@@ -1,0 +1,62 @@
+name: investor_go_app
+services:
+  postgresdb:
+    container_name: investor-postgresdb
+    image: postgres
+    restart: always
+    ports:
+      - ${PG_PORT_DOCKER}:${PG_PORT}
+    environment:
+      - POSTGRES_USER=${PG_USERNAME}
+      - POSTGRES_DB=${PG_DB_NAME}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+    volumes:
+      - pg_go_investor:/var/lib/postgresql
+    networks:
+      - investor_network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "pg_isready",
+          "-h",
+          "postgresdb",
+          "-p",
+          "5432",
+          "-U",
+          "${PG_DB_NAME}",
+        ]
+      interval: 10s
+      retries: 10
+
+  backend:
+    container_name: investor-go-api
+    build:
+      context: ./go-api
+      dockerfile: Dockerfile
+    environment:
+      - DB_HOST=postgresdb
+    depends_on:
+      postgresdb:
+        condition: service_healthy
+    ports:
+      - ${GO_API_PORT_DOCKER}:${GO_API_PORT}
+    networks:
+      - investor_network
+
+  frontend:
+    container_name: investor-client
+    build:
+      context: ./next-client
+      dockerfile: Dockerfile
+    ports:
+      - ${DOCKER_NEXTC_LIENT_PORT}:${NEXT_CLIENT_PORT}
+    networks:
+      - investor_network
+
+volumes:
+  pg_go_investor:
+
+networks:
+  investor_network:
+    name: investor_network

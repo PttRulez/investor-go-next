@@ -1,0 +1,12 @@
+/node_modules
+
+/.next/
+/out/
+/build
+
+.env
+.env.docker
+
+next-env.d.ts
+
+.DS_Store
