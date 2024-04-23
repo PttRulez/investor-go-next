@@ -8,7 +8,7 @@ type Deal struct {
 	Id          int       `json:"id" db:"id"`
 	PortfolioId int       `json:"portfolioId" db:"portfolio_id" validate:"required"`
 	Price       float64   `json:"price" db:"price"  validate:"required,price"`
-	SecurityId  int       `json:"securityId" db:"security_id"`
+	SecurityId  int       `json:"securityId" db:"security_id" validate:"required"`
 	Ticker      string    `json:"ticker" db:"ticker"`
 	Type        DealType  `json:"type" db:"type" validate:"required,dealType"`
 }
@@ -16,8 +16,8 @@ type Deal struct {
 type DealType string
 
 const (
-	Buy  DealType = "Buy"
-	Sell DealType = "Sell"
+	Buy  DealType = "BUY"
+	Sell DealType = "SELL"
 )
 
 func (e DealType) Validate() bool {

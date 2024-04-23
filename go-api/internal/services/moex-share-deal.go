@@ -17,16 +17,24 @@ func (s *MoexShareDealService) CreateDeal(ctx context.Context, dealData *types.D
 		return types.ErrNotYours
 	}
 
-	err = s.repo.Deal.MoexShares.Insert(ctx, dealData)
+	err = s.repo.Deal.MoexShare.Insert(ctx, dealData)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.CreateDeal]: %w", err)
 	}
-	err = s.services.Moex.Shares.UpdatePositionInDB(ctx, dealData.PortfolioId,
+	err = s.services.MoexShare.UpdatePositionInDB(ctx, dealData.PortfolioId,
 		dealData.SecurityId)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.CreateDeal]: %w", err)
 	}
 
+	return nil
+}
+
+func (s *MoexShareDealService) DeleteDeal(ctx context.Context, dealId int, userId int) error {
+	err := s.repo.Deal.MoexShare.Delete(ctx, dealId)
+	if err != nil {
+		return fmt.Errorf("\n<-[MoexShareDealService.DeleteDeal]: %w", err)
+	}
 	return nil
 }
 

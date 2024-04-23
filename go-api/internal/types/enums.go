@@ -3,14 +3,14 @@ package types
 type Role string
 
 const (
-	Admin    Role = "Admin"
-	Investor Role = "Investor"
+	Admin    Role = "ADMIN"
+	Investor Role = "INVESTOR"
 )
 
 type Exchange string
 
 const (
-	EXCH_Moex Exchange = "Moex"
+	EXCH_Moex Exchange = "MOEX"
 )
 
 func (e Exchange) Validate() bool {
@@ -25,12 +25,12 @@ func (e Exchange) Validate() bool {
 type SecurityType string
 
 const (
-	ST_Bond  SecurityType = "Bond"
-	Currency SecurityType = "Currency"
-	Futures  SecurityType = "Futures"
-	Index    SecurityType = "Index"
-	Pif      SecurityType = "Pif"
-	ST_Share SecurityType = "Share"
+	ST_Bond  SecurityType = "BOND"
+	Currency SecurityType = "CURRENCY"
+	Futures  SecurityType = "FUTURES"
+	Index    SecurityType = "INDEX"
+	Pif      SecurityType = "PIF"
+	ST_Share SecurityType = "SHARE"
 )
 
 func (e SecurityType) Validate() bool {

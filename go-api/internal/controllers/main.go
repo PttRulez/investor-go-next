@@ -30,9 +30,11 @@ func Init(r *chi.Mux, repo *types.Repository, services *services.ServiceContaine
 		r.Route("/deal", func(r chi.Router) {
 			r.Route("/moex-bond", func(r chi.Router) {
 				r.Post("/", c.Deal.MoexBond.CreateNewDeal)
+				r.Delete("/{id}", c.Deal.MoexBond.DeleteDeal)
 			})
 			r.Route("/moex-share", func(r chi.Router) {
 				r.Post("/", c.Deal.MoexShare.CreateNewDeal)
+				r.Delete("/{id}", c.Deal.MoexShare.DeleteDeal)
 			})
 		})
 
@@ -46,6 +48,16 @@ func Init(r *chi.Mux, repo *types.Repository, services *services.ServiceContaine
 		r.Route("/expert", func(r chi.Router) {
 			r.Post("/", c.Expert.CreateNewExpert)
 			r.Get("/", c.Expert.GetExpertsList)
+		})
+
+		// Moex-Bonds
+		r.Route("/moex-share", func(r chi.Router) {
+			r.Get("/{ticker}", c.MoexShare.GetInfoByTicker)
+		})
+
+		// Moex-Shares
+		r.Route("/moex-bond", func(r chi.Router) {
+			r.Get("/{isin}", c.MoexBond.GetInfoByISIN)
 		})
 
 		// Portfolios
@@ -68,6 +80,8 @@ type Controllers struct {
 	Deposit   types.DepositController
 	Cashout   types.CashoutController
 	Expert    types.ExpertController
+	MoexBond  types.MoexBondController
+	MoexShare types.MoexShareController
 	Portfolio types.PortfolioController
 }
 
@@ -86,6 +100,8 @@ func NewControllers(repo *types.Repository, services *services.ServiceContainer,
 		},
 		Deposit:   NewDepositController(repo, services),
 		Expert:    NewExpertController(repo, services),
+		MoexBond:  NewMoexBondController(repo, services),
+		MoexShare: NewMoexShareController(repo, services),
 		Portfolio: NewPortfolioController(repo, services),
 	}
 }

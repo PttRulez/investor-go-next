@@ -33,16 +33,16 @@ const PortfolioTable = ({
   const [positionToEdit, setPositionToEdit] =
     useState<IPositionResponse | null>(null);
 
-  const columns = useMemo<Array<MRT_ColumnDef<IPositionResponse>>>(
+  const columns = useMemo<
+    Array<MRT_ColumnDef<IPositionResponse & { securityType: SecurityType }>>
+  >(
     () => [
       {
         header: 'Тип',
         Header: <></>,
         accessorKey: 'security.securityType',
         accessorFn: p =>
-          p.security.securityType === SecurityType.SHARE
-            ? 'Акция'
-            : 'Облигация',
+          p.securityType === SecurityType.SHARE ? 'Акция' : 'Облигация',
         size: 5,
         enableSorting: false,
         enableColumnActions: false,
@@ -70,7 +70,9 @@ const PortfolioTable = ({
       {
         header: 'Стоимость',
         accessorFn: position =>
-          position.total.toLocaleString('ru-RU', { maximumFractionDigits: 0 }),
+          position.currentCost.toLocaleString('ru-RU', {
+            maximumFractionDigits: 0,
+          }),
         size: 5,
       },
       {
@@ -115,10 +117,12 @@ const PortfolioTable = ({
     [],
   );
 
-  const table = useMaterialReactTable<IPositionResponse>({
+  const table = useMaterialReactTable<
+    IPositionResponse & { securityType: SecurityType }
+  >({
     // ...defaultMRTOptions,
     columns,
-    data: portfolio?.positions?.allPositions ?? [],
+    data: portfolio?.positions ?? [],
     enableColumnActions: false,
     enableColumnDragging: false,
     enableGrouping: true,

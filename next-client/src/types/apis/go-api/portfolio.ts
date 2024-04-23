@@ -1,30 +1,38 @@
 import { IDealResponse } from './deal';
 import { ITransactionResponse } from './transaction';
 import { SecurityResponse } from './security';
+import { Exchange, SecurityType } from '@/types/enums';
 
 export interface IPortfolioResponse {
+  bondDeals: IDealResponse[];
+  bondPositions: IPositionResponse[];
   cash: number;
+  cashouts: ITransactionResponse[];
   cashoutsSum: number;
   compound: boolean;
   deals: IDealResponse[];
+  deposits: ITransactionResponse[];
   depositsSum: number;
   id: number;
   name: string;
-  positions: IPortfolioPositionsResponse;
-  profitability: string;
+  positions: IPositionResponse[];
+  profitability: number;
+  shareDeals: IDealResponse[];
+  sharePositions: IPositionResponse[];
   totalCost: number;
-  transactions: ITransactionResponse[];
 }
 
 export interface IPositionResponse {
   amount: number;
+  averagePrice: number;
   comment: string | null;
   id: number;
   currentPrice: number;
-  security: SecurityResponse;
+  currentCost: number;
+  exchange: Exchange;
+  securityType: SecurityType;
+  // security: SecurityResponse;
   targetPrice: number | null;
-  tradeSaldo: number;
-  total: number;
 }
 
 export type IPortfolioListResponse = Pick<

@@ -7,15 +7,26 @@ import (
 )
 
 type Repository struct {
-	Cashout           CashoutRepository
-	Deal              DealRepository
-	Deposit           DepositRepository
-	Expert            ExpertRepository
-	Moex              MoexRepository
-	MoexBondPosition  MoexBondPositionRepository
-	MoexSharePosition MoexSharePositionRepository
-	Portfolio         PortfolioRepository
-	User              UserRepository
+	Cashout   CashoutRepository
+	Deal      DealRepository
+	Deposit   DepositRepository
+	Expert    ExpertRepository
+	Moex      MoexRepository
+	Portfolio PortfolioRepository
+	Position  PositionRepository
+	User      UserRepository
+}
+type DealRepository struct {
+	MoexBond  MoexBondDealRepository
+	MoexShare MoexShareDealRepository
+}
+type MoexRepository struct {
+	Bond  MoexBondRepository
+	Share MoexShareRepository
+}
+type PositionRepository struct {
+	MoexBond  MoexBondPositionRepository
+	MoexShare MoexSharePositionRepository
 }
 
 type CashoutRepository interface {
@@ -52,17 +63,10 @@ type ExpertRepository interface {
 	Insert(ctx context.Context, e *Expert) error
 	Update(ctx context.Context, e *Expert) error
 }
-type MoexRepository struct {
-	Bonds  MoexBondRepository
-	Shares MoexShareRepository
-}
-type DealRepository struct {
-	MoexBonds  MoexBondDealRepository
-	MoexShares MoexShareDealRepository
-}
+
 type MoexBondRepository interface {
 	Insert(ctx context.Context, bond *tmoex.Bond) error
-	GetByTicker(ctx context.Context, ticker string) (*tmoex.Bond, error)
+	GetByISIN(ctx context.Context, isin string) (*tmoex.Bond, error)
 	GetListByIds(ctx context.Context, ids []int) ([]*tmoex.Bond, error)
 }
 type MoexShareRepository interface {

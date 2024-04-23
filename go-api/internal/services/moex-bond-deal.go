@@ -16,12 +16,12 @@ func (s *MoexBondDealService) CreateDeal(ctx context.Context, dealData *types.De
 		return types.ErrNotYours
 	}
 
-	err = s.repo.Deal.MoexBonds.Insert(ctx, dealData)
+	err = s.repo.Deal.MoexBond.Insert(ctx, dealData)
 	if err != nil {
 		return err
 	}
 
-	err = s.services.Moex.Bonds.UpdatePositionInDB(ctx, dealData.PortfolioId, dealData.SecurityId)
+	err = s.services.MoexBond.UpdatePositionInDB(ctx, dealData.PortfolioId, dealData.SecurityId)
 	if err != nil {
 		return err
 	}

@@ -18,10 +18,10 @@ type Opinion struct {
 type OpinionType string
 
 const (
-	Flat      OpinionType = "Flat"
-	General   OpinionType = "General"
-	Growth    OpinionType = "Growth"
-	Reduction OpinionType = "Reduction"
+	Flat      OpinionType = "FLAT"
+	General   OpinionType = "GENERAL"
+	Growth    OpinionType = "GROWTH"
+	Reduction OpinionType = "REDUCTION"
 )
 
 func (e OpinionType) Validate() bool {

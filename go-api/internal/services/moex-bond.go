@@ -11,29 +11,40 @@ import (
 	tmoex "github.com/pttrulez/investor-go/internal/types/moex"
 )
 
-type MoexShareService struct {
+type MoexBondService struct {
 	moexApi *IssApiService
 	repo    *types.Repository
 }
 
-func (s *MoexShareService) GetByTicker(ctx context.Context, ticker string) (*tmoex.Share, error) {
-	share, err := s.repo.Moex.Shares.GetByTicker(ctx, ticker)
+func (s *MoexBondService) GetByISIN(ctx context.Context, isin string) (*tmoex.Bond, error) {
+	bond, err := s.repo.Moex.Bond.GetByISIN(ctx, isin)
 	if errors.Is(err, sql.ErrNoRows) {
 		// если бумаги нет в БД то делаем запрос
 		// на информацию по бумаге из апишки московской биржи
-		security, err := s.moexApi.GetSecurityInfoByTicker(ticker)
+		security, err := s.moexApi.GetSecurityInfoBySecid(isin)
 		if err != nil {
 			return nil, err
 		}
+		if security.Market != tmoex.Market_Bonds {
+			// e := types.NewErrSendToClient("Вы ввели не ISIN облигации")
+			e := types.NewErrSendToClient("Вы ввели не ISIN облигации")
+			fmt.Println("errors.Is(err, types.ErrSendToClient{})", errors.Is(err, types.ErrSendToClient{}))
+			return nil, e
+		}
 
 		// сохраняем в бд
-		err = s.repo.Moex.Shares.Insert(ctx, &tmoex.Share{Security: *security})
+		err = s.repo.Moex.Bond.Insert(
+			ctx,
+			&tmoex.Bond{
+				Security: *security,
+				Isin:     isin,
+			})
 		if err != nil {
 			return nil, err
 		}
 
 		// ищем её же в бд
-		share, err = s.repo.Moex.Shares.GetByTicker(ctx, ticker)
+		bond, err = s.repo.Moex.Bond.GetByISIN(ctx, isin)
 		if err != nil {
 			return nil, err
 		}
@@ -42,25 +53,25 @@ func (s *MoexShareService) GetByTicker(ctx context.Context, ticker string) (*tmo
 	}
 
 	// если уже была в базе, то просто возвращаем
-	return share, nil
+	return bond, nil
 }
 
-func (s *MoexShareService) UpdatePositionInDB(ctx context.Context, portfolioId int,
+func (s *MoexBondService) UpdatePositionInDB(ctx context.Context, portfolioId int,
 	securityId int) error {
-	allDeals, err := s.repo.Deal.MoexShares.GetDealsListForSecurity(ctx, portfolioId, securityId)
+	allDeals, err := s.repo.Deal.MoexBond.GetDealsListForSecurity(ctx, portfolioId, securityId)
 	if err != nil {
-		return fmt.Errorf("\n<-[MoexShareService.UpdatePositionInDB]: %w", err)
+		return fmt.Errorf("\n<-[MoexBondService.UpdatePositionInDB]: %w", err)
 	}
 
-	var position *types.SharePosition
-	oldPosition, err := s.repo.MoexSharePosition.Get(ctx, portfolioId, securityId)
+	var position *types.BondPosition
+	oldPosition, err := s.repo.Position.MoexBond.Get(ctx, portfolioId, securityId)
 	if err != nil {
 		return err
 	}
 	if oldPosition != nil {
 		position = oldPosition
 	} else {
-		position = &types.SharePosition{}
+		position = &types.BondPosition{}
 		position.Exchange = types.EXCH_Moex
 		position.PortfolioId = portfolioId
 		position.SecurityId = securityId
@@ -101,12 +112,12 @@ func (s *MoexShareService) UpdatePositionInDB(ctx context.Context, portfolioId i
 	position.AveragePrice = math.Floor(avPrice*100) / 100
 
 	if position.Id == 0 {
-		err = s.repo.MoexSharePosition.Insert(ctx, position)
+		err = s.repo.Position.MoexBond.Insert(ctx, position)
 		if err != nil {
 			return err
 		}
 	} else {
-		err = s.repo.MoexSharePosition.Update(ctx, position)
+		err = s.repo.Position.MoexBond.Update(ctx, position)
 		if err != nil {
 			return err
 		}
@@ -115,8 +126,8 @@ func (s *MoexShareService) UpdatePositionInDB(ctx context.Context, portfolioId i
 	return nil
 }
 
-func NewShareService(repo *types.Repository) *MoexShareService {
-	return &MoexShareService{
+func NewMoexBondService(repo *types.Repository) *MoexBondService {
+	return &MoexBondService{
 		moexApi: NewIssApiService(),
 		repo:    repo,
 	}

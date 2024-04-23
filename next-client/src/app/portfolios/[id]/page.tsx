@@ -12,6 +12,7 @@ import { PortfolioActionsMap } from '../components/PortfolioTable/PortfolioTable
 import TransactionForm from '../components/TransactionForm/TransactionForm';
 import TransactionsTable from '../components/TransactionsTable';
 import { DealType } from '@/types/enums';
+import { IDealResponse, IPortfolioResponse } from '@/types/apis/go-api';
 
 export default function Portfolio({ params }: { params: { id: string } }) {
   const [openModal, setOpenModal] = useState<PortfolioActionsMap | false>(
@@ -24,7 +25,11 @@ export default function Portfolio({ params }: { params: { id: string } }) {
     queryKey: ['portfolio', parseInt(params.id)],
     queryFn: async () => {
       const portfolio = await investorService.portfolio.getPortfolio(params.id);
-      return portfolio;
+      return {
+        ...portfolio,
+        deals: portfolio.shareDeals.concat(portfolio.bondDeals),
+        transactions: portfolio.cashouts.concat(portfolio.deposits),
+      };
     },
     onSuccess: () => {
       client.invalidateQueries(['prices']);

@@ -15,7 +15,9 @@ import (
 func SendError(w http.ResponseWriter, err error) {
 	if errors.Is(err, types.ErrNotYours) || errors.Is(err, sql.ErrNoRows) {
 		WriteNotFound(w)
-	} else if err != nil {
+	} else if errors.Is(err, types.ErrSendToClient{}) {
+		WriteString(w, http.StatusInternalServerError, err.Error())
+	} else {
 		SmthWentWrong(w)
 	}
 }
@@ -41,7 +43,7 @@ func ValidationErrsToResponse(errs validator.ValidationErrors) map[string]string
 		case "securityType":
 			mappedErrors[err.Field()] += "Указан неправильный тип бумаги"
 		case "dealType":
-			mappedErrors[err.Field()] += "Тип сделки может быть либо Buy либо Sell"
+			mappedErrors[err.Field()] += "Тип сделки может быть либо BUY либо SELL"
 		default:
 			mappedErrors[err.Field()] += fmt.Sprintf("Неверно заполнено поле %s", err.Field())
 		}

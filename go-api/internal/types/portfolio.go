@@ -23,7 +23,9 @@ type FullPortfolioData struct {
 	BondDeals      []*Deal          `json:"bondDeals"`
 	Deposits       []*Deposit       `json:"deposits"`
 	DepositsSum    int              `json:"depositsSum"`
+	Positions      []*Position      `json:"positions"`
+	Profitability  float64          `json:"profitability"`
 	SharePositions []*SharePosition `json:"sharePositions"`
-	Porfitability  float64          `json:"porfitability"`
 	TotalCost      int              `json:"totalCost"`
+	Transactions   []*Transaction   `json:"transactions"`
 }

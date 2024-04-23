@@ -13,27 +13,29 @@ type ServiceContainer struct {
 	Deal      *DealService
 	Deposit   *DepositService
 	IssApi    *IssApiService
-	Moex      *MoexService
+	MoexBond  *MoexBondService
+	MoexShare *MoexShareService
 	Portfolio *PortfolioService
 	Validator *validator.Validate
 }
 
 type DealService struct {
-	MoexShares *MoexShareDealService
-	MoexBonds  *MoexBondDealService
+	MoexShare *MoexShareDealService
+	MoexBond  *MoexBondDealService
 }
 
 func NewServiceContainer(repo *types.Repository) *ServiceContainer {
 	container := &ServiceContainer{}
 	container.Deal = &DealService{
-		MoexShares: NewMoexShareDealService(repo, container),
-		MoexBonds:  NewMoexBondDealService(repo, container),
+		MoexShare: NewMoexShareDealService(repo, container),
+		MoexBond:  NewMoexBondDealService(repo, container),
 	}
 	container.Cashout = NewCashoutService(repo, container)
 	container.Deposit = NewDepositService(repo, container)
 	container.IssApi = NewIssApiService()
+	container.MoexBond = NewMoexBondService(repo)
+	container.MoexShare = NewMoexShareService(repo)
 	container.Portfolio = NewPortfolioService(repo, container)
-	container.Moex = NewMoexService(repo)
 	container.Validator = NewValidator()
 
 	return container

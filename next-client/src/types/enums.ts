@@ -1,10 +1,10 @@
 export enum Exchange {
-  MOEX = 'MOEX',
+  MOEX = 'Moex',
 }
 
 export enum DealType {
   BUY = 'BUY',
-  SELL = 'SELL'
+  SELL = 'SELL',
 }
 
 export enum OpinionType {
@@ -15,8 +15,8 @@ export enum OpinionType {
 }
 
 export enum Role {
-	ADMIN = 'ADMIN',
-	INVESTOR = 'INVESTOR'
+  ADMIN = 'ADMIN',
+  INVESTOR = 'INVESTOR',
 }
 
 export enum SecurityType {
@@ -25,47 +25,46 @@ export enum SecurityType {
   FUTURES = 'FUTURES',
   INDEX = 'INDEX',
   PIF = 'PIF',
-  SHARE = 'SHARE'
+  SHARE = 'SHARE',
 }
 
 export enum TransactionType {
   CASHOUT = 'CASHOUT',
-  DEPOSIT = 'DEPOSIT'
+  DEPOSIT = 'DEPOSIT',
 }
-
 
 //  MOEX
 
 export enum MoexEngine {
   stock = 'stock',
-  currency = 'currency'
+  currency = 'currency',
 }
 
 export enum MoexMarket {
   shares = 'shares',
   bonds = 'bonds',
   index = 'index',
-  selt = 'selt'       // Валюта: Биржевые сделки с ЦК
+  selt = 'selt', // Валюта: Биржевые сделки с ЦК
 }
 
 export enum MoexBoard {
-  TQBR = 'TQBR',												// Т+: Акции и ДР - безадрес.
-  CETS = 'CETS'                         // Системные сделки - безадрес.
+  TQBR = 'TQBR', // Т+: Акции и ДР - безадрес.
+  CETS = 'CETS', // Системные сделки - безадрес.
 }
 
 export enum MoexSecurityType {
-  common_share = 'common_share', 				// 'акция обыкновенная'
-  preferred_share = 'preferred_share', 	// 'акция привелигированная'
-  
-	corporate_bond = 'corporate_bond',		// 'корпоративная облигация'
-  exchange_bond = 'exchange_bond', 			// 'облигация'
-  ofz_bond = 'ofz_bond',								// 'ОФЗ'
+  common_share = 'common_share', // 'акция обыкновенная'
+  preferred_share = 'preferred_share', // 'акция привелигированная'
 
-  exchange_ppif = 'exchange_ppif', 			// 'биржевой ПИФ'
-  public_ppif = 'public_ppif', 					// 'публичный ПИФ'
-  stock_index_if = 'stock_index_if', 		// 'iNAV облигаций'
+  corporate_bond = 'corporate_bond', // 'корпоративная облигация'
+  exchange_bond = 'exchange_bond', // 'облигация'
+  ofz_bond = 'ofz_bond', // 'ОФЗ'
 
-  futures = 'futures', 									// 'фьючерс'
+  exchange_ppif = 'exchange_ppif', // 'биржевой ПИФ'
+  public_ppif = 'public_ppif', // 'публичный ПИФ'
+  stock_index_if = 'stock_index_if', // 'iNAV облигаций'
 
-  stock_index = 'stock_index',					// 'индекс'
+  futures = 'futures', // 'фьючерс'
+
+  stock_index = 'stock_index', // 'индекс'
 }

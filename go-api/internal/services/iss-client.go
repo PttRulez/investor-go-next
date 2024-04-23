@@ -25,8 +25,8 @@ func NewIssApiService() *IssApiService {
 	}
 }
 
-func (api *IssApiService) GetSecurityInfoByTicker(ticker string) (*tmoex.Security, error) {
-	uri := fmt.Sprintf("%s/securities/%s.json", api.baseUrl, ticker)
+func (api *IssApiService) GetSecurityInfoBySecid(secid string) (*tmoex.Security, error) {
+	uri := fmt.Sprintf("%s/securities/%s.json", api.baseUrl, secid)
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("[IssApiService.GetSecurityByTicker http.NewRequest]: %w", err)
@@ -74,11 +74,14 @@ func (api *IssApiService) GetSecurityInfoByTicker(ticker string) (*tmoex.Securit
 	}
 
 	var boardData [4]any
+	fmt.Println("data.Boards.Data", data.Boards.Data)
 	for _, item := range data.Boards.Data {
+		// если is_primary
 		if item[3].(float64) == 1 {
 			boardData = item
 		}
 	}
+	fmt.Println("boardData\n", boardData)
 	board = tmoex.Board(boardData[0].(string))
 	market = tmoex.Market(boardData[1].(string))
 	engine = tmoex.Engine(boardData[2].(string))
@@ -89,7 +92,6 @@ func (api *IssApiService) GetSecurityInfoByTicker(ticker string) (*tmoex.Securit
 		Market:    market,
 		Name:      name,
 		ShortName: shortname,
-		Ticker:    ticker,
 	}, nil
 }
 

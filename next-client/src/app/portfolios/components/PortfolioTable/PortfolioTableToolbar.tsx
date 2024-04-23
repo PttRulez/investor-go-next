@@ -25,7 +25,7 @@ const PortfolioTableToolbar = ({ onChooseTransaction }: Props) => {
           { id: PortfolioActionsMap.sell, name: 'SELL' },
           { id: PortfolioActionsMap.transaction, name: 'Депозит/Кэшаут' },
         ]}
-        value={null}
+        value={''}
       />
     </>
   );

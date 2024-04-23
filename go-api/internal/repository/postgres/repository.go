@@ -24,19 +24,21 @@ func NewPostgresRepo(cfg config.PostgresConfig) (*types.Repository, error) {
 	return &types.Repository{
 		Cashout: NewCashoutPostgres(db),
 		Deal: types.DealRepository{
-			MoexBonds:  NewMoexBondDealPostgres(db),
-			MoexShares: NewMoexShareDealPostgres(db),
+			MoexBond:  NewMoexBondDealPostgres(db),
+			MoexShare: NewMoexShareDealPostgres(db),
 		},
 		Deposit: NewDepositPostgres(db),
 		Expert:  NewExpertPostgres(db),
 		Moex: types.MoexRepository{
-			Bonds:  NewMoexBondsPostgres(db),
-			Shares: NewMoexSharesPostgres(db),
+			Bond:  NewMoexBondsPostgres(db),
+			Share: NewMoexSharesPostgres(db),
 		},
-		Portfolio:         NewPortfolioPostgres(db),
-		MoexBondPosition:  NewMoexBondPositionPostgres(db),
-		MoexSharePosition: NewMoexSharePositionPostgres(db),
-		User:              NewUserPostgres(db),
+		Portfolio: NewPortfolioPostgres(db),
+		Position: types.PositionRepository{
+			MoexBond:  NewMoexBondPositionPostgres(db),
+			MoexShare: NewMoexSharePositionPostgres(db),
+		},
+		User: NewUserPostgres(db),
 	}, nil
 }
 func createAllTables(db *sql.DB) {
@@ -79,7 +81,7 @@ func createMoexBondDealsTable(db *sql.DB) {
 		date date not null,
 		portfolio_id integer references portfolios(id) not null,
 		price numeric(10, 2) not null,
-		security_id integer not null,
+		security_id integer references moex_bonds(id) not null,
 		type varchar(50) not null
 	)`
 
@@ -95,7 +97,7 @@ func createMoexShareDealsTable(db *sql.DB) {
 		date date not null,
 		portfolio_id integer references portfolios(id) not null,
 		price numeric(10, 2) not null,
-		security_id integer not null,
+		security_id integer references moex_shares(id) not null,
 		type varchar(50) not null
 	)`
 
@@ -227,8 +229,8 @@ func createMoexBondsTable(db *sql.DB) {
 		engine varchar(50) not null,
 		market varchar(50) not null,
 		name varchar(100) not null,
-		shortName varchar(50) not null,
-		ticker varchar(10) not null
+		shortname varchar(50) not null,
+		isin varchar(10) not null
 	)`
 
 	_, err := db.Exec(queryString)
@@ -243,7 +245,7 @@ func createMoexCurrenciesTable(db *sql.DB) {
 		engine varchar(50) not null,
 		market varchar(50) not null,
 		name varchar(120) not null,
-		shortName varchar(50) not null,
+		shortname varchar(50) not null,
 		ticker varchar(10) not null
 	)`
 
@@ -259,7 +261,7 @@ func createMoexSharesTable(db *sql.DB) {
 		engine varchar(50) not null,
 		market varchar(50) not null,
 		name varchar(120) not null,
-		shortName varchar(50) not null,
+		shortname varchar(50) not null,
 		ticker varchar(10) not null unique
 	)`
 

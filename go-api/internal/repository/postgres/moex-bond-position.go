@@ -40,9 +40,9 @@ func (pg *MoexBondPositionPostgres) Get(ctx context.Context, portfolioId int, se
 func (pg *MoexBondPositionPostgres) GetListByPortfolioId(ctx context.Context, id int) ([]*types.BondPosition, error) {
 	queryString := `
 		SELECT p.id, p.amount, p.average_price, p.comment, p.portfolio_id,
-		p.security_id, p.target_price, m.ticker
+		p.security_id, p.target_price, b.isin
 		FROM moex_bond_positions p 
-		LEFT JOIN moex_bonds m ON p.security_id = m.id
+		LEFT JOIN moex_bonds b ON p.security_id = b.id
 		WHERE p.portfolio_id = $1;
 	`
 

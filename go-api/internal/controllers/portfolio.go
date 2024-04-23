@@ -61,7 +61,7 @@ func (c *PortfolioController) GetPortfolioById(w http.ResponseWriter, r *http.Re
 		fmt.Println(err)
 		response.SendError(w, err)
 	}
-
+	fmt.Println("portfolio\n", portfolio)
 	response.WriteOKJSON(w, portfolio)
 }
 

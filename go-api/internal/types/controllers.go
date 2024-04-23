@@ -11,12 +11,19 @@ type CashoutController interface {
 	CreateNewCashout(w http.ResponseWriter, r *http.Request)
 	DeleteCashout(w http.ResponseWriter, r *http.Request)
 }
-
+type MoexShareController interface {
+	GetInfoByTicker(w http.ResponseWriter, r *http.Request)
+}
+type MoexBondController interface {
+	GetInfoByISIN(w http.ResponseWriter, r *http.Request)
+}
 type MoexBondDealController interface {
 	CreateNewDeal(w http.ResponseWriter, r *http.Request)
+	DeleteDeal(w http.ResponseWriter, r *http.Request)
 }
 type MoexShareDealController interface {
 	CreateNewDeal(w http.ResponseWriter, r *http.Request)
+	DeleteDeal(w http.ResponseWriter, r *http.Request)
 }
 
 type DepositController interface {
