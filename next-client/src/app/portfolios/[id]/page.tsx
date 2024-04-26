@@ -12,7 +12,6 @@ import { PortfolioActionsMap } from '../components/PortfolioTable/PortfolioTable
 import TransactionForm from '../components/TransactionForm/TransactionForm';
 import TransactionsTable from '../components/TransactionsTable';
 import { DealType } from '@/types/enums';
-import { IDealResponse, IPortfolioResponse } from '@/types/apis/go-api';
 
 export default function Portfolio({ params }: { params: { id: string } }) {
   const [openModal, setOpenModal] = useState<PortfolioActionsMap | false>(
@@ -27,8 +26,6 @@ export default function Portfolio({ params }: { params: { id: string } }) {
       const portfolio = await investorService.portfolio.getPortfolio(params.id);
       return {
         ...portfolio,
-        deals: portfolio.shareDeals.concat(portfolio.bondDeals),
-        transactions: portfolio.cashouts.concat(portfolio.deposits),
       };
     },
     onSuccess: () => {
@@ -67,7 +64,7 @@ export default function Portfolio({ params }: { params: { id: string } }) {
             />
           )}
         </TabPanel>
-        <TabPanel value="deals">
+        {/* <TabPanel value="deals">
           {portfolio && <DealsTable deals={portfolio.deals ?? []} />}
         </TabPanel>
         <TabPanel value="transactions">
@@ -77,7 +74,7 @@ export default function Portfolio({ params }: { params: { id: string } }) {
               transactions={portfolio.transactions ?? []}
             />
           )}
-        </TabPanel>
+        </TabPanel> */}
       </TabContext>
 
       {/* <AddNewButton onClick={() => setCreateDeal(true)} /> */}

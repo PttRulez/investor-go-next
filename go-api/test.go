@@ -14,6 +14,6 @@ func main() {
 	if err != nil {
 		panic("Failed to initialize postgres repository: " + err.Error())
 	}
-	a, _ := repository.Moex.Shares.GetListByIds(context.Background(), []int{1, 2})
+	a, _ := repository.Moex.Share.GetListByIds(context.Background(), []int{1, 2})
 	fmt.Printf("SHARES:\n %+v", a)
 }

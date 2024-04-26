@@ -7,7 +7,7 @@ import {
   FormDatePicker,
 } from '@pttrulez/mui-based-ui';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import MoexSearch from '@/components/ui/StocksSearch/MoexSearch';
 import investorService from '@/axios/investor/investor.service';
@@ -16,7 +16,10 @@ import { MoexSearchAutocompleteOption } from '@/components/ui/StocksSearch/types
 import { getSecurityTypeFromMoexSecType } from '@/utils/helpers';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { DealType, Exchange } from '@/types/enums';
-import { CreateDealData, CreateDealSchema } from '@/validation';
+import {
+  CreateMoexShareDealData,
+  CreateMoexShareDealSchema,
+} from '@/validation';
 
 interface DealFormProps {
   afterSuccessfulSubmit: () => void;
@@ -37,35 +40,21 @@ const CreateDealForm: FC<DealFormProps> = ({
     resetField,
     setValue,
     watch,
-  } = useForm<CreateDealData>({
+  } = useForm<CreateMoexShareDealData>({
     defaultValues: {
       date: dayjs().toDate(),
       portfolioId,
       type: dealType,
-      securityType: undefined,
-      exchange: undefined,
-      ticker: undefined,
     },
-    resolver: zodResolver(CreateDealSchema),
+    resolver: zodResolver(CreateMoexShareDealSchema),
   });
   const watchAll = watch();
   const client = useQueryClient();
-
-  const changeMoexSecurityHandler = (
-    value: MoexSearchAutocompleteOption | null,
-  ) => {
-    if (value) {
-      setValue('exchange', Exchange.MOEX);
-      setValue('securityType', getSecurityTypeFromMoexSecType(value.type));
-      setValue('ticker', value.ticker);
-      clearErrors('ticker');
-    } else {
-      resetField('ticker');
-    }
-  };
+  const [ticker, setTicker] = useState<string | null>(null);
 
   const createDeal = useMutation(
-    (formData: CreateDealData) => investorService.deal.createDeal(formData),
+    (formData: CreateMoexShareDealData) =>
+      investorService.deal.createDeal(formData),
     {
       onSuccess: deal => {
         afterSuccessfulSubmit();
@@ -74,7 +63,11 @@ const CreateDealForm: FC<DealFormProps> = ({
     },
   );
 
-  const onSubmit: SubmitHandler<CreateDealData> = data => {
+  const onSubmit: SubmitHandler<CreateMoexShareDealData> = async data => {
+    if (!ticker) return;
+    const shareInfo = await investorService.moexShare.getByTicker(ticker);
+    
+    data.securityId = shareInfo.id;
     createDeal.mutate(data);
   };
 
@@ -82,15 +75,12 @@ const CreateDealForm: FC<DealFormProps> = ({
     <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
       <Controller
         control={control}
-        name="ticker"
+        name="securityId"
         render={({ field }) => (
           <MoexSearch
-            onChange={(e, value) => {
-              // field.onChange(e);
-              changeMoexSecurityHandler(value);
-            }}
-            error={!!formState.errors.ticker}
-            helperText={formState.errors.ticker?.message}
+            onChange={(e, value) => setTicker(value?.ticker ?? null)}
+            error={!!formState.errors.securityId}
+            helperText={formState.errors.securityId?.message}
           />
         )}
       />

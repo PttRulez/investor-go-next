@@ -10,7 +10,7 @@ export class InvestorMoexBond {
 
   getByTicker(ticker: string): Promise<IMoexBondResponse> {
     return this.api
-      .get(`/moex/bonds/${ticker}`)
+      .get(`/moex-bond/${ticker}`)
       .then(res => {
         return res.data;
       })

@@ -1,25 +1,31 @@
 'use client';
-import { SyntheticEvent, useMemo, useState } from 'react';
+import PositionForm from '@/app/position/components/PositionForm';
 import {
-  MaterialReactTable,
-  type MRT_ColumnDef,
-  useMaterialReactTable,
-} from 'material-react-table';
-import PortfolioTableFooter from './PortfolioTableFooter';
+  IMoexBondPositionResponse,
+  IMoexSharePositionResponse,
+  IPortfolioResponse,
+  IPositionResponse,
+} from '@/types/apis/go-api';
+import { SecurityType } from '@/types/enums';
 import { getDefaultMRTOptions } from '@/utils/mrt-default-options';
-import PortfolioTableToolbar from './PortfolioTableToolbar';
+import EditIcon from '@mui/icons-material/Edit';
 import {
+  Box,
   Dialog,
   IconButton,
   SelectChangeEvent,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import PositionForm from '@/app/position/components/PositionForm';
 import { LightTooltip } from '@pttrulez/mui-based-ui';
-import { IPortfolioResponse, IPositionResponse } from '@/types/apis/go-api';
-import { SecurityType } from '@/types/enums';
+import {
+  MRT_ExpandedState,
+  MaterialReactTable,
+  useMaterialReactTable,
+  type MRT_ColumnDef,
+} from 'material-react-table';
+import { SyntheticEvent, useMemo, useState } from 'react';
+import PortfolioTableFooter from './PortfolioTableFooter';
+import PortfolioTableToolbar from './PortfolioTableToolbar';
 
 const defaultMRTOptions = getDefaultMRTOptions<IPositionResponse>();
 
@@ -32,29 +38,31 @@ const PortfolioTable = ({
 }) => {
   const [positionToEdit, setPositionToEdit] =
     useState<IPositionResponse | null>(null);
+  const [expanded, setExpanded] = useState<MRT_ExpandedState>({});
 
   const columns = useMemo<
-    Array<MRT_ColumnDef<IPositionResponse & { securityType: SecurityType }>>
+    Array<MRT_ColumnDef<IMoexSharePositionResponse | IMoexBondPositionResponse>>
   >(
     () => [
       {
-        header: 'Тип',
-        Header: <></>,
-        accessorKey: 'security.securityType',
-        accessorFn: p =>
-          p.securityType === SecurityType.SHARE ? 'Акция' : 'Облигация',
-        size: 5,
-        enableSorting: false,
-        enableColumnActions: false,
-      },
-      {
-        header: 'Тикер',
-        accessorKey: 'security.ticker',
-        size: 5,
-      },
-      {
         header: 'Название',
-        accessorKey: 'security.name',
+        accessorKey: 'shortName',
+        Cell: ({ row }) => {
+          const p = row.original;
+          return (
+            <Typography variant="body1">
+              {p.shortName}
+              <Box
+                sx={{
+                  fontSize: '0.8rem',
+                  color: 'gray',
+                }}
+              >
+                {'ticker' in p ? p.ticker : p.isin}
+              </Box>
+            </Typography>
+          );
+        },
         size: 50,
       },
       {
@@ -63,20 +71,22 @@ const PortfolioTable = ({
         size: 5,
       },
       {
-        header: 'Цена',
+        header: 'Цена покупки',
+        accessorKey: 'averagePrice',
+        size: 5,
+      },
+      {
+        header: 'Текущая цена',
         accessorKey: 'currentPrice',
         size: 5,
       },
       {
         header: 'Стоимость',
-        accessorFn: position =>
-          position.currentCost.toLocaleString('ru-RU', {
-            maximumFractionDigits: 0,
-          }),
+        accessorKey: 'currentCost',
         size: 5,
       },
       {
-        header: 'Комент',
+        header: 'Коммент',
         accessorKey: 'comment',
         Cell: ({ row }) => {
           return (
@@ -99,9 +109,16 @@ const PortfolioTable = ({
       },
       {
         header: '',
+        Header: () => (
+          <PortfolioTableToolbar
+            onChooseTransaction={e => {
+              onChooseTransaction(e);
+            }}
+          />
+        ),
         accessorKey: 'total',
         Cell: ({ row }) => {
-          return (
+          return row.original.shortName ? (
             <IconButton
               onClick={(e: SyntheticEvent) => {
                 e.stopPropagation();
@@ -110,49 +127,115 @@ const PortfolioTable = ({
             >
               <EditIcon />
             </IconButton>
+          ) : (
+            <></>
           );
         },
       },
     ],
     [],
   );
+  type PositionRow = IMoexBondPositionResponse | IMoexSharePositionResponse;
 
-  const table = useMaterialReactTable<
-    IPositionResponse & { securityType: SecurityType }
-  >({
+  const portfolioData = useMemo<PositionRow[]>(() => {
+    if (!portfolio) return [];
+    return [
+      {
+        amount: '' as unknown as number,
+        averagePrice: '' as unknown as number,
+        comment: '',
+        id: '' as unknown as number,
+        currentPrice: '' as unknown as number,
+        currentCost: portfolio?.bondPositions.reduce((acc, p) => {
+          return acc + p.currentCost;
+        }, 0),
+        targetPrice: '' as unknown as number,
+        shortName: '',
+        ticker: 'Облигации',
+        subRows: portfolio?.bondPositions,
+      },
+      {
+        amount: '' as unknown as number,
+        averagePrice: '' as unknown as number,
+        comment: '',
+        id: '' as unknown as number,
+        currentPrice: '' as unknown as number,
+        currentCost: portfolio?.sharePositions.reduce((acc, p) => {
+          return acc + p.currentCost;
+        }, 0),
+        targetPrice: '' as unknown as number,
+        shortName: '',
+        ticker: 'Акции',
+        subRows: portfolio?.sharePositions,
+      },
+      {
+        amount: '' as unknown as number,
+        averagePrice: '' as unknown as number,
+        comment: '',
+        id: '' as unknown as number,
+        currentPrice: '' as unknown as number,
+        currentCost: portfolio?.cash,
+        targetPrice: '' as unknown as number,
+        shortName: '',
+        ticker: 'Рубли',
+      },
+    ];
+  }, [portfolio]);
+
+  const table = useMaterialReactTable<PositionRow>({
     // ...defaultMRTOptions,
     columns,
-    data: portfolio?.positions ?? [],
+    data: portfolioData,
     enableColumnActions: false,
     enableColumnDragging: false,
-    enableGrouping: true,
-    // enableToolbarInternalActions: false,
-    renderToolbarInternalActions: props => (
-      <PortfolioTableToolbar
-        onChooseTransaction={e => {
-          onChooseTransaction(e);
-        }}
-      />
-    ),
-    icons: { SortIcon: <></> },
+    enableExpanding: true,
+    enableTopToolbar: false,
+    enableToolbarInternalActions: false,
+    // icons: { SortIcon: <></> },
+    muiExpandAllButtonProps: {
+      sx: {
+        display: 'none',
+      },
+    },
+    renderRowActions: () => <></>,
     muiTableHeadRowProps: {
       sx: {
         '.Mui-TableHeadCell-Content-Wrapper': { whiteSpace: 'pre-wrap' },
         '.MuiTableSortLabel-icon': {
           display: 'none',
         },
+        '.MuiTableCell-head': {
+          textAlign: 'center',
+          verticalAlign: 'middle',
+        },
+        '.Mui-TableHeadCell-Content': {
+          justifyContent: 'center',
+          '.MuiBadge-root': {
+            display: 'none',
+          },
+        },
       },
     },
-    muiTableHeadCellProps: {
-      align: 'center',
-    },
     muiTableBodyCellProps: {
-      align: 'center',
+      sx: {
+        textAlign: 'center',
+      },
     },
-    initialState: { expanded: true, grouping: ['security.securityType'] },
-    // renderColumnActionsMenuItems: () => [<></>],
+    muiTableBodyRowProps: ({ row }) => {
+      if (!row.original.shortName) {
+        return {
+          sx: {
+            backgroundColor: 'rgba(0, 0, 0, 0.05)',
+          },
+        };
+      }
+      return {
+        sx: {
+          backgroundColor: 'inherit',
+        },
+      };
+    },
     muiTablePaperProps: { sx: { marginBottom: '100px' } },
-    // enableRowPinning: false,
     renderBottomToolbar: () => (
       <PortfolioTableFooter
         cashoutsSum={portfolio.cashoutsSum}

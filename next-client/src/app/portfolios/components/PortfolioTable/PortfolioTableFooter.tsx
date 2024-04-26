@@ -1,3 +1,4 @@
+import { Box, Typography } from '@mui/material';
 import Grid from '@mui/material/Unstable_Grid2';
 
 type Props = {
@@ -22,7 +23,18 @@ const PortfolioTableFooter = ({
       <Grid>Сумма депозитов: {depositsSum.toLocaleString('RU-ru')}</Grid>
       <Grid>Сумма кэшаутов: {cashoutsSum.toLocaleString('RU-ru')}</Grid>
       <Grid>Текущая стоимость: {currentValue.toLocaleString('RU-ru')}</Grid>
-      <Grid>Общая доходность: {profitability}</Grid>
+      <Grid>
+        Общая доходность:
+        <Box
+          component="span"
+          sx={{
+            color: profitability > 0 ? 'success.main' : 'error.main',
+            paddingLeft: '5px',
+          }}
+        >
+          {profitability}%
+        </Box>
+      </Grid>
     </Grid>
   );
 };
