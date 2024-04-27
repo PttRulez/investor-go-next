@@ -80,7 +80,7 @@ type Controllers struct {
 
 func NewControllers(repo *repository.Repository, services *service.Container, tokenAuth *jwtauth.JWTAuth) *Controllers {
 	return &Controllers{
-		Auth:      controller.NewAuthController(repo, tokenAuth),
+		Auth:      controller.NewAuthController(repo, services),
 		Cashout:   controller.NewCashoutController(repo, services),
 		Deal:      controller.NewDealController(repo, services),
 		Deposit:   controller.NewDepositController(repo, services),
@@ -90,3 +90,5 @@ func NewControllers(repo *repository.Repository, services *service.Container, to
 		Portfolio: controller.NewPortfolioController(repo, services),
 	}
 }
+
+

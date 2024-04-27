@@ -8,7 +8,7 @@ import (
 	"github.com/pttrulez/investor-go/internal/repository"
 )
 
-func (s *MoexShareDealService) CreateShareDeal(ctx context.Context, dealData *model.Deal, userId int) error {
+func (s *MoexShareDealService) CreateDeal(ctx context.Context, dealData *model.Deal, userId int) error {
 	if dealData.SecurityId == 0 {
 		_, _ = s.services.Moex.Share.GetByTicker(ctx, dealData.Ticker)
 	}
@@ -25,15 +25,13 @@ func (s *MoexShareDealService) CreateShareDeal(ctx context.Context, dealData *mo
 	return nil
 }
 
-func (s *MoexShareDealService) DeleteShareDeal(ctx context.Context, dealId int, userId int) error {
+func (s *MoexShareDealService) DeleteDeal(ctx context.Context, dealId int, userId int) error {
 	err := s.repo.Deal.MoexShare.Delete(ctx, dealId)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.DeleteDeal]: %w", err)
 	}
 	return nil
 }
-
-
 
 type MoexShareDealService struct {
 	repo     *repository.Repository

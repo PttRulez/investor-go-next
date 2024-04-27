@@ -8,7 +8,7 @@ import (
 	"github.com/pttrulez/investor-go/internal/repository"
 )
 
-func (s *MoexBondDealService) CreateBondDeal(ctx context.Context, dealData *model.Deal, userId int) error {
+func (s *MoexBondDealService) CreateDeal(ctx context.Context, dealData *model.Deal, userId int) error {
 	if dealData.SecurityId == 0 {
 		_, _ = s.services.Moex.Bond.GetByISIN(ctx, dealData.Ticker)
 	}
@@ -25,7 +25,7 @@ func (s *MoexBondDealService) CreateBondDeal(ctx context.Context, dealData *mode
 	return nil
 }
 
-func (s *MoexBondDealService) DeleteBondDeal(ctx context.Context, dealId int, userId int) error {
+func (s *MoexBondDealService) DeleteDeal(ctx context.Context, dealId int, userId int) error {
 	err := s.repo.Deal.MoexBond.Delete(ctx, dealId)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexBondDealService.DeleteDeal]: %w", err)

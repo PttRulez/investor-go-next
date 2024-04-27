@@ -12,14 +12,14 @@ type Container struct {
 	Deposit   Deposit
 	Deal      Deal
 	Expert    Expert
-	Moex      MoexService
-	Position  Position
+	Moex      MoexContainer
+	Opinion   Opinion
 	Portfolio Portfolio
 	User      User
 	Validator *validator.Validate
 }
 
-type MoexService struct {
+type MoexContainer struct {
 	Api       IssApi
 	Bond      MoexBond
 	BondDeal  MoexBondDeal
@@ -43,21 +43,18 @@ type Expert interface {
 	DeleteExpert(ctx context.Context, id int, userId int) error
 	GetExpertsListByUserId(ctx context.Context, userId int) ([]*model.Expert, error)
 	GetExpertById(ctx context.Context, id int, userId int) (*model.Expert, error)
-	UpdateExpert(ctx context.Context, expert *model.Expert) error
+	UpdateExpert(ctx context.Context, expert *model.Expert, userId int) error
 }
-
 type IssApi interface {
 	GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, error)
 	GetStocksCurrentPrices(ctx context.Context, market model.ISSMoexMarket,
 		tickers []string) (*model.MoexApiResponseCurrentPrices, error)
 }
-
 type MoexBond interface {
 	GetByISIN(ctx context.Context, isin string) (*model.MoexBond, error)
 	UpdatePositionInDB(ctx context.Context, portfolioId int,
 		securityId int) error
 }
-
 type MoexShare interface {
 	GetByTicker(ctx context.Context, ticker string) (*model.MoexShare, error)
 	UpdatePositionInDB(ctx context.Context, portfolioId int,
@@ -79,14 +76,19 @@ type MoexShareDeal interface {
 	CreateDeal(ctx context.Context, deal *model.Deal, userId int) error
 	DeleteDeal(ctx context.Context, dealId int, userId int) error
 }
+type Opinion interface {
+	CreateNewOpinion(ctx context.Context, opinion *model.Opinion) error
+	DeleteOpinion(ctx context.Context, id int, userId int) error
+	GetOpinionsListByUserId(ctx context.Context, userId int) ([]*model.Opinion, error)
+	GetOpinionById(ctx context.Context, id int, userId int) (*model.Opinion, error)
+	UpdateOpinion(ctx context.Context, opinion *model.Opinion, userId int) error
+}
 type Portfolio interface {
 	CreatePortfolio(ctx context.Context, p *model.Portfolio) error
 	GetListByUserId(ctx context.Context, userId int) ([]*model.Portfolio, error)
 	GetPortfolioById(ctx context.Context, portfolioId int, userId int) (*model.Portfolio, error)
-	DeletePortfolio (ctx context.Context, portfolioId int, userId int) error
-	UpdatePortfolio (ctx context.Context, portfolio *model.Portfolio, userId int) error
-}
-type Position interface {
+	DeletePortfolio(ctx context.Context, portfolioId int, userId int) error
+	UpdatePortfolio(ctx context.Context, portfolio *model.Portfolio, userId int) error
 }
 
 type User interface {

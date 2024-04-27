@@ -263,12 +263,12 @@ func (s *PortfolioService) GetPortfolioById(ctx context.Context, portfolioId int
 	return portfolio, nil
 }
 
-// func (s *PortfolioService) DeletePortfolio(ctx context.Context, portfolioId int, userId int) error {
-// 	if _, err := s.GetPortfolioById(ctx, portfolioId, userId); err != nil {
-// 		return err
-// 	}
-// 	return s.repo.Portfolio.Delete(ctx, portfolioId)
-// }
+func (s *PortfolioService) DeletePortfolio(ctx context.Context, portfolioId int, userId int) error {
+	if _, err := s.GetPortfolioById(ctx, portfolioId, userId); err != nil {
+		return err
+	}
+	return s.repo.Portfolio.Delete(ctx, portfolioId)
+}
 
 func (s *PortfolioService) UpdatePortfolio(ctx context.Context, portfolio *model.Portfolio, userId int) error {
 	if _, err := s.GetPortfolioById(ctx, portfolio.Id, userId); err != nil {

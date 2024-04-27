@@ -16,7 +16,6 @@ func (pg *ExpertPostgres) Delete(ctx context.Context, id int) error {
 	}
 	return nil
 }
-
 func (pg *ExpertPostgres) Insert(ctx context.Context, e *model.Expert) error {
 	queryString := "INSERT INTO experts (avatar_url, name, user_id) VALUES ($1, $2, $3);"
 	row := pg.db.QueryRow(queryString, e.AvatarUrl, e.Name, e.UserId)
@@ -25,7 +24,6 @@ func (pg *ExpertPostgres) Insert(ctx context.Context, e *model.Expert) error {
 	}
 	return nil
 }
-
 func (pg *ExpertPostgres) Update(ctx context.Context, e *model.Expert) error {
 	queryString := "UPDATE experts SET avatar_url = $1, name = $2 WHERE id = $3;"
 	row := pg.db.QueryRowContext(ctx, queryString, e.AvatarUrl, e.Name, e.Id)

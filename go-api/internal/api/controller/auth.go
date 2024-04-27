@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/api/model/converter"
 	"github.com/pttrulez/investor-go/internal/api/model/dto"
+	"github.com/pttrulez/investor-go/internal/model"
 	"github.com/pttrulez/investor-go/internal/repository"
 	"github.com/pttrulez/investor-go/internal/service"
 	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"
@@ -59,15 +59,19 @@ func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-type AuthController struct {
-	services  *service.Container
-	repo      *repository.Repository
-	tokenAuth *jwtauth.JWTAuth
+type UserService interface {
+	LoginUser(ctx context.Context, user *model.User) (string, error)
+	RegisterUser(ctx context.Context, user *model.User) error
 }
 
-func NewAuthController(repo *repository.Repository, tokenAuth *jwtauth.JWTAuth) *AuthController {
+type AuthController struct {
+	repo     *repository.Repository
+	services *service.Container
+}
+
+func NewAuthController(repo *repository.Repository, services *service.Container) *AuthController {
 	return &AuthController{
-		repo:      repo,
-		tokenAuth: tokenAuth,
+		repo:     repo,
+		services: services,
 	}
 }
