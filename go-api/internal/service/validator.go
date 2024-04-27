@@ -12,6 +12,7 @@ func NewValidator() *validator.Validate {
 	validate := validator.New()
 	validate.RegisterValidation("dealType", ValidateDealType)
 	validate.RegisterValidation("is-exchange", ValidateExchange)
+	validate.RegisterValidation("moex-market", ValidateMoexMarket)
 	validate.RegisterValidation("opinionType", ValidatePrice)
 	validate.RegisterValidation("price", ValidatePrice)
 	validate.RegisterValidation("securityType", ValidateSecurityType)
@@ -21,13 +22,12 @@ func NewValidator() *validator.Validate {
 func ValidateExchange(fl validator.FieldLevel) bool {
 	return fl.Field().Interface().(model.Exchange).Validate()
 }
-
-func ValidateSecurityType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(model.SecurityType).Validate()
-}
-
 func ValidateDealType(fl validator.FieldLevel) bool {
 	return fl.Field().Interface().(model.DealType).Validate()
+}
+
+func ValidateMoexMarket(fl validator.FieldLevel) bool {
+	return fl.Field().Interface().(model.ISSMoexMarket).Validate()
 }
 
 func ValidateOpinion(fl validator.FieldLevel) bool {
@@ -45,4 +45,8 @@ func ValidatePrice(fl validator.FieldLevel) bool {
 
 func ValidateRole(fl validator.FieldLevel) bool {
 	return fl.Field().Interface().(model.Exchange).Validate()
+}
+
+func ValidateSecurityType(fl validator.FieldLevel) bool {
+	return fl.Field().Interface().(model.SecurityType).Validate()
 }

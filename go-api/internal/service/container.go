@@ -8,28 +8,29 @@ import (
 )
 
 type Container struct {
-	Cashout       Cashout
-	Deal          Deal
-	Deposit       Deposit
-	Expert        Expert
-	MoexApi       IssApi
-	MoexBond      MoexBond
-	MoexShare     MoexShare
-	MoexBondDeal  MoexBondDeal
-	MoexShareDeal MoexShareDeal
-	Position      Position
-	User          User
-	Validator     *validator.Validate
+	Cashout   Cashout
+	Deposit   Deposit
+	Deal      Deal
+	Expert    Expert
+	Moex      MoexService
+	Position  Position
+	Portfolio Portfolio
+	User      User
+	Validator *validator.Validate
+}
+
+type MoexService struct {
+	Api       IssApi
+	Bond      MoexBond
+	BondDeal  MoexBondDeal
+	Deal      MoexDeal
+	Share     MoexShare
+	ShareDeal MoexShareDeal
 }
 
 type Cashout interface {
 	CreateCashout(ctx context.Context, cashoutData *model.Cashout, userId int) error
 	DeleteCashout(ctx context.Context, cashoutId int, userId int) error
-}
-
-type Deal interface {
-	CreateDeal(ctx context.Context, dealData *model.Deal, userId int) error
-	DeleteDeal(ctx context.Context, dealId int, userId int) error
 }
 
 type Deposit interface {
@@ -52,7 +53,7 @@ type IssApi interface {
 }
 
 type MoexBond interface {
-	GetByTicker(ctx context.Context, ticker string) (*model.MoexBond, error)
+	GetByISIN(ctx context.Context, isin string) (*model.MoexBond, error)
 	UpdatePositionInDB(ctx context.Context, portfolioId int,
 		securityId int) error
 }
@@ -62,20 +63,29 @@ type MoexShare interface {
 	UpdatePositionInDB(ctx context.Context, portfolioId int,
 		securityId int) error
 }
+type Deal interface {
+	CreateDeal(ctx context.Context, deal *model.Deal, userId int) error
+	DeleteDeal(ctx context.Context, deal *model.Deal, userId int) error
+}
 type MoexDeal interface {
 	CreateDeal(ctx context.Context, deal *model.Deal, userId int) error
-	DeleteDeal(ctx context.Context, dealId int, userId int) error
+	DeleteDeal(ctx context.Context, deal *model.Deal, userId int) error
 }
 type MoexBondDeal interface {
 	CreateDeal(ctx context.Context, deal *model.Deal, userId int) error
 	DeleteDeal(ctx context.Context, dealId int, userId int) error
 }
-
 type MoexShareDeal interface {
 	CreateDeal(ctx context.Context, deal *model.Deal, userId int) error
 	DeleteDeal(ctx context.Context, dealId int, userId int) error
 }
-
+type Portfolio interface {
+	CreatePortfolio(ctx context.Context, p *model.Portfolio) error
+	GetListByUserId(ctx context.Context, userId int) ([]*model.Portfolio, error)
+	GetPortfolioById(ctx context.Context, portfolioId int, userId int) (*model.Portfolio, error)
+	DeletePortfolio (ctx context.Context, portfolioId int, userId int) error
+	UpdatePortfolio (ctx context.Context, portfolio *model.Portfolio, userId int) error
+}
 type Position interface {
 }
 

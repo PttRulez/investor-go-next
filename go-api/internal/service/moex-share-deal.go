@@ -8,15 +8,15 @@ import (
 	"github.com/pttrulez/investor-go/internal/repository"
 )
 
-func (s *MoexShareDealService) CreateDeal(ctx context.Context, dealData *model.Deal, userId int) error {
+func (s *MoexShareDealService) CreateShareDeal(ctx context.Context, dealData *model.Deal, userId int) error {
 	if dealData.SecurityId == 0 {
-		_, _ = s.services.MoexShare.GetByTicker(ctx, dealData.Secid)
+		_, _ = s.services.Moex.Share.GetByTicker(ctx, dealData.Ticker)
 	}
 	err := s.repo.Deal.MoexShare.Insert(ctx, dealData)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.CreateDeal]: %w", err)
 	}
-	err = s.services.MoexShare.UpdatePositionInDB(ctx, dealData.PortfolioId,
+	err = s.services.Moex.Share.UpdatePositionInDB(ctx, dealData.PortfolioId,
 		dealData.SecurityId)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.CreateDeal]: %w", err)
@@ -25,7 +25,7 @@ func (s *MoexShareDealService) CreateDeal(ctx context.Context, dealData *model.D
 	return nil
 }
 
-func (s *MoexShareDealService) DeleteDeal(ctx context.Context, dealId int, userId int) error {
+func (s *MoexShareDealService) DeleteShareDeal(ctx context.Context, dealId int, userId int) error {
 	err := s.repo.Deal.MoexShare.Delete(ctx, dealId)
 	if err != nil {
 		return fmt.Errorf("\n<-[MoexShareDealService.DeleteDeal]: %w", err)

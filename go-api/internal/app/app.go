@@ -10,7 +10,6 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/pttrulez/investor-go/internal/api/controller"
 	"github.com/pttrulez/investor-go/internal/config"
 	"github.com/pttrulez/investor-go/internal/repository"
 )
@@ -37,7 +36,7 @@ func Run() {
 
 	services := NewServiceContainer(repository)
 	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
-	controller.Init(r, repository, services, tokenAuth)
+	InitControllers(r, repository, services, tokenAuth)
 
 	logger := slog.Default()
 	address := fmt.Sprintf("%v:%v", cfg.ApiHost, cfg.ApiPort)

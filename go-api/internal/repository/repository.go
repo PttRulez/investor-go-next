@@ -95,7 +95,6 @@ type OpinionRepository interface {
 type PortfolioRepository interface {
 	Delete(ctx context.Context, id int) error
 	GetById(ctx context.Context, id int) (*model.Portfolio, error)
-	GetByIdAndScan(ctx context.Context, id int, p *model.Portfolio) (*model.Portfolio, error)
 	GetListByUserId(ctx context.Context, userId int) ([]*model.Portfolio, error)
 	Insert(ctx context.Context, u *model.Portfolio) error
 	Update(ctx context.Context, u *model.Portfolio) error

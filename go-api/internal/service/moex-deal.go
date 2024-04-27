@@ -20,31 +20,19 @@ func (s *MoexDealService) CreateDeal(ctx context.Context, deal *model.Deal, user
 	}
 
 	if deal.SecurityType == model.ST_Bond {
-		err = s.services.MoexShareDeal.CreateDeal(ctx, deal, userId)
-		if err != nil {
-			return fmt.Errorf("\n<-[DealService.CreateDeal]: %w", err)
-		}
+		return s.services.Moex.BondDeal.CreateDeal(ctx, deal, userId)
 	} else if deal.SecurityType == model.ST_Share {
-		err = s.services.MoexBondDeal.CreateDeal(ctx, deal, userId)
-		if err != nil {
-			return fmt.Errorf("\n<-[DealService.CreateDeal]: %w", err)
-		}
+		return s.services.Moex.ShareDeal.CreateDeal(ctx, deal, userId)
 	}
 
-	return nil
+	return fmt.Errorf("\n<-[DealService.CreateDeal]: Логика описана только для BOND и SHARE")
 }
 
 func (s *MoexDealService) DeleteDeal(ctx context.Context, deal *model.Deal, userId int) error {
 	if deal.SecurityType == model.ST_Bond {
-		err := s.repo.Deal.MoexShare.Delete(ctx, deal.Id)
-		if err != nil {
-			return fmt.Errorf("\n<-[DealService.CreateDeal]: %w", err)
-		}
+		return s.repo.Deal.MoexShare.Delete(ctx, deal.Id)
 	} else if deal.SecurityType == model.ST_Share {
-		err := s.services.MoexBondDeal.DeleteDeal(ctx, deal.Id)
-		if err != nil {
-			return fmt.Errorf("\n<-[DealService.CreateDeal]: %w", err)
-		}
+		return s.services.Moex.BondDeal.DeleteDeal(ctx, deal.Id, userId)
 	}
 
 	return nil

@@ -18,7 +18,7 @@ func (s *MoexBondService) GetByISIN(ctx context.Context, isin string) (*model.Mo
 	if errors.Is(err, sql.ErrNoRows) {
 		// если бумаги нет в БД то делаем запрос
 		// на информацию по бумаге из апишки московской биржи
-		ISSecurityInfo, err := s.services.MoexApi.GetSecurityInfoBySecid(isin)
+		ISSecurityInfo, err := s.services.Moex.Api.GetSecurityInfoBySecid(isin)
 		bond := &model.MoexBond{
 			Name:      ISSecurityInfo.Name,
 			ShortName: ISSecurityInfo.ShortName,
@@ -126,13 +126,12 @@ func (s *MoexBondService) UpdatePositionInDB(ctx context.Context, portfolioId in
 }
 
 type MoexBondService struct {
-	services Container
 	repo     *repository.Repository
+	services *Container
 }
 
-func NewMoexBondService(repo *repository.Repository, services Container) *MoexBondService {
+func NewMoexBondService(repo *repository.Repository, services *Container) *MoexBondService {
 	return &MoexBondService{
-		services: services,
-		repo:     repo,
+		repo: repo,
 	}
 }

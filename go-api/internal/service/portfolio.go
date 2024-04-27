@@ -3,30 +3,33 @@ package service
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	"github.com/pttrulez/investor-go/internal/lib/response"
-	"github.com/pttrulez/investor-go/internal/types"
-	tmoex "github.com/pttrulez/investor-go/internal/types/moex"
+	"github.com/pttrulez/investor-go/internal/model"
+	"github.com/pttrulez/investor-go/internal/repository"
+	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"
 )
 
 func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
-	userId int) (*types.FullPortfolioData, error) {
-	var fp types.FullPortfolioData
+	userId int) (*model.Portfolio, error) {
 
-	done := make(chan struct{})
-	errCh := make(chan error)
+	var (
+		done  = make(chan struct{})
+		errCh = make(chan error)
+		p     model.Portfolio
+	)
 
 	// Проверяем владельца портфеля
 	go func() {
-		err := s.repo.Portfolio.GetByIdAndScan(ctx, portfolioId, &fp)
+		portfolioFronmDb, err := s.GetPortfolioById(ctx, portfolioId, userId)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
-		if userId != fp.UserId {
-			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", response.ErrNotYours)
-			return
-		}
+
+		p.Id = portfolioFronmDb.Id
+		p.Compound = portfolioFronmDb.Compound
+		p.Name = portfolioFronmDb.Name
 
 		done <- struct{}{}
 	}()
@@ -38,7 +41,7 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
-		fp.ShareDeals = shareDeals
+		p.ShareDeals = shareDeals
 
 		done <- struct{}{}
 	}()
@@ -50,7 +53,7 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
-		fp.BondDeals = bondDeals
+		p.BondDeals = bondDeals
 
 		done <- struct{}{}
 	}()
@@ -65,7 +68,7 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		}
 
 		if len(bondPositions) == 0 {
-			fp.BondPositions = []*types.BondPosition{}
+			p.BondPositions = []*model.Position{}
 			done <- struct{}{}
 			return
 		}
@@ -73,19 +76,19 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		// запрашиваем цены с московской биржи
 		bondIsins := make([]string, len(bondPositions))
 		for i, b := range bondPositions {
-			bondIsins[i] = b.Isin
+			bondIsins[i] = b.Secid
 		}
 
-		bondPrices, err := s.services.IssApi.GetStocksCurrentPrices(ctx, tmoex.Market_Bonds, bondIsins)
+		bondPrices, err := s.services.Moex.Api.GetStocksCurrentPrices(ctx, model.Market_Bonds, bondIsins)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
-		bondPositionsMap := make(map[string]*types.BondPosition, len(bondPositions))
+		bondPositionsMap := make(map[string]*model.Position, len(bondPositions))
 		for _, b := range bondPositions {
-			bondPositionsMap[b.Isin] = b
+			bondPositionsMap[b.Secid] = b
 		}
 		for _, b := range bondPrices.Securities.Data {
 			isin := b[0].(string)
@@ -96,11 +99,11 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 			bondPositionsMap[isin].CurrentCost = int(price * amount)
 		}
 		for i, s := range bondPositions {
-			bondPositions[i] = bondPositionsMap[s.Isin]
+			bondPositions[i] = bondPositionsMap[s.Secid]
 		}
 
 		// записываем в FullPortfolio
-		fp.BondPositions = bondPositions
+		p.BondPositions = bondPositions
 
 		done <- struct{}{}
 	}()
@@ -115,7 +118,7 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		}
 
 		if len(sharePositions) == 0 {
-			fp.SharePositions = []*types.SharePosition{}
+			p.SharePositions = []*model.Position{}
 			done <- struct{}{}
 			return
 		}
@@ -123,19 +126,19 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		// запрашиваем цены с московской биржи
 		shareTickers := make([]string, len(sharePositions))
 		for i, s := range sharePositions {
-			shareTickers[i] = s.Ticker
+			shareTickers[i] = s.Secid
 		}
 
-		sharePrices, err := s.services.IssApi.GetStocksCurrentPrices(ctx, tmoex.Market_Shares, shareTickers)
+		sharePrices, err := s.services.Moex.Api.GetStocksCurrentPrices(ctx, model.Market_Shares, shareTickers)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
-		sharePositionsMap := make(map[string]*types.SharePosition, len(sharePositions))
+		sharePositionsMap := make(map[string]*model.Position, len(sharePositions))
 		for _, s := range sharePositions {
-			sharePositionsMap[s.Ticker] = s
+			sharePositionsMap[s.Secid] = s
 		}
 		for _, s := range sharePrices.Securities.Data {
 			ticker := s[0].(string)
@@ -146,11 +149,11 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 			sharePositionsMap[ticker].CurrentCost = int(price * amount)
 		}
 		for i, s := range sharePositions {
-			sharePositions[i] = sharePositionsMap[s.Ticker]
+			sharePositions[i] = sharePositionsMap[s.Secid]
 		}
 
-		// записываем в fp
-		fp.SharePositions = sharePositions
+		// записываем в p
+		p.SharePositions = sharePositions
 
 		done <- struct{}{}
 	}()
@@ -164,9 +167,9 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		}
 
 		if cashouts == nil {
-			cashouts = make([]*types.Cashout, 0)
+			cashouts = make([]*model.Cashout, 0)
 		}
-		fp.Cashouts = cashouts
+		p.Cashouts = cashouts
 
 		done <- struct{}{}
 	}()
@@ -179,9 +182,9 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 			return
 		}
 		if deposits == nil {
-			deposits = make([]*types.Deposit, 0)
+			deposits = make([]*model.Deposit, 0)
 		}
-		fp.Deposits = deposits
+		p.Deposits = deposits
 
 		done <- struct{}{}
 	}()
@@ -197,51 +200,89 @@ func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
 		}
 	}
 
-	for _, c := range fp.Cashouts {
-		fp.CashoutsSum += c.Amount
+	for _, c := range p.Cashouts {
+		p.CashoutsSum += c.Amount
 	}
-	for _, d := range fp.Deposits {
-		fp.DepositsSum += d.Amount
+	for _, d := range p.Deposits {
+		p.DepositsSum += d.Amount
 	}
 
 	spentToBuys := 0
 	receivedFromSells := 0
 
-	for _, d := range fp.ShareDeals {
-		if d.Type == types.Buy {
+	for _, d := range p.ShareDeals {
+		if d.Type == model.DT_Buy {
 			spentToBuys += d.Amount * int(d.Price)
 		} else {
 			receivedFromSells += d.Amount * int(d.Price)
 		}
 	}
-	for _, d := range fp.BondDeals {
-		if d.Type == types.Buy {
+	for _, d := range p.BondDeals {
+		if d.Type == model.DT_Buy {
 			spentToBuys += d.Amount * int(d.Price)
 		} else {
 			receivedFromSells += d.Amount * int(d.Price)
 		}
 	}
 
-	for _, p := range fp.BondPositions {
-		fp.TotalCost += p.CurrentCost
+	for _, pos := range p.BondPositions {
+		p.TotalCost += pos.CurrentCost
 	}
-	for _, p := range fp.SharePositions {
-		fp.TotalCost += p.CurrentCost
+	for _, pos := range p.SharePositions {
+		p.TotalCost += pos.CurrentCost
 	}
 
-	fp.Cash = fp.DepositsSum - fp.CashoutsSum - spentToBuys + receivedFromSells
-	fp.TotalCost += fp.Cash
-	fp.Profitability = int((float64((fp.TotalCost+fp.CashoutsSum+fp.Cash))/float64(fp.DepositsSum) - 1) * 100)
+	p.Cash = p.DepositsSum - p.CashoutsSum - spentToBuys + receivedFromSells
+	p.TotalCost += p.Cash
+	p.Profitability = int((float64((p.TotalCost+p.CashoutsSum+p.Cash))/float64(p.DepositsSum) - 1) * 100)
 
-	return &fp, nil
+	return &p, nil
+}
+
+func (s *PortfolioService) CreatePortfolio(ctx context.Context, p *model.Portfolio) error {
+	return s.repo.Portfolio.Insert(ctx, p)
+}
+
+func (s *PortfolioService) GetListByUserId(ctx context.Context, userId int) ([]*model.Portfolio, error) {
+	portfolios, err := s.repo.Portfolio.GetListByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	return portfolios, nil
+}
+
+func (s *PortfolioService) GetPortfolioById(ctx context.Context, portfolioId int,
+	userId int) (*model.Portfolio, error) {
+	portfolio, err := s.repo.Portfolio.GetById(ctx, portfolioId)
+	if err != nil {
+		return nil, err
+	}
+	if portfolio.UserId != userId {
+		return nil, httpresponse.NewErrSendToClient("Такого портфолио не существует", http.StatusNotFound)
+	}
+	return portfolio, nil
+}
+
+// func (s *PortfolioService) DeletePortfolio(ctx context.Context, portfolioId int, userId int) error {
+// 	if _, err := s.GetPortfolioById(ctx, portfolioId, userId); err != nil {
+// 		return err
+// 	}
+// 	return s.repo.Portfolio.Delete(ctx, portfolioId)
+// }
+
+func (s *PortfolioService) UpdatePortfolio(ctx context.Context, portfolio *model.Portfolio, userId int) error {
+	if _, err := s.GetPortfolioById(ctx, portfolio.Id, userId); err != nil {
+		return err
+	}
+	return s.repo.Portfolio.Update(ctx, portfolio)
 }
 
 type PortfolioService struct {
-	repo     *types.Repository
-	services *ServiceContainer
+	repo     *repository.Repository
+	services *Container
 }
 
-func NewPortfolioService(repo *types.Repository, services *ServiceContainer) *PortfolioService {
+func NewPortfolioService(repo *repository.Repository, services *Container) *PortfolioService {
 	return &PortfolioService{
 		repo:     repo,
 		services: services,

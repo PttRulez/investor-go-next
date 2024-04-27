@@ -4,69 +4,74 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/dtos"
-	"github.com/pttrulez/investor-go/internal/lib/response"
-	"github.com/pttrulez/investor-go/internal/services"
-	"github.com/pttrulez/investor-go/internal/types"
-	tmoex "github.com/pttrulez/investor-go/internal/types/moex"
+	"github.com/pttrulez/investor-go/internal/api/model/converter"
+	"github.com/pttrulez/investor-go/internal/api/model/dto"
+	"github.com/pttrulez/investor-go/internal/repository"
+	"github.com/pttrulez/investor-go/internal/service"
+	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"
 )
 
-func (c *MoexDealController) CreateNewDeal(w http.ResponseWriter, r *http.Request) {
+func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	// Анмаршалим данные
-	var dto dtos.CreateMoexDeal
+	var dto dto.CreateDeal
 	var err error
 	if err = json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		response.WriteJSON(w, http.StatusBadRequest, err.Error())
+		httpresponse.WriteJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	// Валидация пришедших данных
 	if err = c.services.Validator.Struct(dto); err != nil {
 		validateErr := err.(validator.ValidationErrors)
-		response.WriteValidationErrorsJSON(w, validateErr)
+		httpresponse.WriteValidationErrorsJSON(w, validateErr)
 		return
 	}
 
-	c.services.Mo
-
-	// Создаем сделку
-	if dto.Market == tmoex.Market_Bonds {
-		shareDeal := dto.ToMoexShareDeal()
-		err = c.services.Deal.MoexShare.CreateDeal(ctx, &deal, getUserIdFromJwt(r))
-	} else {
-		err = c.services.Deal.MoexShare.CreateDeal(ctx, &deal, getUserIdFromJwt(r))
-	}
+	err = c.services.Deal.CreateDeal(ctx,
+		converter.FromCreateDealDtoToDeal(&dto), getUserIdFromJwt(r))
 	if err != nil {
-		fmt.Println(err)
-		response.SendError(w, err)
+		httpresponse.SendError(w, err)
 	}
 
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (c *MoexDealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
+func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	id, _ := strconv.Atoi(chi.URLParam(r, "id"))
-	err := c.services.Deal.MoexShare.DeleteDeal(ctx, id, getUserIdFromJwt(r))
+
+	var dto dto.DeleteDeal
+	var err error
+	if err = json.NewDecoder(r.Body).Decode(&dto); err != nil {
+		httpresponse.WriteJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	// Валидация пришедших данных
+	if err = c.services.Validator.Struct(dto); err != nil {
+		validateErr := err.(validator.ValidationErrors)
+		httpresponse.WriteValidationErrorsJSON(w, validateErr)
+		return
+	}
+
+	userId := getUserIdFromJwt(r)
+	err = c.services.Deal.DeleteDeal(ctx, converter.FromDeleteDealDtoToDeal(&dto), userId)
 	if err != nil {
 		fmt.Printf("[MoexShareDealController.DeleteDeal] error: %v\n", err)
-		response.SendError(w, err)
+		httpresponse.SendError(w, err)
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
-type MoexDealController struct {
-	repo     *types.Repository
-	services *services.ServiceContainer
+type DealController struct {
+	repo     *repository.Repository
+	services *service.Container
 }
 
-func NewMoexDealController(repo *types.Repository,
-	services *services.ServiceContainer) *MoexDealController {
-	return &MoexDealController{
+func NewDealController(repo *repository.Repository, services *service.Container) *DealController {
+	return &DealController{
 		repo:     repo,
 		services: services,
 	}

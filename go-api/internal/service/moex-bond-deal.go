@@ -1,43 +1,46 @@
 package service
 
-// import (
-// 	"context"
+import (
+	"context"
+	"fmt"
 
-// 	"github.com/pttrulez/investor-go/internal/lib/response"
-// 	"github.com/pttrulez/investor-go/internal/types"
-// )
+	"github.com/pttrulez/investor-go/internal/model"
+	"github.com/pttrulez/investor-go/internal/repository"
+)
 
-// func (s *MoexBondDealService) CreateDeal(ctx context.Context, dealData *types.Deal, userId int) error {
-// 	// Проверяем не чужой ли этой портфолио
-// 	portfolio, err := s.repo.Portfolio.GetById(ctx, dealData.PortfolioId)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if portfolio.UserId != userId {
-// 		return response.ErrNotYours
-// 	}
+func (s *MoexBondDealService) CreateBondDeal(ctx context.Context, dealData *model.Deal, userId int) error {
+	if dealData.SecurityId == 0 {
+		_, _ = s.services.Moex.Bond.GetByISIN(ctx, dealData.Ticker)
+	}
+	err := s.repo.Deal.MoexBond.Insert(ctx, dealData)
+	if err != nil {
+		return fmt.Errorf("\n<-[MoexBondDealService.CreateDeal]: %w", err)
+	}
+	err = s.services.Moex.Bond.UpdatePositionInDB(ctx, dealData.PortfolioId,
+		dealData.SecurityId)
+	if err != nil {
+		return fmt.Errorf("\n<-[MoexBondDealService.CreateDeal]: %w", err)
+	}
 
-// 	err = s.repo.Deal.MoexBond.Insert(ctx, dealData)
-// 	if err != nil {
-// 		return err
-// 	}
+	return nil
+}
 
-// 	err = s.services.MoexBond.UpdatePositionInDB(ctx, dealData.PortfolioId, dealData.SecurityId)
-// 	if err != nil {
-// 		return err
-// 	}
+func (s *MoexBondDealService) DeleteBondDeal(ctx context.Context, dealId int, userId int) error {
+	err := s.repo.Deal.MoexBond.Delete(ctx, dealId)
+	if err != nil {
+		return fmt.Errorf("\n<-[MoexBondDealService.DeleteDeal]: %w", err)
+	}
+	return nil
+}
 
-// 	return nil
-// }
+type MoexBondDealService struct {
+	repo     *repository.Repository
+	services *Container
+}
 
-// type MoexBondDealService struct {
-// 	repo     *types.Repository
-// 	services *ServiceContainer
-// }
-
-// func NewMoexBondDealService(repo *types.Repository, services *ServiceContainer) *MoexBondDealService {
-// 	return &MoexBondDealService{
-// 		repo:     repo,
-// 		services: services,
-// 	}
-// }
+func NewMoexBondDealService(repo *repository.Repository, services *Container) *MoexBondDealService {
+	return &MoexBondDealService{
+		repo:     repo,
+		services: services,
+	}
+}

@@ -9,7 +9,7 @@ type Deal struct {
 	Id           int
 	PortfolioId  int
 	Price        float64
-	Secid        string
+	Ticker       string
 	SecurityId   int
 	SecurityType SecurityType
 	Type         DealType

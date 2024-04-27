@@ -6,7 +6,7 @@ type CreatePortfolio struct {
 }
 
 type UpdatePortfolio struct {
-	Compound *bool   `json:"compound,omitempty"`
-	Id       int     `json:"id"`
-	Name     *string `json:"name,omitempty"`
+	Compound bool   `json:"compound,omitempty"`
+	Id       int    `json:"id"`
+	Name     string `json:"name,omitempty"`
 }

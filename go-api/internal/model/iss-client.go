@@ -45,8 +45,35 @@ const (
 	Market_Standard      ISSMoexMarket = "standard"      // Standard
 	Market_Selt          ISSMoexMarket = "selt"          // Валюта: Биржевые сделки с ЦК
 	Market_Shares        ISSMoexMarket = "shares"        // Рынок акций
-
 )
+
+func (e ISSMoexMarket) Validate() bool {
+	switch e {
+	case Market_Bonds:
+	case Market_Classica:
+	case Market_Credit:
+	case Market_Deposit:
+	case Market_ForeignShares:
+	case Market_ForeignNdm:
+	case Market_Gcc:
+	case Market_Index:
+	case Market_Moexboard:
+	case Market_Ndm:
+	case Market_NonresCcp:
+	case Market_NonresNdm:
+	case Market_NonresRepo:
+	case Market_Otc:
+	case Market_Qnv:
+	case Market_Mamc:
+	case Market_Repo:
+	case Market_Standard:
+	case Market_Selt:
+	case Market_Shares:
+	default:
+		return false
+	}
+	return true
+}
 
 type ISSMoexBoard string
 

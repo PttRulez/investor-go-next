@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
+	"github.com/pttrulez/investor-go/internal/api/model/converter"
 	"github.com/pttrulez/investor-go/internal/api/model/dto"
-	"github.com/pttrulez/investor-go/internal/converter"
 	"github.com/pttrulez/investor-go/internal/repository"
 	"github.com/pttrulez/investor-go/internal/service"
 	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"

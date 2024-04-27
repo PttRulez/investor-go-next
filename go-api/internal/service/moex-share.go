@@ -20,7 +20,7 @@ func (s *MoexShareService) GetByTicker(ctx context.Context, ticker string) (*mod
 		// если бумаги нет в БД то делаем запрос
 		// на информацию по бумаге из апишки московской биржи
 
-		ISSecurityInfo, err := s.services.MoexApi.GetSecurityInfoBySecid(ticker)
+		ISSecurityInfo, err := s.services.Moex.Api.GetSecurityInfoBySecid(ticker)
 		share := &model.MoexShare{
 			Name:      ISSecurityInfo.Name,
 			ShortName: ISSecurityInfo.ShortName,
@@ -32,7 +32,7 @@ func (s *MoexShareService) GetByTicker(ctx context.Context, ticker string) (*mod
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if share.Market != model.Market_Shares {
 			e := httpresponse.NewErrSendToClient("Вы ввели некорректный Ticker акции", http.StatusBadRequest)
 			return nil, e
