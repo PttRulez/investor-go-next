@@ -147,6 +147,7 @@ const PortfolioTable = ({
         id: '' as unknown as number,
         currentPrice: '' as unknown as number,
         currentCost: portfolio?.bondPositions.reduce((acc, p) => {
+          console.log('acc', acc, p);
           return acc + p.currentCost;
         }, 0),
         targetPrice: '' as unknown as number,

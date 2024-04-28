@@ -34,8 +34,8 @@ func Run() {
 		panic("Failed to initialize postgres repository: " + err.Error())
 	}
 
-	services := NewServiceContainer(repository)
 	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+	services := NewServiceContainer(repository, tokenAuth)
 	InitControllers(r, repository, services, tokenAuth)
 
 	logger := slog.Default()

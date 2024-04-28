@@ -1,15 +1,19 @@
 package response
 
-import "github.com/pttrulez/investor-go/internal/model"
+type ShortPortfolio struct {
+	Id       int    `json:"id"`
+	Compound bool   `json:"compound"`
+	Name     string `json:"name"`
+}
 
-type FullPortfolioData struct {
+type FullPortfolio struct {
 	BondDeals      []*MoexBondDeal  `json:"bondDeals"`
 	BondPositions  []*BondPosition  `json:"bondPositions"`
 	Cash           int              `json:"cash"`
 	Cashouts       []*Cashout       `json:"cashouts"`
 	CashoutsSum    int              `json:"cashoutsSum"`
 	Compound       bool             `json:"compound"`
-	Deals          []*model.Deal    `json:"deals"`
+	Deals          []interface{}    `json:"deals"`
 	Deposits       []*Deposit       `json:"deposits"`
 	DepositsSum    int              `json:"depositsSum"`
 	Name           string           `json:"name"`

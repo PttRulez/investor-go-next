@@ -1,21 +1,21 @@
 package model
 
 type Portfolio struct {
-	BondDeals      []*Deal
-	BondPositions  []*Position
-	Cash           int
-	Cashouts       []*Cashout
-	CashoutsSum    int
-	Compound       bool
-	Deals          []*Deal
-	Deposits       []*Deposit
-	DepositsSum    int
-	Id             int
-	Name           string
-	Positions      []*Position
-	Profitability  int
-	ShareDeals     []*Deal
-	SharePositions []*Position
-	TotalCost      int
-	UserId         int
+	BondDeals      []*Deal     `json:"bondDeals"`
+	BondPositions  []*Position `json:"bondPositions"`
+	Cash           int         `json:"cash"`
+	Cashouts       []*Cashout  `json:"cashouts"`
+	CashoutsSum    int         `json:"cashoutsSum"`
+	Compound       bool        `json:"compound"`
+	Deals          []*Deal     `json:"deals"`
+	Deposits       []*Deposit  `json:"deposits"`
+	DepositsSum    int         `json:"depositsSum"`
+	Id             int         `json:"id"`
+	Name           string      `json:"name"`
+	Positions      []*Position `json:"positions"`
+	Profitability  int         `json:"profitability"`
+	ShareDeals     []*Deal     `json:"sahreDeals"`
+	SharePositions []*Position `json:"sharePositions"`
+	TotalCost      int         `json:"totalCost"`
+	UserId         int         `json:"userId"`
 }

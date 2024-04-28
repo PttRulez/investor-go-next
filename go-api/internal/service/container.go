@@ -85,6 +85,7 @@ type Opinion interface {
 }
 type Portfolio interface {
 	CreatePortfolio(ctx context.Context, p *model.Portfolio) error
+	GetFullPortfolioById(ctx context.Context, portfolioId int, userId int) (*model.Portfolio, error)
 	GetListByUserId(ctx context.Context, userId int) ([]*model.Portfolio, error)
 	GetPortfolioById(ctx context.Context, portfolioId int, userId int) (*model.Portfolio, error)
 	DeletePortfolio(ctx context.Context, portfolioId int, userId int) error

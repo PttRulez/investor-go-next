@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/api/model/converter"
 	"github.com/pttrulez/investor-go/internal/api/model/dto"
+	"github.com/pttrulez/investor-go/internal/api/model/response"
 	"github.com/pttrulez/investor-go/internal/repository"
 	"github.com/pttrulez/investor-go/internal/service"
 	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"
@@ -41,17 +42,21 @@ func (c *PortfolioController) CreateNewPortfolio(w http.ResponseWriter, r *http.
 	}
 	w.WriteHeader(http.StatusCreated)
 }
-
-func (c *PortfolioController) GetListOfPortfolios(w http.ResponseWriter, r *http.Request) {
+func (c *PortfolioController) GetListOfPortfoliosOfCurrentUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	portfolios, err := c.services.Portfolio.GetListByUserId(ctx, getUserIdFromJwt(r))
+
+	var res []*response.ShortPortfolio
+	for _, portfolio := range portfolios {
+		res = append(res, converter.FromPortfolioToShortPortfolio(portfolio))
+	}
 	if err != nil {
 		httpresponse.SendError(w, err)
 		return
 	}
-	httpresponse.WriteOKJSON(w, portfolios)
-}
 
+	httpresponse.WriteOKJSON(w, res)
+}
 func (c *PortfolioController) GetPortfolioById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	portfolioId, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -59,13 +64,13 @@ func (c *PortfolioController) GetPortfolioById(w http.ResponseWriter, r *http.Re
 		httpresponse.WriteString(w, http.StatusBadRequest, "Неверный айди портфолио")
 	}
 
-	portfolio, err := c.services.Portfolio.GetPortfolioById(ctx, portfolioId, getUserIdFromJwt(r))
+	portfolio, err := c.services.Portfolio.GetFullPortfolioById(ctx, portfolioId, getUserIdFromJwt(r))
 	if err != nil {
 		httpresponse.SendError(w, err)
 	}
+
 	httpresponse.WriteOKJSON(w, portfolio)
 }
-
 func (c *PortfolioController) DeletePortfolio(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
@@ -79,9 +84,9 @@ func (c *PortfolioController) DeletePortfolio(w http.ResponseWriter, r *http.Req
 	}
 	w.WriteHeader(http.StatusOK)
 }
-
 func (c *PortfolioController) UpdatePortfolio(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
+
 	var dto dto.UpdatePortfolio
 	err := json.NewDecoder(r.Body).Decode(&dto)
 	if err != nil {
@@ -96,6 +101,7 @@ func (c *PortfolioController) UpdatePortfolio(w http.ResponseWriter, r *http.Req
 		httpresponse.SendError(w, err)
 		return
 	}
+
 	w.WriteHeader(http.StatusOK)
 }
 

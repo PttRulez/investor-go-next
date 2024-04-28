@@ -59,7 +59,7 @@ func InitControllers(r *chi.Mux, repo *repository.Repository, serviceContainer *
 		// Portfolios
 		r.Route("/portfolio", func(r chi.Router) {
 			r.Delete("/{id}", c.Portfolio.DeletePortfolio)
-			r.Get("/", c.Portfolio.GetListOfPortfolios)
+			r.Get("/", c.Portfolio.GetListOfPortfoliosOfCurrentUser)
 			r.Get("/{id}", c.Portfolio.GetPortfolioById)
 			r.Post("/", c.Portfolio.CreateNewPortfolio)
 			r.Put("/", c.Portfolio.UpdatePortfolio)
@@ -90,5 +90,3 @@ func NewControllers(repo *repository.Repository, services *service.Container, to
 		Portfolio: controller.NewPortfolioController(repo, services),
 	}
 }
-
-

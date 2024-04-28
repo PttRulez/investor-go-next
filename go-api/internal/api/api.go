@@ -32,6 +32,6 @@ type PortfolioController interface {
 	CreateNewPortfolio(w http.ResponseWriter, r *http.Request)
 	GetPortfolioById(w http.ResponseWriter, r *http.Request)
 	DeletePortfolio(w http.ResponseWriter, r *http.Request)
-	GetListOfPortfolios(w http.ResponseWriter, r *http.Request)
+	GetListOfPortfoliosOfCurrentUser(w http.ResponseWriter, r *http.Request)
 	UpdatePortfolio(w http.ResponseWriter, r *http.Request)
 }

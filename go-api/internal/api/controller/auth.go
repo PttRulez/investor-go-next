@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -23,13 +24,14 @@ func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 		httpresponse.WriteJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	fmt.Printf("loginData: %v\n", loginData)
 
 	tokenString, err := c.services.User.LoginUser(ctx, converter.FromLoginDtoToUser(&loginData))
 	if err != nil {
 		httpresponse.SendError(w, err)
 		return
 	}
-
+	fmt.Println("IM HERE")
 	httpresponse.WriteOKJSON(w, map[string]string{"token": tokenString})
 }
 

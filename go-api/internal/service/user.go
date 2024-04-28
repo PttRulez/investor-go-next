@@ -13,20 +13,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserService struct {
-	tokenAuth *jwtauth.JWTAuth
-	repo      *repository.Repository
-}
-
-func (s *UserService) LoginUser(ctx context.Context, user *model.User) (string, error) {
-	user, err := s.repo.User.GetByEmail(ctx, user.Email)
+func (s *UserService) LoginUser(ctx context.Context, model *model.User) (string, error) {
+	user, err := s.repo.User.GetByEmail(ctx, model.Email)
 	if err != nil {
 		return "", err
 	} else if user == nil {
-		return "", httpresponse.NewErrSendToClient("Пользователя с таким email не существует", http.StatusBadRequest)
+		return "", httpresponse.NewErrSendToClient("Неверные данные", http.StatusUnauthorized)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(user.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(model.Password))
 	if err != nil {
 		return "", httpresponse.NewErrSendToClient("Неверные данные", http.StatusUnauthorized)
 	}
@@ -38,7 +33,11 @@ func (s *UserService) LoginUser(ctx context.Context, user *model.User) (string, 
 		"role":  user.Role,
 	}
 	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*6))
-	_, tokenString, _ := s.tokenAuth.Encode(claims)
+
+	_, tokenString, err := s.tokenAuth.Encode(claims)
+	if err != nil {
+		return "", nil
+	}
 
 	return tokenString, nil
 }
@@ -66,8 +65,14 @@ func (s *UserService) RegisterUser(ctx context.Context, user *model.User) error 
 	return nil
 }
 
-func NewUserService(repo *repository.Repository) *UserService {
+type UserService struct {
+	tokenAuth *jwtauth.JWTAuth
+	repo      *repository.Repository
+}
+
+func NewUserService(repo *repository.Repository, tokenAuth *jwtauth.JWTAuth) *UserService {
 	return &UserService{
-		repo: repo,
+		tokenAuth: tokenAuth,
+		repo:      repo,
 	}
 }

@@ -10,7 +10,7 @@ import (
 	httpresponse "github.com/pttrulez/investor-go/pkg/http-response"
 )
 
-func (s *PortfolioService) GetPortfolio(ctx context.Context, portfolioId int,
+func (s *PortfolioService) GetFullPortfolioById(ctx context.Context, portfolioId int,
 	userId int) (*model.Portfolio, error) {
 
 	var (
