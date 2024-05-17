@@ -11,7 +11,7 @@ RUN go get -d -v ./...
 
 # Build the go app
 RUN mv ./.env.docker ./.env
-RUN go build -o api ./cmd/app
+RUN go build -o controller ./cmd/app
 EXPOSE 3001
 
 CMD ["./api"]

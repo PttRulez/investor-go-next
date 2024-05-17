@@ -26,7 +26,7 @@ const menu = (loggedIn: boolean): IMenuItem[] => {
       {
         title: 'Выйти',
         iconName: 'Logout',
-        link: '/api/auth/signout',
+        link: '/controller/auth/signout',
         active: false,
       },
     ];

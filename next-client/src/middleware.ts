@@ -30,4 +30,4 @@ export default withAuth(
 );
 
 // https://nextjs.org/docs/pages/building-your-application/routing/middleware#matcher
-export const config = { matcher: ['/((?!register|api|login|$).*)'] };
+export const config = { matcher: ['/((?!register|controller|login|$).*)'] };

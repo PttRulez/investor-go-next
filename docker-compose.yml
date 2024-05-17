@@ -30,7 +30,7 @@ services:
       retries: 10
 
   backend:
-    container_name: investor-go-api
+    container_name: investor-go-controller
     build:
       context: ./go-api
       dockerfile: Dockerfile
