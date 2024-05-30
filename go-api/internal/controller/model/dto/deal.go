@@ -13,8 +13,8 @@ type CreateDeal struct {
 	Exchange     types.Exchange     `json:"exchange" validate:"required,exchange"`
 	PortfolioId  int                `json:"portfolioId" validate:"required"`
 	Price        float64            `json:"price" validate:"required,price"`
-	Ticker       string             `json:"ticker" validate:"required"`
 	SecurityType types.SecurityType `json:"securityType" validate:"required,securityType"`
+	Ticker       string             `json:"ticker" validate:"required"`
 	Type         entity.Type        `json:"type" validate:"required,dealType"`
 }
 

@@ -1,34 +1,34 @@
 package http_controllers
 
 import (
+	"context"
 	"fmt"
-	"github.com/pttrulez/investor-go/internal/utils/http_response"
+	"github.com/pttrulez/investor-go/internal/entity"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/pttrulez/investor-go/internal/repository"
-	"github.com/pttrulez/investor-go/internal/service"
 )
 
 func (c *MoexShareController) GetInfoByTicker(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	moexShare, err := c.services.Moex.Share.GetByTicker(ctx, chi.URLParam(r, "ticker"))
+	moexShare, err := c.moexSharService.GetByTicker(ctx, chi.URLParam(r, "ticker"))
 	if err != nil {
-		httpresponse.SendError(w, err)
+		writeError(w, err)
 		fmt.Println(err)
 		return
 	}
-	httpresponse.WriteOKJSON(w, moexShare)
+	writeOKJSON(w, moexShare)
 }
 
+type MoexShareService interface {
+	GetByTicker(ctx context.Context, ticker string) (*entity.Share, error)
+}
 type MoexShareController struct {
-	repo     *repository.Repository
-	services *service.Container
+	moexSharService MoexShareService
 }
 
-func NewMoexShareController(repo *repository.Repository, services *service.Container) *MoexShareController {
+func NewMoexShareController(moexService MoexShareService) *MoexShareController {
 	return &MoexShareController{
-		repo:     repo,
-		services: services,
+		moexSharService: moexService,
 	}
 }

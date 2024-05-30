@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/repository/postgres/pgexpert"
 )
 
 func (pg *ExpertPostgres) Delete(ctx context.Context, id int) error {
@@ -34,16 +33,19 @@ func (pg *ExpertPostgres) Update(ctx context.Context, e *entity.Expert) error {
 }
 func (pg *ExpertPostgres) GetOneById(ctx context.Context, id int) (*entity.Expert, error) {
 	queryString := "SELECT * FROM experts WHERE id = $1;"
+
 	row := pg.db.QueryRowContext(ctx, queryString, id)
 	if row.Err() != nil {
 		return nil, fmt.Errorf("[ExpertPostgres.GetOneById] %w", row.Err())
 	}
-	var e pgexpert.Expert
+
+	var e entity.Expert
 	err := row.Scan(&e.Id, &e.AvatarUrl, &e.Name, &e.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("[ExpertPostgres.GetOneById] %w", err)
 	}
-	return pgexpert.FromDBToModelExpert(&e), nil
+
+	return &e, nil
 }
 func (pg *ExpertPostgres) GetListByUserId(ctx context.Context, userId int) ([]*entity.Expert, error) {
 	queryString := "SELECT * FROM experts WHERE user_id = $1;"
@@ -55,12 +57,12 @@ func (pg *ExpertPostgres) GetListByUserId(ctx context.Context, userId int) ([]*e
 	var experts []*entity.Expert
 
 	for rows.Next() {
-		var e pgexpert.Expert
+		var e entity.Expert
 		err := rows.Scan(&e.Id, &e.AvatarUrl, &e.Name, &e.UserId)
 		if err != nil {
 			return nil, fmt.Errorf("[ExpertPostgres.GetListByUserId] %w", err)
 		}
-		experts = append(experts, pgexpert.FromDBToModelExpert(&e))
+		experts = append(experts, &e)
 	}
 
 	return experts, nil

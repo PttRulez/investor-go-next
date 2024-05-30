@@ -19,11 +19,11 @@ type ISSecurityInfo struct {
 	ShortName string
 }
 
-func (api *IssApiService) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, error) {
+func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, error) {
 	uri := fmt.Sprintf("%s/securities/%s.json", api.baseUrl, secid)
 	req, err := http.NewRequest(http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetSecurityByTicker http_controllers.NewRequest]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker http_controllers.NewRequest]: %w", err)
 	}
 
 	// фильтруем только то что нам нужно
@@ -35,19 +35,19 @@ func (api *IssApiService) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo,
 
 	resp, err := api.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetSecurityByTicker controller.client.Do(req)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker controller.client.Do(req)]: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetSecurityByTicker ReadAll(body)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker ReadAll(body)]: %w", err)
 	}
 
 	data := &MoexApiResponseSecurityInfo{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetSecurityByTicker json.Unmarshal(body)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker json.Unmarshal(body)]: %w", err)
 	}
 
 	var (
@@ -87,12 +87,14 @@ func (api *IssApiService) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo,
 	}, nil
 }
 
-func (api *IssApiService) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
-	tickers []string) (*MoexApiResponseCurrentPrices, error) {
+type Prices map[string]map[entity.ISSMoexBoard]float64
+
+func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
+	tickers []string) (Prices, error) {
 	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseUrl, market)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetStocksCurrentPrices http_controllers.NewRequest]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices http_controllers.NewRequest]: %w", err)
 	}
 
 	params := url.Values{}
@@ -103,31 +105,50 @@ func (api *IssApiService) GetStocksCurrentPrices(ctx context.Context, market ent
 
 	resp, err := api.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetStocksCurrentPrices client.Do(req)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices client.Do(req)]: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetStocksCurrentPrices ReadAll(body)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ReadAll(body)]: %w", err)
 	}
 
 	data := &MoexApiResponseCurrentPrices{}
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, fmt.Errorf("[IssApiService.GetStocksCurrentPrices json.Unmarshal(body)]: %w", err)
+		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices json.Unmarshal(body)]: %w", err)
 	}
 
-	return data, nil
+	var m Prices
+	for _, i := range data.Securities.Data {
+		ticker, ok := i[0].(string)
+		if !ok {
+			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+		}
+
+		board, ok := i[1].(entity.ISSMoexBoard)
+		if !ok {
+			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+		}
+
+		price, ok := i[2].(float64)
+		if !ok {
+			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+		}
+
+		m[ticker][board] = price
+	}
+	return m, nil
 }
 
-type IssApiService struct {
+type IssClient struct {
 	baseUrl string
 	client  *http.Client
 }
 
-func NewIssApiService() *IssApiService {
-	return &IssApiService{
+func NewISSClient() *IssClient {
+	return &IssClient{
 		baseUrl: "https://iss.moex.com/iss",
 		client:  &http.Client{},
 	}

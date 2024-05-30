@@ -7,18 +7,19 @@ type ShortPortfolio struct {
 }
 
 type FullPortfolio struct {
-	BondDeals      []*MoexBondDeal  `json:"bondDeals"`
-	BondPositions  []*BondPosition  `json:"bondPositions"`
-	Cash           int              `json:"cash"`
-	Cashouts       []*Cashout       `json:"cashouts"`
-	CashoutsSum    int              `json:"cashoutsSum"`
-	Compound       bool             `json:"compound"`
-	Deals          []interface{}    `json:"deals"`
-	Deposits       []*Deposit       `json:"deposits"`
-	DepositsSum    int              `json:"depositsSum"`
-	Name           string           `json:"name"`
-	Profitability  int              `json:"profitability"`
-	ShareDeals     []*MoexShareDeal `json:"shareDeals"`
-	SharePositions []*SharePosition `json:"sharePositions"`
-	TotalCost      int              `json:"totalCost"`
+	BondDeals      []Deal        `json:"bondDeals"`
+	BondPositions  []Position    `json:"bondPositions"`
+	Cash           int           `json:"cash"`
+	Cashouts       []Cashout     `json:"cashouts"`
+	CashoutsSum    int           `json:"cashoutsSum"`
+	Compound       bool          `json:"compound"`
+	Deals          []interface{} `json:"deals"`
+	Deposits       []Deposit     `json:"deposits"`
+	DepositsSum    int           `json:"depositsSum"`
+	Id             int           `json:"id"`
+	Name           string        `json:"name"`
+	Profitability  int           `json:"profitability"`
+	ShareDeals     []Deal        `json:"shareDeals"`
+	SharePositions []Position    `json:"sharePositions"`
+	TotalCost      int           `json:"totalCost"`
 }

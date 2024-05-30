@@ -1,39 +1,43 @@
 package http_controllers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/pttrulez/investor-go/internal/utils/http_response"
+	"github.com/go-chi/chi/v5"
+	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/controller/model/dto"
-	"github.com/pttrulez/investor-go/internal/repository"
-	"github.com/pttrulez/investor-go/internal/service"
 )
 
 func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Анмаршалим данные
-	var dto dto.CreateDeal
+	var d = new(dto.CreateDeal)
 	var err error
-	if err = json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		httpresponse.WriteJSON(w, http.StatusBadRequest, err.Error())
+	if err = json.NewDecoder(r.Body).Decode(d); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	// Валидация пришедших данных
-	if err = c.services.Validator.Struct(dto); err != nil {
-		validateErr := err.(validator.ValidationErrors)
-		httpresponse.WriteValidationErrorsJSON(w, validateErr)
+	if err = c.validator.Struct(d); err != nil {
+		var validateErr validator.ValidationErrors
+		errors.As(err, &validateErr)
+		writeValidationErrorsJSON(w, validateErr)
 		return
 	}
 
-	err = c.services.Deal.CreateDeal(ctx,
-		converter.FromCreateDealDtoToDeal(&dto), getUserIdFromJwt(r))
+	err = c.dealService.CreateDeal(ctx,
+		converter.FromCreateDealDtoToDeal(d))
 	if err != nil {
-		httpresponse.SendError(w, err)
+		writeError(w, err)
 	}
 
 	w.WriteHeader(http.StatusCreated)
@@ -41,38 +45,35 @@ func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 
 func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-
-	var dto dto.DeleteDeal
-	var err error
-	if err = json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		httpresponse.WriteJSON(w, http.StatusBadRequest, err.Error())
-		return
-	}
-	// Валидация пришедших данных
-	if err = c.services.Validator.Struct(dto); err != nil {
-		validateErr := err.(validator.ValidationErrors)
-		httpresponse.WriteValidationErrorsJSON(w, validateErr)
-		return
-	}
-
-	userId := getUserIdFromJwt(r)
-	err = c.services.Deal.DeleteDeal(ctx, converter.FromDeleteDealDtoToDeal(&dto), userId)
+	i := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(i)
 	if err != nil {
-		fmt.Printf("[MoexShareDealController.DeleteDeal] error: %v\n", err)
-		httpresponse.SendError(w, err)
+		writeError(w, errors.New("invalid id"))
+	}
+
+	userId := utils.GetCurrentUserId(r.Context())
+
+	err = c.dealService.DeleteDealById(ctx, id, userId)
+	if err != nil {
+		writeError(w, fmt.Errorf("[DealController.DeleteDeal] %w", err))
 	}
 
 	w.WriteHeader(http.StatusOK)
 }
 
-type DealController struct {
-	repo     *repository.Repository
-	services *service.Container
+type DealService interface {
+	CreateDeal(ctx context.Context, d *entity.Deal) error
+	DeleteDealById(ctx context.Context, id int, userId int) error
 }
 
-func NewDealController(repo *repository.Repository, services *service.Container) *DealController {
+type DealController struct {
+	dealService DealService
+	validator   *validator.Validate
+}
+
+func NewDealController(dealService DealService, validator *validator.Validate) *DealController {
 	return &DealController{
-		repo:     repo,
-		services: services,
+		dealService: dealService,
+		validator:   validator,
 	}
 }

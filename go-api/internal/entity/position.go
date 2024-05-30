@@ -7,15 +7,16 @@ import (
 type Position struct {
 	Amount       int
 	AveragePrice float64
+	Board        ISSMoexBoard
 	Comment      string
 	CurrentPrice float64
 	CurrentCost  int
 	Exchange     types.Exchange
 	Id           int
 	PortfolioId  int
-	Secid        string
-	SecurityId   int
 	SecurityType types.SecurityType
 	ShortName    string
 	TargetPrice  float64
+	Ticker       string
+	UserId       int
 }

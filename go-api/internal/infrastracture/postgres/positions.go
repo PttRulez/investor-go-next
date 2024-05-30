@@ -3,123 +3,153 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/repository/postgres/pgmoex-share-position"
+	"github.com/pttrulez/investor-go/internal/types"
 )
 
-type MoexSharePositionPostgres struct {
+type PositionPostgres struct {
 	db *sql.DB
 }
 
-func NewMoexSharePositionPostgres(db *sql.DB) *MoexSharePositionPostgres {
-	return &MoexSharePositionPostgres{db: db}
+func NewPositionPostgres(db *sql.DB) *PositionPostgres {
+	return &PositionPostgres{db: db}
 }
 
-func (pg *MoexSharePositionPostgres) Get(ctx context.Context, portfolioId int, securityId int) (*entity.Position, error) {
-	queryString := `SELECT p.*, s.isin, s.shortname
-    FROM moex_shared_positions p
-    LEFT JOIN moex_shares s ON p.security_id = s.id
-		WHERE p.portfolio_id = $1 AND p.security_id = $2;`
+func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange types.Exchange, portfolioId int,
+	securityType types.SecurityType, ticker string) (*entity.Position, error) {
+	queryString := `SELECT * FROM positions
+    WHERE exchange = $1 AND portfolio_id = $2 AND security_type = $3 AND ticker = $4;`
 
-	var p pgmoexshareposition.MoexSharePosition
+	var p = new(entity.Position)
 
-	row := pg.db.QueryRowContext(ctx, queryString, portfolioId, securityId)
+	row := pg.db.QueryRowContext(
+		ctx,
+		queryString,
+		exchange,
+		portfolioId,
+		securityType,
+		ticker,
+	)
 
 	err := row.Scan(
-		&p.Id,
-		&p.Amount,
-		&p.AveragePrice,
-		&p.Comment,
-		&p.PortfolioId,
-		&p.SecurityId,
-		&p.TargetPrice,
-		&p.Ticker,
-		&p.ShortName,
+		p.Id,
+		p.Amount,
+		p.AveragePrice,
+		p.Board,
+		p.Comment,
+		p.Exchange,
+		p.PortfolioId,
+		p.SecurityType,
+		p.Ticker,
+		p.TargetPrice,
+		p.ShortName,
 	)
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	} else if err != nil {
-		return nil, fmt.Errorf("[MoexSharePositionPostgres Get]: %w", err)
+		return nil, fmt.Errorf("[PositionPostgres Get]: %w", err)
 	}
 
-	return pgmoexshareposition.FromDBtoPosition(&p), nil
+	return p, nil
 }
 
-func (pg *MoexSharePositionPostgres) GetListByPortfolioId(ctx context.Context, id int) ([]*entity.Position, error) {
+func (pg *PositionPostgres) GetListByPortfolioId(ctx context.Context, id int, userId int) (
+	[]*entity.Position, error) {
 	queryString := `
-		SELECT p.*, m.ticker, m.shortname
-		FROM moex_share_positions p 
-		LEFT JOIN moex_shares m ON p.security_id = m.id
-		WHERE p.portfolio_id = $1;
+		SELECT * FROM positions 
+		WHERE portfolio_id = $1 AND user_id = $2;
 	`
 
-	rows, err := pg.db.QueryContext(ctx, queryString, id)
+	rows, err := pg.db.QueryContext(ctx, queryString, id, userId)
 	if err != nil {
-		return nil, fmt.Errorf("<-[MoexSharePositionPostgres GetListByPortfolioId]: \n%w", err)
+		return nil, fmt.Errorf("[PositionPostgres GetListByPortfolioId]: \n%w", err)
 	}
 	defer rows.Close()
 
 	var positions []*entity.Position
+
 	for rows.Next() {
-		var p pgmoexshareposition.MoexSharePosition
+		var p *entity.Position
 
 		err := rows.Scan(
-			&p.Id,
-			&p.Amount,
-			&p.AveragePrice,
-			&p.Comment,
-			&p.PortfolioId,
-			&p.SecurityId,
-			&p.TargetPrice,
-			&p.Ticker,
-			&p.ShortName,
+			p.Id,
+			p.Amount,
+			p.AveragePrice,
+			p.Board,
+			p.Comment,
+			p.Exchange,
+			p.PortfolioId,
+			p.SecurityType,
+			p.ShortName,
+			p.Ticker,
+			p.TargetPrice,
+			p.UserId,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("<-[MoexSharePositionPostgres GetListByPortfolioId]: \n%w", err)
+			return nil, fmt.Errorf("[MoexSharePositionPostgres GetListByPortfolioId]: %w", err)
 		}
-		positions = append(positions, pgmoexshareposition.FromDBtoPosition(&p))
+		positions = append(positions, p)
 	}
 
 	return positions, nil
 }
 
-func (pg *MoexSharePositionPostgres) Insert(ctx context.Context, position *entity.Position) error {
-	p := pgmoexshareposition.FromPositionToDB(position)
-	queryString := `INSERT INTO moex_share_positions (amount, average_price, comment,
-    portfolio_id, security_id, target_price) 
-    VALUES ($1, $2, $3, $4, $5, $6) ;`
+func (pg *PositionPostgres) Insert(ctx context.Context, p *entity.Position) error {
+	queryString := `INSERT INTO positions (
+		amount,
+		average_price,
+	   	board,
+		comment,
+		exchange,
+		portfolio_id,
+		security_type,
+		short_name,
+		ticker,
+		target_price,
+		user_id
+    ) 
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ;`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		p.Amount,
 		p.AveragePrice,
+		p.Board,
 		p.Comment,
+		p.Exchange,
 		p.PortfolioId,
-		p.SecurityId,
+		p.SecurityType,
+		p.ShortName,
+		p.Ticker,
 		p.TargetPrice,
+		p.UserId,
 	)
 	if err != nil {
-		return fmt.Errorf("[MoexSharePositionPostgres Insert]: %w", err)
+		return fmt.Errorf("[PositionPostgres Insert]: %w", err)
 	}
 	return nil
 }
 
-func (pg *MoexSharePositionPostgres) Update(ctx context.Context, position *entity.Position) error {
-	p := pgmoexshareposition.FromPositionToDB(position)
-	queryString := `UPDATE moex_share_positions SET amount = $1, average_price = $2, comment = $3,
-    portfolio_id = $4, security_id = $5, target_price = $6 WHERE id = $7;`
+func (pg *PositionPostgres) Update(ctx context.Context, p *entity.Position) error {
+	queryString := `UPDATE positions SET amount = $1, average_price = $2, comment = $3, exchange = $4,
+		portfolio_id = $5, security_type = $6, short_name = $7, ticker = $8, target_price = $9 WHERE id = $10;`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		p.Amount,
 		p.AveragePrice,
+		p.Board,
 		p.Comment,
+		p.Exchange,
 		p.PortfolioId,
-		p.SecurityId,
+		p.SecurityType,
+		p.ShortName,
+		p.Ticker,
 		p.TargetPrice,
 		p.Id,
 	)
 	if err != nil {
-		return fmt.Errorf("[MoexSharePositionPostgres Update]: %w", err)
+		return fmt.Errorf("[PositionPostgres Update]: %w", err)
 	}
 	return nil
 }

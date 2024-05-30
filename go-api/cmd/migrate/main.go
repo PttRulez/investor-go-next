@@ -1,9 +1,23 @@
-package migrate
+package main
 
 import (
 	"database/sql"
+	"fmt"
+	_ "github.com/lib/pq"
+	"github.com/pttrulez/investor-go/config"
 	"log"
 )
+
+func main() {
+	cfg := config.MustLoad()
+	connStr := fmt.Sprintf(`postgresql://%v:%v@%v:%v/%v?sslmode=%v`,
+		cfg.Pg.Username, cfg.Pg.Password, cfg.Pg.Host, cfg.Pg.Port, cfg.Pg.DBName, cfg.Pg.SSLMode)
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		panic(fmt.Sprintf("failed to connect to db %v", err))
+	}
+	createAllTables(db)
+}
 
 func createAllTables(db *sql.DB) {
 	createUsersTable(db)
@@ -45,6 +59,7 @@ func createDealsTable(db *sql.DB) {
 		id serial primary key,
 		portfolio_id integer references portfolios(id) not null,
 		price numeric(10, 2) not null,
+		security_type varchar(20) not null, 
 		ticker varchar(50) not null,
 		type varchar(50) not null,
 		user_id  integer references users(id) not null
@@ -74,7 +89,7 @@ func createExpertsTable(db *sql.DB) {
 		id serial primary key,
 		avatar_url varchar(100),
 		name varchar(50) not null,
-		user_id  integer references users(id) not null,
+		user_id  integer references users(id) not null
 	)`
 
 	_, err := db.Exec(queryString)
@@ -180,9 +195,12 @@ func createPositionsTable(db *sql.DB) {
 		id serial primary key,
 		amount integer not null,
 		average_price numeric(10, 2) not null,
+		board varchar(20) not null, 
 		comment text,
 		exchange varchar(20) not null,
 		portfolio_id integer references portfolios(id) not null,
+		security_type varchar(20),
+		short_name varchar(20),
 		ticker varchar(50) not null,
 		target_price numeric(10, 2),
 		user_id  integer references users(id) not null

@@ -7,30 +7,24 @@ import (
 )
 
 type Deal struct {
-	Amount      int
-	Date        time.Time
-	Id          int
-	PortfolioId int
-	Price       float64
-	SecurityId  int
-	Type        Type
-	UserId      int
-}
-
-type CreateDealInfo struct {
-	Deal
+	Amount       int
+	Date         time.Time
 	Exchange     types.Exchange
-	Isin         string
+	Id           int
+	PortfolioId  int
+	Price        float64
+	SecurityId   int
 	SecurityType types.SecurityType
+	Type         Type
 	Ticker       string
 	UserId       int
 }
 
-type DeleteDealInfo struct {
-	Exchange     types.Exchange
-	SecurityType types.SecurityType
-	Id           int
-}
+//type DeleteDealInfo struct {
+//	Exchange     types.Exchange
+//	SecurityType types.SecurityType
+//	Id           int
+//}
 
 //type Position struct {
 //	Amount       int

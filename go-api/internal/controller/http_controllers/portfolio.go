@@ -3,6 +3,9 @@ package http_controllers
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/utils"
 	"net/http"
 	"strconv"
 
@@ -16,26 +19,27 @@ import (
 
 func (c *PortfolioController) CreateNewPortfolio(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var dto dto.CreatePortfolio
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		WriteJSON(w, http.StatusBadRequest, err.Error())
+	var pDto dto.CreatePortfolio
+	if err := json.NewDecoder(r.Body).Decode(&pDto); err != nil {
+		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Validate request fields
-	if err := validator.New().Struct(dto); err != nil {
-		validateErr := err.(validator.ValidationErrors)
-		WriteValidationErrorsJSON(w, validateErr)
+	if err := validator.New().Struct(pDto); err != nil {
+		var validateErr validator.ValidationErrors
+		errors.As(err, &validateErr)
+		writeValidationErrorsJSON(w, validateErr)
 		return
 	}
 	_, claims, _ := jwtauth.FromContext(r.Context())
-	portfolio := converter.FromCreatePortfolioDtoToPortfolio(&dto)
+	portfolio := converter.FromCreatePortfolioDtoToPortfolio(&pDto)
 	portfolio.UserId = int(claims["id"].(float64))
 
 	// Create new Portfolio
 	err := c.portfolioService.CreatePortfolio(ctx, portfolio)
 	if err != nil {
-		SendError(w, err)
+		writeError(w, err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -44,61 +48,61 @@ func (c *PortfolioController) GetListOfPortfoliosOfCurrentUser(w http.ResponseWr
 	r *http.Request) {
 
 	ctx := r.Context()
-	portfolios, err := c.portfolioService.GetListByUserId(ctx, getUserIdFromJwt(r))
+	portfolios, err := c.portfolioService.GetListByUserId(ctx, utils.GetCurrentUserId(r.Context()))
 
 	var res []*response.ShortPortfolio
 	for _, portfolio := range portfolios {
 		res = append(res, converter.FromPortfolioToShortPortfolio(portfolio))
 	}
 	if err != nil {
-		SendError(w, err)
+		writeError(w, err)
 		return
 	}
 
-	WriteOKJSON(w, res)
+	writeOKJSON(w, res)
 }
 func (c *PortfolioController) GetPortfolioById(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	portfolioId, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		WriteString(w, http.StatusBadRequest, "Неверный айди портфолио")
+		writeString(w, http.StatusBadRequest, "Неверный айди портфолио")
 	}
 
-	portfolio, err := c.portfolioService.GetFullPortfolioById(ctx, portfolioId, getUserIdFromJwt(r))
+	portfolio, err := c.portfolioService.GetFullPortfolioById(ctx, portfolioId, utils.GetCurrentUserId(r.Context()))
 	if err != nil {
-		SendError(w, err)
+		writeError(w, err)
 	}
 
-	WriteOKJSON(w, portfolio)
+	writeOKJSON(w, portfolio)
 }
 func (c *PortfolioController) DeletePortfolio(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	id, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		WriteString(w, http.StatusBadRequest, "Неверный айди портфолио")
+		writeString(w, http.StatusBadRequest, "Неверный айди портфолио")
 	}
 
-	err = c.portfolioService.DeletePortfolio(ctx, id, getUserIdFromJwt(r))
+	err = c.portfolioService.DeletePortfolio(ctx, id, utils.GetCurrentUserId(r.Context()))
 	if err != nil {
-		WriteString(w, http.StatusInternalServerError, err.Error())
+		writeString(w, http.StatusInternalServerError, err.Error())
 	}
 	w.WriteHeader(http.StatusOK)
 }
 func (c *PortfolioController) UpdatePortfolio(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var dto dto.UpdatePortfolio
-	err := json.NewDecoder(r.Body).Decode(&dto)
+	var pDto dto.UpdatePortfolio
+	err := json.NewDecoder(r.Body).Decode(&pDto)
 	if err != nil {
-		WriteJSON(w, http.StatusBadRequest, err.Error())
+		writeJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Update Portfolio
 	err = c.portfolioService.UpdatePortfolio(ctx,
-		converter.FromUpdatePortfolioDtoToPortfolio(&dto), getUserIdFromJwt(r))
+		converter.FromUpdatePortfolioDtoToPortfolio(&pDto), utils.GetCurrentUserId(r.Context()))
 	if err != nil {
-		SendError(w, err)
+		writeError(w, err)
 		return
 	}
 
@@ -106,13 +110,12 @@ func (c *PortfolioController) UpdatePortfolio(w http.ResponseWriter, r *http.Req
 }
 
 type PortfolioService interface {
-	BelongsToUser(ctx context.Context, portfolioId int, userId int) (bool, error)
-	// CreatePortfolio(ctx context.Context, p *service.Portfolio) error
-	// GetFullPortfolioById(ctx context.Context, portfolioId int, userId int) (*service.Portfolio, error)
-	// GetListByUserId(ctx context.Context, userId int) ([]*service.Portfolio, error)
-	// GetPortfolioById(ctx context.Context, portfolioId int, userId int) (*service.Portfolio, error)
-	// DeletePortfolio(ctx context.Context, portfolioId int, userId int) error
-	// UpdatePortfolio(ctx context.Context, portfolio *service.Portfolio, userId int) error
+	DeletePortfolio(ctx context.Context, portfolioId int, userId int) error
+	CreatePortfolio(ctx context.Context, p *entity.Portfolio) error
+	GetFullPortfolioById(ctx context.Context, portfolioId int,
+		userId int) (*response.FullPortfolio, error)
+	GetListByUserId(ctx context.Context, userId int) ([]*entity.Portfolio, error)
+	UpdatePortfolio(ctx context.Context, portfolio *entity.Portfolio, userId int) error
 }
 type PortfolioController struct {
 	portfolioService PortfolioService

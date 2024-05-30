@@ -7,18 +7,18 @@ import (
 	"github.com/pttrulez/investor-go/internal/entity"
 )
 
-func (pg *DepositPostgres) Delete(ctx context.Context, id int) error {
-	queryString := `DELETE FROM deposits WHERE id = $1;`
-	_, err := pg.db.ExecContext(ctx, queryString, id)
+func (pg *DepositPostgres) Delete(ctx context.Context, id int, userId int) error {
+	queryString := `DELETE FROM deposits WHERE id = $1 AND user_id = $2;`
+	_, err := pg.db.ExecContext(ctx, queryString, id, userId)
 	if err != nil {
 		return fmt.Errorf("[DepositPostgres.Delete] %w", err)
 	}
 	return nil
 }
 
-func (pg *DepositPostgres) GetById(ctx context.Context, id int) (*entity.Deposit, error) {
-	queryString := `SELECT * FROM deposits WHERE id = $1;`
-	row := pg.db.QueryRowContext(ctx, queryString, id)
+func (pg *DepositPostgres) GetById(ctx context.Context, id int, userId int) (*entity.Deposit, error) {
+	queryString := `SELECT * FROM deposits WHERE id = $1 AND user_id = $2;`
+	row := pg.db.QueryRowContext(ctx, queryString, id, userId)
 	if row.Err() != nil {
 		return nil, fmt.Errorf("[DepositPostgres.GetById]: %w", row.Err())
 	}
@@ -32,7 +32,7 @@ func (pg *DepositPostgres) GetById(ctx context.Context, id int) (*entity.Deposit
 	return &deposit, nil
 }
 
-func (pg *DepositPostgres) GetListByPortfolioId(ctx context.Context, id int) ([]*entity.Deposit, error) {
+func (pg *DepositPostgres) GetListByPortfolioId(ctx context.Context, id int) ([]entity.Deposit, error) {
 	queryString := `SELECT * FROM deposits WHERE portfolio_id = $1;`
 	rows, err := pg.db.QueryContext(ctx, queryString, id)
 	if err != nil {
@@ -40,14 +40,14 @@ func (pg *DepositPostgres) GetListByPortfolioId(ctx context.Context, id int) ([]
 	}
 	defer rows.Close()
 
-	var deposits []*entity.Deposit
+	var deposits []entity.Deposit
 	for rows.Next() {
 		var deposit entity.Deposit
 		err := rows.Scan(&deposit.Id, &deposit.Amount, &deposit.Date, &deposit.PortfolioId)
 		if err != nil {
 			return nil, fmt.Errorf("[DepositPostgres.GetListByPortfolioId]: %w", err)
 		}
-		deposits = append(deposits, &deposit)
+		deposits = append(deposits, deposit)
 	}
 
 	return deposits, nil
