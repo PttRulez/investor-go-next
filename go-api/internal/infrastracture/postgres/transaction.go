@@ -32,9 +32,9 @@ func (pg *Cashout) GetById(ctx context.Context, id int, userId int) (*entity.Cas
 	return &c, nil
 }
 
-func (pg *Cashout) GetListByPortfolioId(ctx context.Context, id int) ([]entity.Cashout, error) {
+func (pg *Cashout) GetListByPortfolioId(ctx context.Context, id int, userId int) ([]entity.Cashout, error) {
 	queryString := `SELECT * FROM cashouts WHERE portfolio_id = $1 AND user_id = $2;`
-	rows, err := pg.db.QueryContext(ctx, queryString, id)
+	rows, err := pg.db.QueryContext(ctx, queryString, id, userId)
 	if err != nil {
 		return nil, fmt.Errorf("[CashoutPostgres.GetListByPortfolioId]: %w", err)
 	}
