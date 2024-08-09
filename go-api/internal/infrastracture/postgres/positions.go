@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/types"
 )
 
 type PositionPostgres struct {
@@ -17,8 +16,8 @@ func NewPositionPostgres(db *sql.DB) *PositionPostgres {
 	return &PositionPostgres{db: db}
 }
 
-func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange types.Exchange, portfolioId int,
-	securityType types.SecurityType, ticker string) (*entity.Position, error) {
+func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange entity.Exchange, portfolioId int,
+	securityType entity.SecurityType, ticker string) (*entity.Position, error) {
 	queryString := `SELECT * FROM positions
     WHERE exchange = $1 AND portfolio_id = $2 AND security_type = $3 AND ticker = $4;`
 

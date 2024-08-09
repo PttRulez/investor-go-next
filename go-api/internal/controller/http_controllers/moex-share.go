@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (c *MoexShareController) GetInfoByTicker(w http.ResponseWriter, r *http.Request) {
+func (c *MoexShareController) GetInfoBySecid(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	moexShare, err := c.moexSharService.GetByTicker(ctx, chi.URLParam(r, "ticker"))
+	moexShare, err := c.moexSharService.GetBySecid(ctx, chi.URLParam(r, "secid"))
 	if err != nil {
 		writeError(w, err)
 		fmt.Println(err)
@@ -21,7 +21,7 @@ func (c *MoexShareController) GetInfoByTicker(w http.ResponseWriter, r *http.Req
 }
 
 type MoexShareService interface {
-	GetByTicker(ctx context.Context, ticker string) (*entity.Share, error)
+	GetBySecid(ctx context.Context, ticker string) (*entity.Share, error)
 }
 type MoexShareController struct {
 	moexSharService MoexShareService

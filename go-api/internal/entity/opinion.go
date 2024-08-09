@@ -1,19 +1,19 @@
 package entity
 
 import (
-	"github.com/pttrulez/investor-go/internal/types"
 	"time"
 )
 
 type Opinion struct {
 	Date         *time.Time
-	Exchange     types.Exchange
+	Exchange     Exchange
 	ExpertId     int
 	Id           int
 	SecurityId   int
-	SecurityType types.SecurityType
+	SecurityType SecurityType
 	SourceLink   *string
 	TargetPrice  *float64
+	Text         string
 	Type         OpinionType
 	UserId       int
 }

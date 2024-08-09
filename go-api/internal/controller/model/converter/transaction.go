@@ -6,17 +6,20 @@ import (
 	"github.com/pttrulez/investor-go/internal/entity"
 )
 
-func FromCreateCashoutDtoToCashout(dto *dto.CreateCashout) *entity.Cashout {
-	return &entity.Cashout{
+func FromCreateDtoToTransaction(dto *dto.CreateTransaction) *entity.Transaction {
+	return &entity.Transaction{
 		Amount:      dto.Amount,
 		Date:        dto.Date,
 		PortfolioId: dto.PortfolioId,
+		Type:        dto.Type,
 	}
 }
 
-func FromCashoutToResponse(c entity.Cashout) response.Cashout {
-	return response.Cashout{
+func FromTransactionToResponse(c entity.Transaction) response.Transaction {
+	return response.Transaction{
 		Amount: c.Amount,
 		Date:   c.Date,
+		Id:     c.Id,
+		Type:   c.Type,
 	}
 }

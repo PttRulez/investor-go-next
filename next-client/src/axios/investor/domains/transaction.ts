@@ -17,7 +17,7 @@ export class InvestorTransaction {
   }
 
   async deleteTransaction(id: number): Promise<ITransactionResponse> {
-    const res = await this.api.delete<ITransactionResponse>(`/cashout/${id}`);
+    const res = await this.api.delete<ITransactionResponse>(`/transaction/${id}`);
     return res.data;
   }
 }

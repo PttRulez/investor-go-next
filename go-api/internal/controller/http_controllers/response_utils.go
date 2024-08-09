@@ -12,21 +12,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func writeError(w http.ResponseWriter, err error) {
-	if errors.Is(err, ierrors.ErrNotYours) {
-		writeString(w, http.StatusNotFound, ierrors.ErrNotFound.Error())
-		return
-	}
-
-	var e ierrors.ErrSendToClient
-	if errors.As(err, &e) {
-		if e.Status == 0 {
-			e.Status = http.StatusInternalServerError
-		}
-		writeString(w, e.Status, e.Error())
-	}
-}
-
 func validationErrsToResponse(errs validator.ValidationErrors) map[string]string {
 	mappedErrors := map[string]string{}
 
@@ -54,7 +39,22 @@ func validationErrsToResponse(errs validator.ValidationErrors) map[string]string
 
 	return mappedErrors
 }
+func writeError(w http.ResponseWriter, err error) {
+	if errors.Is(err, ierrors.ErrNotYours) {
+		writeString(w, http.StatusNotFound, ierrors.ErrNotFound.Error())
+		return
+	}
 
+	var e ierrors.ErrSendToClient
+	if errors.As(err, &e) {
+		if e.Status == 0 {
+			e.Status = http.StatusInternalServerError
+		}
+		writeString(w, e.Status, e.Error())
+		return
+	}
+	writeInternal(w)
+}
 func writeJSON(w http.ResponseWriter, status int, value any) {
 	buf := &bytes.Buffer{}
 	encoder := json.NewEncoder(buf)
@@ -72,7 +72,6 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 		return
 	}
 }
-
 func writeString(w http.ResponseWriter, status int, value string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)

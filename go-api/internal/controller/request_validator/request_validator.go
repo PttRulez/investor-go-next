@@ -2,8 +2,6 @@ package request_validator
 
 import (
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/infrastracture/iss_client"
-	"github.com/pttrulez/investor-go/internal/types"
 	"regexp"
 	"strconv"
 
@@ -18,18 +16,19 @@ func NewValidator() *validator.Validate {
 	validate.RegisterValidation("opinionType", ValidatePrice)
 	validate.RegisterValidation("price", ValidatePrice)
 	validate.RegisterValidation("securityType", ValidateSecurityType)
+	validate.RegisterValidation("transactionType", ValidateTransactionType)
 	return validate
 }
 
 func ValidateExchange(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(types.Exchange).Validate()
+	return fl.Field().Interface().(entity.Exchange).Validate()
 }
 func ValidateDealType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(types.DealType).Validate()
+	return fl.Field().Interface().(entity.DealType).Validate()
 }
 
 func ValidateMoexMarket(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(iss_client.ISSMoexMarket).Validate()
+	return fl.Field().Interface().(entity.ISSMoexMarket).Validate()
 }
 
 func ValidateOpinion(fl validator.FieldLevel) bool {
@@ -46,9 +45,12 @@ func ValidatePrice(fl validator.FieldLevel) bool {
 }
 
 func ValidateRole(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(types.Exchange).Validate()
+	return fl.Field().Interface().(entity.Exchange).Validate()
 }
 
 func ValidateSecurityType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(types.SecurityType).Validate()
+	return fl.Field().Interface().(entity.SecurityType).Validate()
+}
+func ValidateTransactionType(fl validator.FieldLevel) bool {
+	return fl.Field().Interface().(entity.TransactionType).Validate()
 }

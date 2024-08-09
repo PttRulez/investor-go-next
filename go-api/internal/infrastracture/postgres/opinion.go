@@ -5,15 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/repository/postgres/pgopinion"
-	"github.com/pttrulez/investor-go/internal/service"
 )
 
 type OpinionPostgres struct {
 	db *sql.DB
 }
 
-func NewOpinionPostgres(db *sql.DB) service.OpinionRepository {
+func NewOpinionPostgres(db *sql.DB) *OpinionPostgres {
 	return &OpinionPostgres{db: db}
 }
 
@@ -27,11 +25,11 @@ func (pg *OpinionPostgres) Delete(ctx context.Context, id int) error {
 }
 
 func (pg *OpinionPostgres) Insert(ctx context.Context, o *entity.Opinion) error {
-	queryString := `INSERT INTO opinions (date, exchange, expert_id, security_id, 
+	queryString := `INSERT INTO opinions (date, exchange, expert_id, text, security_id,  
     security_type, source_link, target_price, type, user_id) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
 
-	_, err := pg.db.ExecContext(ctx, queryString, o.Date, o.Exchange, o.ExpertId, o.SecurityId,
+	_, err := pg.db.ExecContext(ctx, queryString, o.Date, o.Exchange, o.ExpertId, o.Text, o.SecurityId,
 		o.SecurityType, o.SourceLink, o.TargetPrice, o.Type, o.UserId)
 	if err != nil {
 		return fmt.Errorf("[OpinionPostgres Insert]: %w", err)
@@ -39,12 +37,11 @@ func (pg *OpinionPostgres) Insert(ctx context.Context, o *entity.Opinion) error 
 	return nil
 }
 
-func (pg *OpinionPostgres) Update(ctx context.Context, model *entity.Opinion) error {
+func (pg *OpinionPostgres) Update(ctx context.Context, o *entity.Opinion) error {
 	queryString := `UPDATE opinions SET date = $1, exchange = $2, expert_id = $3,
     security_id = $4, security_type = $5, source_link = $6, target_price = $7,
     type = $8, user_id = $9 WHERE id = $10;`
 
-	o := pgopinion.FromOpinionToDBOpinion(model)
 	_, err := pg.db.ExecContext(ctx, queryString, o.Date, o.Exchange, o.ExpertId, o.SecurityId,
 		o.SecurityType, o.SourceLink, o.TargetPrice, o.Type, o.UserId, o.Id)
 	if err != nil {
@@ -61,16 +58,16 @@ func (pg *OpinionPostgres) GetListByUserId(ctx context.Context, userId int) ([]*
 	}
 	defer rows.Close()
 
-	opinions := []*entity.Opinion{}
+	var opinions []*entity.Opinion
 
 	for rows.Next() {
-		var o pgopinion.Opinion
+		o := new(entity.Opinion)
 		err = rows.Scan(&o.Id, &o.Date, &o.Exchange, &o.ExpertId, &o.SecurityId,
 			&o.SecurityType, &o.SourceLink, &o.TargetPrice, &o.Type, &o.UserId)
 		if err != nil {
 			return nil, fmt.Errorf("[OpinionPostgres GetListByUserId]: %w", err)
 		}
-		opinions = append(opinions, pgopinion.FromDBToModelOpinion(&o))
+		opinions = append(opinions, o)
 	}
 
 	return opinions, nil

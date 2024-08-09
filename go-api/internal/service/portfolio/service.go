@@ -7,23 +7,22 @@ import (
 	"github.com/pttrulez/investor-go/internal/controller/model/response"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/infrastracture/iss_client"
-	"github.com/pttrulez/investor-go/internal/types"
 	"github.com/pttrulez/investor-go/internal/utils"
 )
 
 func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 	userId int) (*response.FullPortfolio, error) {
 	var (
-		done           = make(chan struct{})
-		errCh          = make(chan error)
-		p              entity.Portfolio
-		result         *response.FullPortfolio
-		cashouts       []entity.Cashout
-		deposits       []entity.Deposit
-		bondDeals      []*entity.Deal
-		shareDeals     []*entity.Deal
-		bondPositions  []*entity.Position
-		sharePositions []*entity.Position
+		done   = make(chan struct{})
+		errCh  = make(chan error)
+		result = &response.FullPortfolio{
+			Deals:        []response.Deal{},
+			Transactions: []response.Transaction{},
+		}
+		deals          []*entity.Deal
+		bondPositions  = make([]*entity.Position, 0)
+		sharePositions = make([]*entity.Position, 0)
+		transactions   = make([]entity.Transaction, 0)
 	)
 
 	// Базовая инфа о портфолио
@@ -34,36 +33,37 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 			return
 		}
 
-		p.Id = pdb.Id
-		p.Compound = pdb.Compound
-		p.Name = pdb.Name
+		result.Id = pdb.Id
+		result.Compound = pdb.Compound
+		result.Name = pdb.Name
 
 		done <- struct{}{}
 	}()
 
 	// сделки
 	go func() {
-		deals, err := s.dealRepository.GetDealListByPortoflioId(ctx, portfolioId, userId)
+		var err error
+		deals, err = s.dealRepository.GetDealListByPortoflioId(ctx, portfolioId, userId)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
 
-		var bondDealsCount, shareDealsCount int
-		for _, d := range deals {
-			if d.SecurityType == types.ST_Bond {
-				bondDealsCount++
-			} else if d.SecurityType == types.ST_Share {
-				shareDealsCount++
-			}
-		}
-		for _, d := range deals {
-			if d.SecurityType == types.ST_Share {
-				shareDeals = append(shareDeals, d)
-			} else if d.SecurityType == types.ST_Bond {
-				bondDeals = append(bondDeals, d)
-			}
-		}
+		//var bondDealsCount, shareDealsCount int
+		//for _, d := range deals {
+		//	if d.SecurityType == types.STBond {
+		//		bondDealsCount++
+		//	} else if d.SecurityType == types.STShare {
+		//		shareDealsCount++
+		//	}
+		//}
+		//for _, d := range deals {
+		//	if d.SecurityType == types.STShare {
+		//		shareDeals = append(shareDeals, d)
+		//	} else if d.SecurityType == types.STBond {
+		//		bondDeals = append(bondDeals, d)
+		//	}
+		//}
 
 		done <- struct{}{}
 	}()
@@ -79,9 +79,9 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 
 		var bondPositionsCount, sharePositionsCount int
 		for _, p := range positions {
-			if p.SecurityType == types.ST_Bond {
+			if p.SecurityType == entity.STBond {
 				bondPositionsCount++
-			} else if p.SecurityType == types.ST_Share {
+			} else if p.SecurityType == entity.STShare {
 				sharePositionsCount++
 			}
 		}
@@ -90,10 +90,10 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		bondTickers := make([]string, bondPositionsCount)
 		shareTickers := make([]string, sharePositionsCount)
 		for _, p := range positions {
-			if p.SecurityType == types.ST_Share {
+			if p.SecurityType == entity.STShare {
 				sharePositions = append(sharePositions, p)
 				shareTickers = append(shareTickers, p.Ticker)
-			} else if p.SecurityType == types.ST_Bond {
+			} else if p.SecurityType == entity.STBond {
 				bondPositions = append(bondPositions, p)
 				bondTickers = append(bondTickers, p.Ticker)
 			}
@@ -128,10 +128,10 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		done <- struct{}{}
 	}()
 
-	// кэшауты
+	// транзакции
 	go func() {
 		var err error
-		cashouts, err = s.cashoutRepo.GetListByPortfolioId(ctx, portfolioId)
+		transactions, err = s.transactionRepo.GetListByPortfolioId(ctx, portfolioId, utils.GetCurrentUserId(ctx))
 		if err != nil {
 			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
 			return
@@ -140,19 +140,7 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		done <- struct{}{}
 	}()
 
-	// депозиты
-	go func() {
-		var err error
-		deposits, err = s.depositRepo.GetListByPortfolioId(ctx, portfolioId)
-		if err != nil {
-			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
-			return
-		}
-
-		done <- struct{}{}
-	}()
-
-	routinesWorking := 5
+	routinesWorking := 4
 
 	for routinesWorking > 0 {
 		select {
@@ -163,30 +151,21 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		}
 	}
 
-	for _, c := range cashouts {
-		result.CashoutsSum += c.Amount
-		result.Cashouts = append(result.Cashouts, converter.FromCashoutToResponse(c))
-	}
-	for _, d := range deposits {
-		result.DepositsSum += d.Amount
-		result.Deposits = append(result.Deposits, converter.FromDepositToResponse(d))
+	for _, t := range transactions {
+		if t.Type == entity.TTCashout {
+			result.CashoutsSum += t.Amount
+		} else if t.Type == entity.TTDeposit {
+			result.DepositsSum += t.Amount
+		}
+		result.Transactions = append(result.Transactions, converter.FromTransactionToResponse(t))
 	}
 
 	spentToBuys := 0
 	receivedFromSells := 0
 
 	// сделки
-	result.BondDeals = make([]response.Deal, len(bondDeals))
-	result.ShareDeals = make([]response.Deal, len(shareDeals))
-	for _, d := range shareDeals {
-		if d.Type == entity.DtBuy {
-			spentToBuys += d.Amount * int(d.Price)
-		} else {
-			receivedFromSells += d.Amount * int(d.Price)
-		}
-	}
-	for _, d := range bondDeals {
-		if d.Type == entity.DtBuy {
+	for _, d := range deals {
+		if d.Type == entity.DTBuy {
 			spentToBuys += d.Amount * int(d.Price)
 		} else {
 			receivedFromSells += d.Amount * int(d.Price)
@@ -208,7 +187,7 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 
 	result.Cash = result.DepositsSum - result.CashoutsSum - spentToBuys + receivedFromSells
 	result.TotalCost += result.Cash
-	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum+result.Cash)/float64(result.DepositsSum) - 1) * 100)
+	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum)/float64(result.DepositsSum) - 1) * 100)
 
 	return result, nil
 }
@@ -238,12 +217,11 @@ func (s *Service) UpdatePortfolio(ctx context.Context, portfolio *entity.Portfol
 }
 
 type Service struct {
-	cashoutRepo    CashoutRepository
-	dealRepository DealRepository
-	depositRepo    DepositRepository
-	issClient      iss_client.IssClient
-	positionRepo   PositionRepository
-	repo           Repository
+	dealRepository  DealRepository
+	issClient       *iss_client.IssClient
+	positionRepo    PositionRepository
+	repo            Repository
+	transactionRepo TransactionRepository
 }
 
 type Repository interface {
@@ -253,33 +231,28 @@ type Repository interface {
 	Insert(ctx context.Context, p *entity.Portfolio) error
 	Update(ctx context.Context, p *entity.Portfolio, userId int) error
 }
-type DepositRepository interface {
-	GetListByPortfolioId(ctx context.Context, portfolioId int) ([]entity.Deposit, error)
-}
-type CashoutRepository interface {
-	GetListByPortfolioId(ctx context.Context, portfolioId int) ([]entity.Cashout, error)
-}
 type DealRepository interface {
 	GetDealListByPortoflioId(ctx context.Context, portfolioId int, userId int) ([]*entity.Deal, error)
 }
 type PositionRepository interface {
 	GetListByPortfolioId(ctx context.Context, portfolioId int, userId int) ([]*entity.Position, error)
 }
+type TransactionRepository interface {
+	GetListByPortfolioId(ctx context.Context, portfolioId int, userId int) ([]entity.Transaction, error)
+}
 
 func NewPortfolioService(
-	cashoutRepo CashoutRepository,
 	dealRepository DealRepository,
-	depositRepo DepositRepository,
-	issClient iss_client.IssClient,
+	issClient *iss_client.IssClient,
 	positionRepo PositionRepository,
 	repository Repository,
+	transactionRepo TransactionRepository,
 ) *Service {
 	return &Service{
-		cashoutRepo:    cashoutRepo,
-		dealRepository: dealRepository,
-		depositRepo:    depositRepo,
-		issClient:      issClient,
-		positionRepo:   positionRepo,
-		repo:           repository,
+		dealRepository:  dealRepository,
+		transactionRepo: transactionRepo,
+		issClient:       issClient,
+		positionRepo:    positionRepo,
+		repo:            repository,
 	}
 }

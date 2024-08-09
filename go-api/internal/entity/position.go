@@ -1,9 +1,5 @@
 package entity
 
-import (
-	"github.com/pttrulez/investor-go/internal/types"
-)
-
 type Position struct {
 	Amount       int
 	AveragePrice float64
@@ -11,10 +7,10 @@ type Position struct {
 	Comment      string
 	CurrentPrice float64
 	CurrentCost  int
-	Exchange     types.Exchange
+	Exchange     Exchange
 	Id           int
 	PortfolioId  int
-	SecurityType types.SecurityType
+	SecurityType SecurityType
 	ShortName    string
 	TargetPrice  float64
 	Ticker       string

@@ -3,17 +3,16 @@ package http_controllers
 import (
 	"context"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 )
 
-func (c *MoexBondController) GetInfoByISIN(w http.ResponseWriter, r *http.Request) {
+func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	moexBond, err := c.moexBondService.GetByISIN(ctx, chi.URLParam(r, "isin"))
+	moexBond, err := c.moexBondService.GetBySecid(ctx, chi.URLParam(r, "secid"))
 	if err != nil {
-		slog.Error(err.Error())
+		logger.Error(err)
 		writeError(w, err)
 		return
 	}
@@ -21,7 +20,7 @@ func (c *MoexBondController) GetInfoByISIN(w http.ResponseWriter, r *http.Reques
 }
 
 type MoexService interface {
-	GetByISIN(ctx context.Context, isin string) (*entity.Bond, error)
+	GetBySecid(ctx context.Context, isin string) (*entity.Bond, error)
 }
 type MoexBondController struct {
 	moexBondService MoexService

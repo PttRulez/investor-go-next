@@ -5,7 +5,7 @@ type MoexApiResponseSecurityInfo struct {
 		Data [][]string `json:"data"`
 	}
 	Boards struct {
-		Data [][4]any `json:"data"`
+		Data [][3]string `json:"data"`
 	}
 }
 

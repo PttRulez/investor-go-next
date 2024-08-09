@@ -7,6 +7,7 @@ COPY ./go.mod .
 COPY ./go.sum .
 
 # Download and install the dependencies:
+RUN apk update && apk add git
 RUN go get -d -v ./...
 
 # Build the go app

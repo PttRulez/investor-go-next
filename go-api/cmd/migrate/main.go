@@ -27,40 +27,25 @@ func createAllTables(db *sql.DB) {
 	createOpinionsTable(db)
 	createOpinionsOnPositionsTable(db)
 	createPositionsTable(db)
-	createDepositsTable(db)
-	createCashoutsTable(db)
+	createTransactionsTable(db)
 
 	//  ---------------------- MOEX ----------------------
 	createMoexBondsTable(db)
 	createMoexSharesTable(db)
-	createMoexCurrenciesTable(db)
 }
 
 // ---------------------- FUNCS FOR TABLES CREATION  ----------------------
-func createCashoutsTable(db *sql.DB) {
-	queryString := `create table if not exists cashouts (
-		id serial primary key,
-		amount integer not null,
-		date date not null,
-		portfolio_id integer references portfolios(id) not null,
-		user_id  integer references users(id) not null
-		)`
-
-	_, err := db.Exec(queryString)
-	if err != nil {
-		log.Fatal("[createCashoutsTable] err", err)
-	}
-}
 func createDealsTable(db *sql.DB) {
 	queryString := `create table if not exists deals (
 		amount integer not null,
+		commission numeric(10, 2) not null, 
 		date date not null,
 		exchange varchar(20) not null,
 		id serial primary key,
 		portfolio_id integer references portfolios(id) not null,
-		price numeric(10, 2) not null,
+		price numeric(10, 6) not null,
 		security_type varchar(20) not null, 
-		ticker varchar(50) not null,
+		secid varchar(50) not null,
 		type varchar(50) not null,
 		user_id  integer references users(id) not null
 	)`
@@ -68,20 +53,6 @@ func createDealsTable(db *sql.DB) {
 	_, err := db.Exec(queryString)
 	if err != nil {
 		log.Fatal("[createMoexShareDealsTable] err", err)
-	}
-}
-func createDepositsTable(db *sql.DB) {
-	queryString := `create table if not exists deposits (
-		id serial primary key,
-		amount integer not null,
-		date date not null,
-		portfolio_id integer references portfolios(id) not null,
-		user_id  integer references users(id) not null
-	)`
-
-	_, err := db.Exec(queryString)
-	if err != nil {
-		log.Fatal("[createDepositsTable] err", err)
 	}
 }
 func createExpertsTable(db *sql.DB) {
@@ -101,11 +72,18 @@ func createMoexBondsTable(db *sql.DB) {
 	queryString := `create table if not exists moex_bonds (
 		id serial primary key,
 		board varchar(50) not null,
+		coupon_percent decimal(10, 2) not null,
+		coupon_value decimal(10, 2) not null,
+		coupon_frequency integer not null,
+		face_value integer not null,
+		issue_date date not null, 
 		engine varchar(50) not null,
 		market varchar(50) not null,
+		mat_date date not null,
 		name varchar(100) not null,
 		shortname varchar(50) not null,
-		isin varchar(20) not null unique
+		isin varchar(20) not null unique,
+		type varchar(50) not null                               
 	)`
 
 	_, err := db.Exec(queryString)
@@ -122,22 +100,6 @@ func createMoexSharesTable(db *sql.DB) {
 		name varchar(120) not null,
 		shortname varchar(50) not null,
 		ticker varchar(10) not null unique
-	)`
-
-	_, err := db.Exec(queryString)
-	if err != nil {
-		log.Fatal("[createMoexSharesTable] err", err)
-	}
-}
-func createMoexCurrenciesTable(db *sql.DB) {
-	queryString := `create table if not exists moex_currencies (
-		id serial primary key,
-		board varchar(50) not null,
-		engine varchar(50) not null,
-		market varchar(50) not null,
-		name varchar(120) not null,
-		shortname varchar(50) not null,
-		ticker varchar(10) not null
 	)`
 
 	_, err := db.Exec(queryString)
@@ -209,6 +171,21 @@ func createPositionsTable(db *sql.DB) {
 	_, err := db.Exec(queryString)
 	if err != nil {
 		log.Fatal("[createMoexBondPositionsTable] err", err)
+	}
+}
+func createTransactionsTable(db *sql.DB) {
+	queryString := `create table if not exists transactions (
+		id serial primary key,
+		amount integer not null,
+		date date not null,
+		portfolio_id integer references portfolios(id) not null,
+		type varchar(50) not null,
+		user_id  integer references users(id) not null
+		)`
+
+	_, err := db.Exec(queryString)
+	if err != nil {
+		log.Fatal("[createCashoutsTable] err", err)
 	}
 }
 func createUsersTable(db *sql.DB) {

@@ -8,7 +8,9 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type ISSecurityInfo struct {
@@ -17,6 +19,15 @@ type ISSecurityInfo struct {
 	Market    entity.ISSMoexMarket
 	Name      string
 	ShortName string
+	Secid     string
+	// Только для облигаций
+	CouponPercent   float32
+	CouponValue     float32
+	CouponFrequency int8      // частота выплаты купонов в год
+	IssueDate       time.Time // облигации
+	FaceValue       int       // номинальная стоимость
+	MatDate         time.Time // дата погашения облиги
+
 }
 
 func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, error) {
@@ -26,11 +37,11 @@ func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, err
 		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker http_controllers.NewRequest]: %w", err)
 	}
 
-	// фильтруем только то что нам нужно
 	params := url.Values{}
+	// фильтруем только то что нам нужно
 	params.Add("iss.meta", "off")
 	params.Add("description.columns", "name,value")
-	params.Add("boards.columns", "boardid,market,engine,is_primary")
+	params.Add("boards.columns", "boardid,market,engine")
 	req.URL.RawQuery = params.Encode()
 
 	resp, err := api.client.Do(req)
@@ -50,41 +61,59 @@ func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, err
 		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker json.Unmarshal(body)]: %w", err)
 	}
 
-	var (
-		name, shortname string
-		board           entity.ISSMoexBoard
-		market          entity.ISSMoexMarket
-		engine          entity.ISSMoexEngine
-		// ok              bool
-	)
-
+	result := ISSecurityInfo{}
 	for _, item := range data.Description.Data {
-		if item[0] == "NAME" {
-			name = item[1]
-		}
-		if item[0] == "SHORTNAME" {
-			shortname = item[1]
+		switch item[0] {
+		case "NAME":
+			result.Name = item[1]
+		case "SHORTNAME":
+			result.ShortName = item[1]
+		// Только для облигаций:
+		case "COUPONFREQUENCY":
+			freq, err := strconv.ParseInt(item[1], 10, 8)
+			if err != nil {
+				return nil, err
+			}
+			result.CouponFrequency = int8(freq)
+		case "COUPONPERCENT":
+			percent, err := strconv.ParseFloat(item[1], 32)
+			if err != nil {
+				return nil, err
+			}
+			result.CouponPercent = float32(percent)
+		case "COUPONVALUE":
+			percent, err := strconv.ParseFloat(item[1], 32)
+			if err != nil {
+				return nil, err
+			}
+			result.CouponPercent = float32(percent)
+		case "ISSUEDATE":
+			t, err := time.Parse("2006-01-02", item[1])
+			if err != nil {
+				return nil, err
+			}
+			result.IssueDate = t
+		case "MATDATE":
+			t, err := time.Parse("2006-01-02", item[1])
+			if err != nil {
+				return nil, err
+			}
+			result.MatDate = t
+		case "FACEVALUE":
+			faceValue, err := strconv.Atoi(item[1])
+			if err != nil {
+				return nil, err
+			}
+			result.FaceValue = faceValue
 		}
 	}
 
-	var boardData [4]any
-	for _, item := range data.Boards.Data {
-		// если is_primary
-		if item[3].(float64) == 1 {
-			boardData = item
-		}
-	}
-	board = entity.ISSMoexBoard(boardData[0].(string))
-	market = entity.ISSMoexMarket(boardData[1].(string))
-	engine = entity.ISSMoexEngine(boardData[2].(string))
+	boardData := data.Boards.Data[0]
+	result.Board = entity.ISSMoexBoard(boardData[0])
+	result.Market = entity.ISSMoexMarket(boardData[1])
+	result.Engine = entity.ISSMoexEngine(boardData[2])
 
-	return &ISSecurityInfo{
-		Board:     board,
-		Engine:    engine,
-		Market:    market,
-		Name:      name,
-		ShortName: shortname,
-	}, nil
+	return &result, nil
 }
 
 type Prices map[string]map[entity.ISSMoexBoard]float64

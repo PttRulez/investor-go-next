@@ -2,57 +2,34 @@ package entity
 
 import (
 	"time"
-
-	"github.com/pttrulez/investor-go/internal/types"
 )
 
 type Deal struct {
 	Amount       int
+	Commission   float64
 	Date         time.Time
-	Exchange     types.Exchange
+	Exchange     Exchange
 	Id           int
 	PortfolioId  int
 	Price        float64
 	SecurityId   int
-	SecurityType types.SecurityType
-	Type         Type
+	SecurityType SecurityType
+	Type         DealType
 	Ticker       string
 	UserId       int
 }
 
-//type DeleteDealInfo struct {
-//	Exchange     types.Exchange
-//	SecurityType types.SecurityType
-//	Id           int
-//}
-
-//type Position struct {
-//	Amount       int
-//	AveragePrice float64
-//	Comment      string
-//	CurrentPrice float64
-//	CurrentCost  int
-//	Exchange     types.Exchange
-//	Id           int
-//	PortfolioId  int
-//	Secid        string
-//	SecurityId   int
-//	SecurityType types.SecurityType
-//	ShortName    string
-//	TargetPrice  float64
-//}
-
-type Type string
+type DealType string
 
 const (
-	DtBuy  Type = "BUY"
-	DtSell Type = "SELL"
+	DTBuy  DealType = "BUY"
+	DTSell DealType = "SELL"
 )
 
-func (e Type) Validate() bool {
+func (e DealType) Validate() bool {
 	switch e {
-	case DtBuy:
-	case DtSell:
+	case DTBuy:
+	case DTSell:
 	default:
 		return false
 	}

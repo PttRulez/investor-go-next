@@ -13,7 +13,7 @@ func FromRegisterDataToUser(dto *dto.RegisterUser) *entity.User {
 	}
 
 	if dto.Role == "" {
-		user.Role = user.Investor
+		user.Role = entity.Investor
 	} else {
 		user.Role = dto.Role
 	}
