@@ -9,14 +9,14 @@ type Deal struct {
 	Commission   float64
 	Date         time.Time
 	Exchange     Exchange
-	Id           int
-	PortfolioId  int
+	ID           int
+	PortfolioID  int
 	Price        float64
-	SecurityId   int
+	SecurityID   int
 	SecurityType SecurityType
 	Type         DealType
 	Ticker       string
-	UserId       int
+	UserID       int
 }
 
 type DealType string

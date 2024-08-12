@@ -29,6 +29,10 @@ const (
 func (e SecurityType) Validate() bool {
 	switch e {
 	case STBond:
+	case STCurrency:
+	case STFutures:
+	case STIndex:
+	case STPif:
 	case STShare:
 	default:
 		return false

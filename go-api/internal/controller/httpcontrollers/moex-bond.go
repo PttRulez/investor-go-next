@@ -1,9 +1,10 @@
-package http_controllers
+package httpcontrollers
 
 import (
 	"context"
-	"github.com/pttrulez/investor-go/internal/entity"
 	"net/http"
+
+	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -12,22 +13,24 @@ func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Reque
 	ctx := r.Context()
 	moexBond, err := c.moexBondService.GetBySecid(ctx, chi.URLParam(r, "secid"))
 	if err != nil {
-		logger.Error(err)
+		c.logger.Error(err)
 		writeError(w, err)
 		return
 	}
-	writeOKJSON(w, moexBond)
+	writeJSON(w, http.StatusOK, moexBond)
 }
 
-type MoexService interface {
+type MoexBondService interface {
 	GetBySecid(ctx context.Context, isin string) (*entity.Bond, error)
 }
 type MoexBondController struct {
-	moexBondService MoexService
+	logger          Logger
+	moexBondService MoexBondService
 }
 
-func NewMoexBondController(moexService MoexService) *MoexBondController {
+func NewMoexBondController(moexService MoexBondService, logger Logger) *MoexBondController {
 	return &MoexBondController{
+		logger:          logger,
 		moexBondService: moexService,
 	}
 }

@@ -1,7 +1,7 @@
 package response
 
 type ShortPortfolio struct {
-	Id       int    `json:"id"`
+	ID       int    `json:"id"`
 	Compound bool   `json:"compound"`
 	Name     string `json:"name"`
 }
@@ -13,7 +13,7 @@ type FullPortfolio struct {
 	Compound       bool          `json:"compound"`
 	Deals          []Deal        `json:"deals"`
 	DepositsSum    int           `json:"depositsSum"`
-	Id             int           `json:"id"`
+	ID             int           `json:"id"`
 	Name           string        `json:"name"`
 	Profitability  int           `json:"profitability"`
 	SharePositions []Position    `json:"sharePositions"`

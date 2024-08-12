@@ -1,15 +1,15 @@
-package http_controllers
+package httpcontrollers
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/pttrulez/investor-go/internal/entity"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/controller/model/dto"
+	"github.com/pttrulez/investor-go/internal/entity"
 )
 
 func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeOKJSON(w, map[string]string{"token": tokenString})
+	writeJSON(w, http.StatusOK, map[string]string{"token": tokenString})
 }
 
 func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +46,8 @@ func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		var validateErr validator.ValidationErrors
 		if ok := errors.As(err, &validateErr); ok {
 			writeValidationErrorsJSON(w, validateErr)
+		} else {
+			writeError(w, err)
 		}
 		return
 	}

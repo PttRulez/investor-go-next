@@ -10,7 +10,7 @@ const (
 type User struct {
 	Email          string
 	HashedPassword string
-	Id             int
+	ID             int
 	Name           string
 	Role           Role
 

@@ -11,7 +11,7 @@ func FromCreateDealDtoToDeal(dto *dto.CreateDeal) *entity.Deal {
 		Amount:       dto.Amount,
 		Date:         dto.Date,
 		Exchange:     dto.Exchange,
-		PortfolioId:  dto.PortfolioId,
+		PortfolioID:  dto.PortfolioID,
 		Price:        dto.Price,
 		SecurityType: dto.SecurityType,
 		Ticker:       dto.Ticker,
@@ -21,7 +21,7 @@ func FromCreateDealDtoToDeal(dto *dto.CreateDeal) *entity.Deal {
 
 func FromDeleteDealDtoToDeal(dto *dto.DeleteDeal) *entity.Deal {
 	return &entity.Deal{
-		Id:           dto.Id,
+		ID:           dto.ID,
 		Exchange:     dto.Exchange,
 		SecurityType: dto.SecurityType,
 	}
@@ -31,7 +31,7 @@ func FromDealToResponse(d *entity.Deal) response.Deal {
 	return response.Deal{
 		Amount: d.Amount,
 		Date:   d.Date,
-		Id:     d.Id,
+		ID:     d.ID,
 		Price:  d.Price,
 		Ticker: d.Ticker,
 	}

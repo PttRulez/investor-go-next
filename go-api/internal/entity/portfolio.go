@@ -1,8 +1,8 @@
 package entity
 
 type Portfolio struct {
-	Id       int
+	ID       int
 	Compound bool
 	Name     string
-	UserId   int
+	UserID   int
 }

@@ -1,23 +1,45 @@
-package request_validator
+package requestvalidator
 
 import (
-	"github.com/pttrulez/investor-go/internal/entity"
 	"regexp"
 	"strconv"
+
+	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-playground/validator/v10"
 )
 
-func NewValidator() *validator.Validate {
+func NewValidator() (*validator.Validate, error) {
 	validate := validator.New()
-	validate.RegisterValidation("dealType", ValidateDealType)
-	validate.RegisterValidation("is-exchange", ValidateExchange)
-	validate.RegisterValidation("moex-market", ValidateMoexMarket)
-	validate.RegisterValidation("opinionType", ValidatePrice)
-	validate.RegisterValidation("price", ValidatePrice)
-	validate.RegisterValidation("securityType", ValidateSecurityType)
-	validate.RegisterValidation("transactionType", ValidateTransactionType)
-	return validate
+	err := validate.RegisterValidation("dealType", ValidateDealType)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("is-exchange", ValidateExchange)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("moex-market", ValidateMoexMarket)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("opinionType", ValidatePrice)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("price", ValidatePrice)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("securityType", ValidateSecurityType)
+	if err != nil {
+		return nil, err
+	}
+	err = validate.RegisterValidation("transactionType", ValidateTransactionType)
+	if err != nil {
+		return nil, err
+	}
+	return validate, nil
 }
 
 func ValidateExchange(fl validator.FieldLevel) bool {

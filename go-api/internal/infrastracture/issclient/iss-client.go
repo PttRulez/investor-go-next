@@ -1,16 +1,17 @@
-package iss_client
+package issclient
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/pttrulez/investor-go/internal/entity"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/pttrulez/investor-go/internal/entity"
 )
 
 type ISSecurityInfo struct {
@@ -30,9 +31,9 @@ type ISSecurityInfo struct {
 
 }
 
-func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, error) {
-	uri := fmt.Sprintf("%s/securities/%s.json", api.baseUrl, secid)
-	req, err := http.NewRequest(http.MethodGet, uri, nil)
+func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) (*ISSecurityInfo, error) {
+	uri := fmt.Sprintf("%s/securities/%s.json", api.baseURL, secid)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker http_controllers.NewRequest]: %w", err)
 	}
@@ -55,7 +56,7 @@ func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, err
 		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker ReadAll(body)]: %w", err)
 	}
 
-	data := &MoexApiResponseSecurityInfo{}
+	var data MoexAPIResponseSecurityInfo
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker json.Unmarshal(body)]: %w", err)
@@ -70,39 +71,39 @@ func (api *IssClient) GetSecurityInfoBySecid(secid string) (*ISSecurityInfo, err
 			result.ShortName = item[1]
 		// Только для облигаций:
 		case "COUPONFREQUENCY":
-			freq, err := strconv.ParseInt(item[1], 10, 8)
-			if err != nil {
-				return nil, err
+			freq, parseErr := strconv.ParseInt(item[1], 10, 8)
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.CouponFrequency = int8(freq)
 		case "COUPONPERCENT":
-			percent, err := strconv.ParseFloat(item[1], 32)
-			if err != nil {
-				return nil, err
+			percent, parseErr := strconv.ParseFloat(item[1], 32)
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.CouponPercent = float32(percent)
 		case "COUPONVALUE":
-			percent, err := strconv.ParseFloat(item[1], 32)
-			if err != nil {
-				return nil, err
+			percent, parseErr := strconv.ParseFloat(item[1], 32)
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.CouponPercent = float32(percent)
 		case "ISSUEDATE":
-			t, err := time.Parse("2006-01-02", item[1])
-			if err != nil {
-				return nil, err
+			t, parseErr := time.Parse("2006-01-02", item[1])
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.IssueDate = t
 		case "MATDATE":
-			t, err := time.Parse("2006-01-02", item[1])
-			if err != nil {
-				return nil, err
+			t, parseErr := time.Parse("2006-01-02", item[1])
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.MatDate = t
 		case "FACEVALUE":
-			faceValue, err := strconv.Atoi(item[1])
-			if err != nil {
-				return nil, err
+			faceValue, parseErr := strconv.Atoi(item[1])
+			if parseErr != nil {
+				return nil, parseErr
 			}
 			result.FaceValue = faceValue
 		}
@@ -120,7 +121,7 @@ type Prices map[string]map[entity.ISSMoexBoard]float64
 
 func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
 	tickers []string) (Prices, error) {
-	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseUrl, market)
+	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseURL, market)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices http_controllers.NewRequest]: %w", err)
@@ -143,7 +144,7 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ReadAll(body)]: %w", err)
 	}
 
-	data := &MoexApiResponseCurrentPrices{}
+	var data MoexAPIResponseCurrentPrices
 	err = json.Unmarshal(body, &data)
 	if err != nil {
 		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices json.Unmarshal(body)]: %w", err)
@@ -172,13 +173,13 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 }
 
 type IssClient struct {
-	baseUrl string
+	baseURL string
 	client  *http.Client
 }
 
 func NewISSClient() *IssClient {
 	return &IssClient{
-		baseUrl: "https://iss.moex.com/iss",
+		baseURL: "https://iss.moex.com/iss",
 		client:  &http.Client{},
 	}
 }

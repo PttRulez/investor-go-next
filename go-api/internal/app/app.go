@@ -3,9 +3,9 @@ package app
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,16 +15,17 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
-	_ "github.com/lib/pq"
+	_ "github.com/lib/pq" // postgres db adapter
 	"github.com/pttrulez/investor-go/config"
-	"github.com/pttrulez/investor-go/internal/controller/http_controllers"
-	"github.com/pttrulez/investor-go/internal/controller/request_validator"
-	"github.com/pttrulez/investor-go/internal/infrastracture/iss_client"
+	"github.com/pttrulez/investor-go/internal/controller/httpcontrollers"
+	"github.com/pttrulez/investor-go/internal/controller/requestvalidator"
+	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
 	"github.com/pttrulez/investor-go/internal/infrastracture/postgres"
+	"github.com/pttrulez/investor-go/internal/logger"
 	"github.com/pttrulez/investor-go/internal/service/deal"
 	"github.com/pttrulez/investor-go/internal/service/expert"
-	"github.com/pttrulez/investor-go/internal/service/moex_bond"
-	"github.com/pttrulez/investor-go/internal/service/moex_share"
+	"github.com/pttrulez/investor-go/internal/service/moexbond"
+	"github.com/pttrulez/investor-go/internal/service/moexshare"
 	"github.com/pttrulez/investor-go/internal/service/portfolio"
 	"github.com/pttrulez/investor-go/internal/service/transaction"
 	"github.com/pttrulez/investor-go/internal/service/user"
@@ -33,8 +34,12 @@ import (
 func Run() {
 	cfg := config.MustLoad()
 
-	logger := slog.Default()
-	validator := request_validator.NewValidator()
+	logger := logger.NewLogger()
+	validator, err := requestvalidator.NewValidator()
+	if err != nil {
+		panic("Failed to create validator")
+	}
+
 	r := chi.NewRouter()
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedCors,
@@ -42,7 +47,6 @@ func Run() {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
 	// Repositories init
@@ -51,7 +55,7 @@ func Run() {
 
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		logger.Error(fmt.Sprintf("Error starting postgres db: %v", err))
+		logger.Error(fmt.Errorf("failed to start postgres db: %w", err))
 	}
 
 	dealRepo := postgres.NewDealPostgres(db)
@@ -63,26 +67,26 @@ func Run() {
 	transactionRepo := postgres.NewTransactionPostgres(db)
 	userRepo := postgres.NewUserPostgres(db)
 
-	//Services init
+	// Services init
 	tokenAuth := jwtauth.New("HS256", []byte(cfg.TokenAuthSecret), nil)
-	issClient := iss_client.NewISSClient()
+	issClient := issclient.NewISSClient()
 
 	expertSerice := expert.NewExpertService(expertRepo)
-	moexBondService := moex_bond.NewMoexBondService(moexBondRepo, issClient)
-	moexShareService := moex_share.NewMoexShareService(moexShareRepo, issClient)
+	moexBondService := moexbond.NewMoexBondService(moexBondRepo, issClient)
+	moexShareService := moexshare.NewMoexShareService(moexShareRepo, issClient)
 	portfolioService := portfolio.NewPortfolioService(dealRepo, issClient, positionRepo, portfolioRepo, transactionRepo)
 	transactionService := transaction.NewTransactionService(transactionRepo, portfolioRepo)
 	userService := user.NewUserService(userRepo, tokenAuth)
 	dealService := deal.NewDealService(issClient, moexBondService, moexShareService, dealRepo)
 
 	// Controllers init
-	authController := http_controllers.NewAuthController(userService, validator)
-	dealController := http_controllers.NewDealController(dealService, validator)
-	expertController := http_controllers.NewExpertController(expertSerice, validator)
-	moexBondController := http_controllers.NewMoexBondController(moexBondService)
-	moexShareController := http_controllers.NewMoexShareController(moexShareService)
-	portfolioController := http_controllers.NewPortfolioController(portfolioService)
-	transactionController := http_controllers.NewCashoutController(transactionService, validator)
+	authController := httpcontrollers.NewAuthController(userService, validator)
+	dealController := httpcontrollers.NewDealController(dealService, validator)
+	expertController := httpcontrollers.NewExpertController(expertSerice, validator)
+	moexBondController := httpcontrollers.NewMoexBondController(moexBondService, logger)
+	moexShareController := httpcontrollers.NewMoexShareController(moexShareService)
+	portfolioController := httpcontrollers.NewPortfolioController(portfolioService)
+	transactionController := httpcontrollers.NewCashoutController(transactionService, validator)
 
 	// Public Routes
 	r.Post("/register", authController.RegisterUser)
@@ -124,17 +128,19 @@ func Run() {
 		r.Route("/portfolio", func(r chi.Router) {
 			r.Delete("/{id}", portfolioController.DeletePortfolio)
 			r.Get("/", portfolioController.GetListOfPortfoliosOfCurrentUser)
-			r.Get("/{id}", portfolioController.GetPortfolioById)
+			r.Get("/{id}", portfolioController.GetPortfolioByID)
 			r.Post("/", portfolioController.CreateNewPortfolio)
 			r.Put("/", portfolioController.UpdatePortfolio)
 		})
 	})
 
 	// The HTTP Server
-	address := fmt.Sprintf("%v:%v", cfg.ApiHost, cfg.ApiPort)
+	const headerTimeout = time.Second * 10
+	address := fmt.Sprintf("%v:%v", cfg.APIHost, cfg.APIPort)
 	srv := &http.Server{
-		Addr:    address,
-		Handler: r,
+		Addr:              address,
+		Handler:           r,
+		ReadHeaderTimeout: headerTimeout,
 	}
 
 	// Server run context
@@ -147,7 +153,9 @@ func Run() {
 	go func() {
 		<-quit
 
-		shutdownCtx, _ := context.WithTimeout(serverCtx, 30*time.Second)
+		const shutdownTimeout = 30 * time.Second
+		shutdownCtx, cancel := context.WithTimeout(serverCtx, shutdownTimeout)
+		defer func() { cancel() }()
 
 		go func() {
 			<-shutdownCtx.Done()
@@ -159,15 +167,15 @@ func Run() {
 		//	Startting Graceful shutdown
 
 		// Shutdown database
-		err := db.Close()
-		if err != nil {
-			log.Fatal(err)
+		e := db.Close()
+		if e != nil {
+			log.Fatal(e)
 		}
 
 		// Shutdown server
-		err = srv.Shutdown(shutdownCtx)
-		if err != nil {
-			log.Fatal("Server forced to shutdown: ", err)
+		e = srv.Shutdown(shutdownCtx)
+		if e != nil {
+			log.Fatal("Server forced to shutdown: ", e)
 		}
 
 		serverStopCtx()
@@ -175,7 +183,7 @@ func Run() {
 
 	// Run Server
 	err = srv.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
 

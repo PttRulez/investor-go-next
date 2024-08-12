@@ -2,52 +2,68 @@ package user
 
 import (
 	"context"
-	"github.com/pttrulez/investor-go/internal/entity"
-	ierrors "github.com/pttrulez/investor-go/internal/errors"
-	"net/http"
+	"errors"
+	"fmt"
 	"time"
+
+	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
+var (
+	errWrongUsername = errors.New("неправильный юзернейм")
+	errWrongPassword = errors.New("неправильный юзернейм")
+)
+
+const tokentExpHours = 6
+
 func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, error) {
+	const op = "UserService.LoginUser"
+
 	user, err := s.userRepo.GetByEmail(ctx, model.Email)
+	if errors.Is(err, database.ErrNotFound) {
+		return "", errWrongUsername
+	}
 	if err != nil {
-		return "", err
-	} else if user == nil {
-		return "", ierrors.NewErrSendToClient("Неверные данные", http.StatusUnauthorized)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(model.Password))
 	if err != nil {
-		return "", ierrors.NewErrSendToClient("Неверные данные", http.StatusUnauthorized)
+		return "", errWrongPassword
 	}
 
 	claims := jwt.MapClaims{
-		"id":    user.Id,
+		"id":    user.ID,
 		"email": user.Email,
 		"name":  user.Name,
 		"role":  user.Role,
 	}
-	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*6))
+
+	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*tokentExpHours))
 
 	_, tokenString, err := s.tokenAuth.Encode(claims)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
 	return tokenString, nil
 }
 
 func (s *Service) RegisterUser(ctx context.Context, user *entity.User) error {
+	const op = "UserService.LoginUser"
+
 	// Check if user with this email already exists
 	existingUser, err := s.userRepo.GetByEmail(ctx, user.Email)
 	if existingUser != nil {
-		return ierrors.NewErrSendToClient("Пользователь с таким email уже существует", http.StatusBadRequest)
-	} else if err != nil {
-		return err
+		return errors.New("такой юзер уже существует")
+	}
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	encpw, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)

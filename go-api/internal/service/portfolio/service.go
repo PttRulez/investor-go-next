@@ -2,16 +2,19 @@ package portfolio
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
+
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/controller/model/response"
 	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/infrastracture/iss_client"
+	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
 	"github.com/pttrulez/investor-go/internal/utils"
 )
 
-func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
-	userId int) (*response.FullPortfolio, error) {
+func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
+	userID int) (*response.FullPortfolio, error) {
 	var (
 		done   = make(chan struct{})
 		errCh  = make(chan error)
@@ -27,13 +30,16 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 
 	// Базовая инфа о портфолио
 	go func() {
-		pdb, err := s.GetPortfolioById(ctx, portfolioId, userId)
+		pdb, err := s.GetPortfolioByID(ctx, portfolioID, userID)
+		if errors.Is(err, sql.ErrNoRows) {
+			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
+		}
 		if err != nil {
 			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
 			return
 		}
 
-		result.Id = pdb.Id
+		result.ID = pdb.ID
 		result.Compound = pdb.Compound
 		result.Name = pdb.Name
 
@@ -43,21 +49,21 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 	// сделки
 	go func() {
 		var err error
-		deals, err = s.dealRepository.GetDealListByPortoflioId(ctx, portfolioId, userId)
+		deals, err = s.dealRepository.GetDealListByPortoflioID(ctx, portfolioID, userID)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
 		}
 
-		//var bondDealsCount, shareDealsCount int
-		//for _, d := range deals {
+		// var bondDealsCount, shareDealsCount int
+		// for _, d := range deals {
 		//	if d.SecurityType == types.STBond {
 		//		bondDealsCount++
 		//	} else if d.SecurityType == types.STShare {
 		//		shareDealsCount++
 		//	}
-		//}
-		//for _, d := range deals {
+		// }
+		// for _, d := range deals {
 		//	if d.SecurityType == types.STShare {
 		//		shareDeals = append(shareDeals, d)
 		//	} else if d.SecurityType == types.STBond {
@@ -71,7 +77,7 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 	// позиции
 	go func() {
 		// получили массив позиций по айди портфолио
-		positions, err := s.positionRepo.GetListByPortfolioId(ctx, portfolioId, userId)
+		positions, err := s.positionRepo.GetListByPortfolioID(ctx, portfolioID, userID)
 		if err != nil {
 			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
 			return
@@ -85,10 +91,10 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 				sharePositionsCount++
 			}
 		}
-		sharePositions = make([]*entity.Position, bondPositionsCount)
-		bondPositions = make([]*entity.Position, sharePositionsCount)
-		bondTickers := make([]string, bondPositionsCount)
-		shareTickers := make([]string, sharePositionsCount)
+		sharePositions = make([]*entity.Position, 0, bondPositionsCount)
+		bondPositions = make([]*entity.Position, 0, sharePositionsCount)
+		bondTickers := make([]string, 0, bondPositionsCount)
+		shareTickers := make([]string, 0, sharePositionsCount)
 		for _, p := range positions {
 			if p.SecurityType == entity.STShare {
 				sharePositions = append(sharePositions, p)
@@ -98,7 +104,7 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 				bondTickers = append(bondTickers, p.Ticker)
 			}
 		}
-		var bondPrices, sharePrices iss_client.Prices
+		var bondPrices, sharePrices issclient.Prices
 
 		if bondPositionsCount > 0 {
 			bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds, bondTickers)
@@ -116,13 +122,13 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		}
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
-		for i := 0; i < len(bondPositions); i++ {
-			bondPositions[i].CurrentPrice = bondPrices[bondPositions[i].Ticker][bondPositions[i].Board]
-			bondPositions[i].CurrentCost = int(bondPositions[i].CurrentPrice * float64(bondPositions[i].Amount))
+		for _, position := range bondPositions {
+			position.CurrentPrice = bondPrices[position.Ticker][position.Board]
+			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
 		}
-		for i := 0; i < len(sharePositions); i++ {
-			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Ticker][sharePositions[i].Board]
-			sharePositions[i].CurrentCost = int(sharePositions[i].CurrentPrice * float64(sharePositions[i].Amount))
+		for _, position := range sharePositions {
+			position.CurrentPrice = sharePrices[position.Ticker][position.Board]
+			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
 		}
 
 		done <- struct{}{}
@@ -131,7 +137,7 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 	// транзакции
 	go func() {
 		var err error
-		transactions, err = s.transactionRepo.GetListByPortfolioId(ctx, portfolioId, utils.GetCurrentUserId(ctx))
+		transactions, err = s.transactionRepo.GetListByPortfolioID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
 		if err != nil {
 			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
 			return
@@ -185,9 +191,11 @@ func (s *Service) GetFullPortfolioById(ctx context.Context, portfolioId int,
 		result.SharePositions[i] = converter.FromPositionToResponse(pos)
 	}
 
+	const percentageMultiplier = 100
 	result.Cash = result.DepositsSum - result.CashoutsSum - spentToBuys + receivedFromSells
 	result.TotalCost += result.Cash
-	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum)/float64(result.DepositsSum) - 1) * 100)
+	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum)/
+		float64(result.DepositsSum) - 1) * percentageMultiplier)
 
 	return result, nil
 }
@@ -196,54 +204,54 @@ func (s *Service) CreatePortfolio(ctx context.Context, p *entity.Portfolio) erro
 	return s.repo.Insert(ctx, p)
 }
 
-func (s *Service) GetListByUserId(ctx context.Context, userId int) ([]*entity.Portfolio, error) {
-	return s.repo.GetListByUserId(ctx, userId)
+func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio, error) {
+	return s.repo.GetListByUserID(ctx, userID)
 }
 
-func (s *Service) GetPortfolioById(ctx context.Context, portfolioId int,
-	userId int) (*entity.Portfolio, error) {
-	return s.repo.GetById(ctx, portfolioId, userId)
+func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
+	userID int) (*entity.Portfolio, error) {
+	return s.repo.GetByID(ctx, portfolioID, userID)
 }
 
-func (s *Service) DeletePortfolio(ctx context.Context, portfolioId int, userId int) error {
-	if _, err := s.GetPortfolioById(ctx, portfolioId, userId); err != nil {
+func (s *Service) DeletePortfolio(ctx context.Context, portfolioID int, userID int) error {
+	if _, err := s.GetPortfolioByID(ctx, portfolioID, userID); err != nil {
 		return err
 	}
-	return s.repo.Delete(ctx, portfolioId, userId)
+	return s.repo.Delete(ctx, portfolioID, userID)
 }
 
-func (s *Service) UpdatePortfolio(ctx context.Context, portfolio *entity.Portfolio, userId int) error {
-	return s.repo.Update(ctx, portfolio, utils.GetCurrentUserId(ctx))
+func (s *Service) UpdatePortfolio(ctx context.Context, portfolio *entity.Portfolio, userID int) error {
+	return s.repo.Update(ctx, portfolio, userID)
 }
 
 type Service struct {
 	dealRepository  DealRepository
-	issClient       *iss_client.IssClient
+	issClient       *issclient.IssClient
 	positionRepo    PositionRepository
 	repo            Repository
 	transactionRepo TransactionRepository
 }
 
 type Repository interface {
-	Delete(ctx context.Context, id int, userId int) error
-	GetById(ctx context.Context, id int, userId int) (*entity.Portfolio, error)
-	GetListByUserId(ctx context.Context, id int) ([]*entity.Portfolio, error)
+	Delete(ctx context.Context, id int, userID int) error
+	GetByID(ctx context.Context, id int, userID int) (*entity.Portfolio, error)
+	GetListByUserID(ctx context.Context, id int) ([]*entity.Portfolio, error)
 	Insert(ctx context.Context, p *entity.Portfolio) error
-	Update(ctx context.Context, p *entity.Portfolio, userId int) error
+	Update(ctx context.Context, p *entity.Portfolio, userID int) error
 }
 type DealRepository interface {
-	GetDealListByPortoflioId(ctx context.Context, portfolioId int, userId int) ([]*entity.Deal, error)
+	GetDealListByPortoflioID(ctx context.Context, portfolioID int, userID int) ([]*entity.Deal, error)
 }
 type PositionRepository interface {
-	GetListByPortfolioId(ctx context.Context, portfolioId int, userId int) ([]*entity.Position, error)
+	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]*entity.Position, error)
 }
 type TransactionRepository interface {
-	GetListByPortfolioId(ctx context.Context, portfolioId int, userId int) ([]entity.Transaction, error)
+	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]entity.Transaction, error)
 }
 
 func NewPortfolioService(
 	dealRepository DealRepository,
-	issClient *iss_client.IssClient,
+	issClient *issclient.IssClient,
 	positionRepo PositionRepository,
 	repository Repository,
 	transactionRepo TransactionRepository,

@@ -1,15 +1,16 @@
-package http_controllers
+package httpcontrollers
 
 import (
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/utils"
-	"net/http"
-	"strconv"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
@@ -51,9 +52,9 @@ func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 		writeError(w, errors.New("invalid id"))
 	}
 
-	userId := utils.GetCurrentUserId(r.Context())
+	userID := utils.GetCurrentUserID(r.Context())
 
-	err = c.dealService.DeleteDealById(ctx, id, userId)
+	err = c.dealService.DeleteDealByID(ctx, id, userID)
 	if err != nil {
 		writeError(w, fmt.Errorf("[DealController.DeleteDeal] %w", err))
 	}
@@ -63,7 +64,7 @@ func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 
 type DealService interface {
 	CreateDeal(ctx context.Context, d *entity.Deal) error
-	DeleteDealById(ctx context.Context, id int, userId int) error
+	DeleteDealByID(ctx context.Context, id int, userID int) error
 }
 
 type DealController struct {

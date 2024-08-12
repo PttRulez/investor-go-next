@@ -2,14 +2,15 @@ package transaction
 
 import (
 	"context"
+
 	"github.com/pttrulez/investor-go/internal/entity"
 )
 
 func (s *Service) CreateTransaction(ctx context.Context, t *entity.Transaction) error {
 	return s.repo.Insert(ctx, t)
 }
-func (s *Service) DeleteTransaction(ctx context.Context, transactionId int, userId int) error {
-	err := s.repo.Delete(ctx, transactionId, userId)
+func (s *Service) DeleteTransaction(ctx context.Context, transactionID int, userID int) error {
+	err := s.repo.Delete(ctx, transactionID, userID)
 	if err != nil {
 		return err
 	}
@@ -17,11 +18,11 @@ func (s *Service) DeleteTransaction(ctx context.Context, transactionId int, user
 }
 
 type PortfolioRepository interface {
-	GetById(ctx context.Context, portfolioId int, userId int) (*entity.Portfolio, error)
+	GetByID(ctx context.Context, portfolioID int, userID int) (*entity.Portfolio, error)
 }
 type Repository interface {
-	Delete(ctx context.Context, id int, userId int) error
-	GetById(ctx context.Context, id int, userId int) (*entity.Transaction, error)
+	Delete(ctx context.Context, id int, userID int) error
+	GetByID(ctx context.Context, id int, userID int) (*entity.Transaction, error)
 	Insert(ctx context.Context, t *entity.Transaction) error
 }
 type Service struct {

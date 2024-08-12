@@ -8,11 +8,11 @@ type Position struct {
 	CurrentPrice float64
 	CurrentCost  int
 	Exchange     Exchange
-	Id           int
-	PortfolioId  int
+	ID           int
+	PortfolioID  int
 	SecurityType SecurityType
 	ShortName    string
 	TargetPrice  float64
 	Ticker       string
-	UserId       int
+	UserID       int
 }

@@ -1,10 +1,10 @@
-package http_controllers
+package httpcontrollers
 
 import (
 	"context"
-	"fmt"
-	"github.com/pttrulez/investor-go/internal/entity"
 	"net/http"
+
+	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -14,10 +14,9 @@ func (c *MoexShareController) GetInfoBySecid(w http.ResponseWriter, r *http.Requ
 	moexShare, err := c.moexSharService.GetBySecid(ctx, chi.URLParam(r, "secid"))
 	if err != nil {
 		writeError(w, err)
-		fmt.Println(err)
 		return
 	}
-	writeOKJSON(w, moexShare)
+	writeJSON(w, http.StatusOK, moexShare)
 }
 
 type MoexShareService interface {

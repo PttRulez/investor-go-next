@@ -2,23 +2,25 @@ package logger
 
 import "log/slog"
 
-var impl Interface
-
-type Interface interface {
+type Logger interface {
 	Info(err error)
 	Error(err error)
 }
 
-func init() {
-	impl = &Slogger{
+type Log struct {
+	slog *slog.Logger
+}
+
+func NewLogger() Logger {
+	return &Log{
 		slog: slog.Default(),
 	}
 }
 
-func Info(err error) {
-	impl.Info(err)
+func (l *Log) Info(err error) {
+	l.slog.Info(err.Error())
 }
 
-func Error(err error) {
-	impl.Error(err)
+func (l *Log) Error(err error) {
+	l.slog.Error(err.Error())
 }

@@ -18,8 +18,8 @@ type PostgresConfig struct {
 }
 
 type Config struct {
-	ApiHost         string
-	ApiPort         int
+	APIHost         string
+	APIPort         int
 	AllowedCors     []string
 	JwtSecret       string
 	Pg              PostgresConfig
@@ -49,8 +49,8 @@ func MustLoad() *Config {
 
 	return &Config{
 		AllowedCors:     strings.Split(corsString, ","),
-		ApiPort:         apiPort,
-		ApiHost:         apiHost,
+		APIPort:         apiPort,
+		APIHost:         apiHost,
 		JwtSecret:       jwtSecret,
 		Pg:              pgConfig,
 		TokenAuthSecret: tokenAuthSecret,

@@ -5,7 +5,7 @@ import "time"
 type SecurityCommonInfo struct {
 	Board     ISSMoexBoard
 	Engine    ISSMoexEngine
-	Id        int
+	ID        int
 	Market    ISSMoexMarket
 	Name      string
 	Secid     string

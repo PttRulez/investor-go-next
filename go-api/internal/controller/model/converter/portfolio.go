@@ -15,7 +15,7 @@ func FromCreatePortfolioDtoToPortfolio(dto *dto.CreatePortfolio) *entity.Portfol
 
 func FromUpdatePortfolioDtoToPortfolio(dto *dto.UpdatePortfolio) *entity.Portfolio {
 	return &entity.Portfolio{
-		Id:       dto.Id,
+		ID:       dto.ID,
 		Compound: dto.Compound,
 		Name:     dto.Name,
 	}
@@ -23,7 +23,7 @@ func FromUpdatePortfolioDtoToPortfolio(dto *dto.UpdatePortfolio) *entity.Portfol
 
 func FromPortfolioToShortPortfolio(portfolio *entity.Portfolio) *response.ShortPortfolio {
 	return &response.ShortPortfolio{
-		Id:       portfolio.Id,
+		ID:       portfolio.ID,
 		Compound: portfolio.Compound,
 		Name:     portfolio.Name,
 	}

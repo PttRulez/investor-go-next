@@ -5,10 +5,10 @@ import "time"
 type Transaction struct {
 	Amount      int
 	Date        time.Time
-	Id          int
-	PortfolioId int
+	ID          int
+	PortfolioID int
 	Type        TransactionType
-	UserId      int
+	UserID      int
 }
 
 type TransactionType string
