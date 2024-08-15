@@ -1,0 +1,40 @@
+get:
+  summary: Получение портфолио по id
+  parameters:
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник портфолио
+  responses:
+    "200":
+      description: удачный запрос
+      content:
+        application/json:
+          schema:
+            $ref: ../responses/portfolio.yaml#/components/schemas/FullPortfolioResponse
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе
+delete:
+  summary: Удаление портфолио по id
+  parameters:
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник портфолио
+  responses:
+    "200":
+      description: Портфолио удален
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе

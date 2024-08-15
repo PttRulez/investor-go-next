@@ -1,8 +1,8 @@
 package entity
 
 type Expert struct {
-	AvatarURL string `json:"avatarUrl"`
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	UserID    int    `json:"userId"`
+	AvatarURL *string `json:"avatarUrl"`
+	ID        int     `json:"id"`
+	Name      string  `json:"name"`
+	UserID    int     `json:"userId"`
 }

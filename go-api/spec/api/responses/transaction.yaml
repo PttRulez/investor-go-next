@@ -1,0 +1,9 @@
+components:
+  schemas:
+    TransactionResponse:
+      allOf:
+        - $ref: ../requests/transaction.yaml#/components/schemas/CreateTransactionRequest
+        - type: object
+          properties:
+            id:
+              type: integer

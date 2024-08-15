@@ -1,0 +1,37 @@
+components:
+  schemas:
+    DealType:
+      type: string
+      enum:
+        - BUY
+        - SELL
+    Exchange:
+      type: string
+      enum:
+        - MOEX
+    OpinionType:
+      type: string
+      enum:
+        - FLAT
+        - GENERAL
+        - GROWTH
+        - REDUCTION
+    Role:
+      type: string
+      enum:
+        - ADMIN
+        - INVESTOR
+    SecurityType:
+      type: string
+      enum:
+        - BOND
+        - CURRENCY
+        - FUTURES
+        - INDEX
+        - PIF
+        - SHARE
+    TransactionType:
+      type: string
+      enum:
+        - DEPOSIT
+        - CASHOUT

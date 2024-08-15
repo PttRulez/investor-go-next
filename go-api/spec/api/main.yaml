@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: Investor API
+  description: REST API для приложения "Инвестор"
+  version: 1.0.0
+paths:
+  /deal:
+    $ref: ./paths/deal.yaml
+  /deal/{id}:
+    $ref: ./paths/deal@{id}.yaml
+  /expert:
+    $ref: ./paths/expert.yaml
+  /login:
+    $ref: ./paths/auth.yaml#/~1login
+  /moex-bond/{secid}:
+    $ref: ./paths/moex-bond.yaml
+  /moex-share/{secid}:
+    $ref: ./paths/moex-share.yaml
+  /opinion:
+    $ref: ./paths/opinion.yaml
+  /portfolio:
+    $ref: ./paths/portfolio.yaml
+  /portfolio/{id}:
+    $ref: ./paths/portfolio@{id}.yaml
+  /register:
+    $ref: ./paths/auth.yaml#/~1register
+  /transaction:
+    $ref: ./paths/transaction.yaml
+  /transaction/{id}:
+    $ref: ./paths/transaction@{id}.yaml
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - BearerAuth: []

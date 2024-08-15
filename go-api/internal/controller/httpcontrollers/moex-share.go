@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-chi/chi/v5"
@@ -16,7 +17,7 @@ func (c *MoexShareController) GetInfoBySecid(w http.ResponseWriter, r *http.Requ
 		writeError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, moexShare)
+	writeJSON(w, http.StatusOK, converter.FromMoexShareToMoexShareResponse(*moexShare))
 }
 
 type MoexShareService interface {

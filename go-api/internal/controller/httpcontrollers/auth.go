@@ -8,13 +8,14 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
-	"github.com/pttrulez/investor-go/internal/controller/model/dto"
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/service/user"
+	"github.com/pttrulez/investor-go/pkg/api"
 )
 
 func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	var loginData dto.LoginUser
+	var loginData api.LoginRequest
 
 	// Return error if json couldn't be decoded
 	if err := json.NewDecoder(r.Body).Decode(&loginData); err != nil {
@@ -22,9 +23,9 @@ func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenString, err := c.userService.LoginUser(ctx, converter.FromLoginDtoToUser(&loginData))
-	if err != nil {
-		writeError(w, err)
+	tokenString, err := c.userService.LoginUser(ctx, converter.FromLoginRequestToUser(loginData))
+	if errors.Is(err, user.ErrWrongUsername) || errors.Is(err, user.ErrWrongPassword) {
+		writeString(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
@@ -33,7 +34,7 @@ func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	var registerData dto.RegisterUser
+	var registerData api.RegisterUserRequest
 
 	// Return error if json couldn't be decoded
 	if err := json.NewDecoder(r.Body).Decode(&registerData); err != nil {
@@ -52,7 +53,7 @@ func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := c.userService.RegisterUser(ctx, converter.FromRegisterDataToUser(&registerData))
+	err := c.userService.RegisterUser(ctx, converter.FromRegisterRequestToUser(registerData))
 	if err != nil {
 		writeError(w, err)
 		return

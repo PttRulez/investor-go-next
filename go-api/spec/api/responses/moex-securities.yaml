@@ -1,0 +1,57 @@
+components:
+  schemas:
+    MoexSecurityResponse:
+      type: object
+      required: [board, engine, id, market, name, secid, shortName]
+      properties:
+        board:
+          $ref: ../shared/iss.yaml#/components/schemas/ISSMoexBoard
+        engine:
+          $ref: ../shared/iss.yaml#/components/schemas/ISSMoexEngine
+        id:
+          type: integer
+        market:
+          $ref: ../shared/iss.yaml#/components/schemas/ISSMoexMarket
+        name:
+          type: string
+        secid:
+          type: string
+        shortName:
+          type: string
+    MoexShareResponse:
+      allOf:
+        - $ref: "#/components/schemas/MoexSecurityResponse"
+    MoexBondResponse:
+      allOf:
+        - $ref: "#/components/schemas/MoexSecurityResponse"
+        - type: object
+          required:
+            [
+              couponPercent,
+              couponValue,
+              couponFrequency,
+              issueDate,
+              faceValue,
+              matDate,
+            ]
+          properties:
+            couponPercent:
+              type: number
+              format: double
+              description: купон в процентах
+            couponValue:
+              type: number
+              format: double
+              description: купон в деньгах
+            couponFrequency:
+              type: integer
+              description: частота выплаты купонов в год
+            issueDate:
+              type: string
+              format: date
+            faceValue:
+              type: integer
+              description: номинальная стоимость
+            matDate:
+              type: string
+              format: date

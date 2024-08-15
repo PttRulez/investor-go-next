@@ -43,7 +43,7 @@ func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange entity.
 		p.Exchange,
 		p.PortfolioID,
 		p.SecurityType,
-		p.Ticker,
+		p.Secid,
 		p.TargetPrice,
 		p.ShortName,
 	)
@@ -84,7 +84,7 @@ func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, us
 			p.PortfolioID,
 			p.SecurityType,
 			p.ShortName,
-			p.Ticker,
+			p.Secid,
 			p.TargetPrice,
 			p.UserID,
 		)
@@ -127,7 +127,7 @@ func (pg *PositionPostgres) Insert(ctx context.Context, p *entity.Position) erro
 		p.PortfolioID,
 		p.SecurityType,
 		p.ShortName,
-		p.Ticker,
+		p.Secid,
 		p.TargetPrice,
 		p.UserID,
 	)
@@ -152,7 +152,7 @@ func (pg *PositionPostgres) Update(ctx context.Context, p *entity.Position) erro
 		p.PortfolioID,
 		p.SecurityType,
 		p.ShortName,
-		p.Ticker,
+		p.Secid,
 		p.TargetPrice,
 		p.ID,
 	)

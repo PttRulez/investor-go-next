@@ -74,7 +74,8 @@ func Run() {
 	expertSerice := expert.NewExpertService(expertRepo)
 	moexBondService := moexbond.NewMoexBondService(moexBondRepo, issClient)
 	moexShareService := moexshare.NewMoexShareService(moexShareRepo, issClient)
-	portfolioService := portfolio.NewPortfolioService(dealRepo, issClient, positionRepo, portfolioRepo, transactionRepo)
+	portfolioService := portfolio.NewPortfolioService(dealRepo, issClient, positionRepo,
+		portfolioRepo, transactionRepo)
 	transactionService := transaction.NewTransactionService(transactionRepo, portfolioRepo)
 	userService := user.NewUserService(userRepo, tokenAuth)
 	dealService := deal.NewDealService(issClient, moexBondService, moexShareService, dealRepo)
@@ -124,6 +125,7 @@ func Run() {
 		r.Route("/moex-share", func(r chi.Router) {
 			r.Get("/{secid}", moexShareController.GetInfoBySecid)
 		})
+
 		// Portfolios
 		r.Route("/portfolio", func(r chi.Router) {
 			r.Delete("/{id}", portfolioController.DeletePortfolio)

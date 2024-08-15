@@ -6,15 +6,15 @@ import (
 
 type Opinion struct {
 	Date         *time.Time
-	Exchange     Exchange
+	Exchange     *Exchange
 	ExpertID     int
 	ID           int
-	SecurityID   int
-	SecurityType SecurityType
+	SecurityID   *int
+	SecurityType *SecurityType
 	SourceLink   *string
 	TargetPrice  *float64
 	Text         string
-	Type         OpinionType
+	Type         *OpinionType
 	UserID       int
 }
 

@@ -1,0 +1,32 @@
+get:
+  summary: Список экспертов, созданных текущим юзером
+  responses:
+    "200":
+      description: удачный запрос
+      content:
+        application/json:
+          schema:
+            $ref: ../responses/expert.yaml#/components/schemas/ExpertListResponse
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе
+post:
+  summary: Создание нового эксперта
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/expert.yaml#/components/schemas/CreateExpertRequest
+  responses:
+    "201":
+      description: эксперт создан
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе

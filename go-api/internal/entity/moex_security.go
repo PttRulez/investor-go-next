@@ -18,9 +18,9 @@ type Share struct {
 
 type Bond struct {
 	SecurityCommonInfo
-	CouponPercent   float32
-	CouponValue     float32
-	CouponFrequency int8      // частота выплаты купонов в год
+	CouponPercent   float64
+	CouponValue     float64
+	CouponFrequency int       // частота выплаты купонов в год
 	IssueDate       time.Time // облигации
 	FaceValue       int       // номинальная стоимость
 	MatDate         time.Time
@@ -36,49 +36,49 @@ const (
 type ISSMoexMarket string
 
 const (
-	MoexMarketBonds         ISSMoexMarket = "bonds"         // Рынок облигаций
-	MoexMarketClassica      ISSMoexMarket = "classica"      // Classica
-	MoexMarketCredit        ISSMoexMarket = "credit"        // Рынок кредитов
-	MoexMarketDeposit       ISSMoexMarket = "deposit"       // Депозиты с ЦК
-	MoexMarketForeignShares ISSMoexMarket = "foreignshares" // Иностранные ц.б.
-	MoexMarketForeignNdm    ISSMoexMarket = "foreignndm"    // Иностранные ц.б. РПС
-	MoexMarketGcc           ISSMoexMarket = "gcc"           // РЕПО с ЦК с КСУ
-	MoexMarketIndex         ISSMoexMarket = "index"         // Индексы фондового рынка
-	MoexMarketMoexboard     ISSMoexMarket = "moexboard"     // MOEX Board
-	MoexMarketNdm           ISSMoexMarket = "ndm"           // Режим переговорных сделок
-	MoexMarketNonresCcp     ISSMoexMarket = "nonresccp"     // Рынок РЕПО с ЦК (нерезиденты)
-	MoexMarketNonresNdm     ISSMoexMarket = "nonresndm"     // Режим переговорных сделок (нерезиденты)
-	MoexMarketNonresRepo    ISSMoexMarket = "nonresrepo"    // Рынок РЕПО (нерезиденты)
-	MoexMarketOtc           ISSMoexMarket = "otc"           // ОТС - on the counter?
-	MoexMarketQnv           ISSMoexMarket = "qnv"           // Квал. инвесторы
-	MoexMarketMamc          ISSMoexMarket = "mamc"          // Мультивалютный рынок смешанных активов
-	MoexMarketRepo          ISSMoexMarket = "repo"          // Рынок сделок РЕПО
-	MoexMarketStandard      ISSMoexMarket = "standard"      // Standard
-	MoexMarketSelt          ISSMoexMarket = "selt"          // Валюта: Биржевые сделки с ЦК
-	MoexMarketShares        ISSMoexMarket = "shares"        // Рынок акций
+	MoexMarketBonds ISSMoexMarket = "bonds" // Рынок облигаций
+	// MoexMarketClassica      ISSMoexMarket = "classica"      // Classica
+	// MoexMarketCredit        ISSMoexMarket = "credit"        // Рынок кредитов
+	// MoexMarketDeposit       ISSMoexMarket = "deposit"       // Депозиты с ЦК
+	// MoexMarketForeignShares ISSMoexMarket = "foreignshares" // Иностранные ц.б.
+	// MoexMarketForeignNdm    ISSMoexMarket = "foreignndm"    // Иностранные ц.б. РПС
+	// MoexMarketGcc           ISSMoexMarket = "gcc"           // РЕПО с ЦК с КСУ
+	// MoexMarketIndex         ISSMoexMarket = "index"         // Индексы фондового рынка
+	// MoexMarketMoexboard     ISSMoexMarket = "moexboard"     // MOEX Board
+	// MoexMarketNdm           ISSMoexMarket = "ndm"           // Режим переговорных сделок
+	// MoexMarketNonresCcp     ISSMoexMarket = "nonresccp"     // Рынок РЕПО с ЦК (нерезиденты)
+	// MoexMarketNonresNdm     ISSMoexMarket = "nonresndm"     // Режим переговорных сделок (нерезиденты)
+	// MoexMarketNonresRepo    ISSMoexMarket = "nonresrepo"    // Рынок РЕПО (нерезиденты)
+	// MoexMarketOtc           ISSMoexMarket = "otc"           // ОТС - on the counter?
+	// MoexMarketQnv           ISSMoexMarket = "qnv"           // Квал. инвесторы
+	// MoexMarketMamc          ISSMoexMarket = "mamc"          // Мультивалютный рынок смешанных активов
+	// MoexMarketRepo          ISSMoexMarket = "repo"          // Рынок сделок РЕПО
+	// MoexMarketStandard      ISSMoexMarket = "standard"      // Standard
+	// MoexMarketSelt          ISSMoexMarket = "selt"          // Валюта: Биржевые сделки с ЦК.
+	MoexMarketShares ISSMoexMarket = "shares" // Рынок акций
 )
 
 func (e ISSMoexMarket) Validate() bool {
 	switch e {
 	case MoexMarketBonds:
-	case MoexMarketClassica:
-	case MoexMarketCredit:
-	case MoexMarketDeposit:
-	case MoexMarketForeignShares:
-	case MoexMarketForeignNdm:
-	case MoexMarketGcc:
-	case MoexMarketIndex:
-	case MoexMarketMoexboard:
-	case MoexMarketNdm:
-	case MoexMarketNonresCcp:
-	case MoexMarketNonresNdm:
-	case MoexMarketNonresRepo:
-	case MoexMarketOtc:
-	case MoexMarketQnv:
-	case MoexMarketMamc:
-	case MoexMarketRepo:
-	case MoexMarketStandard:
-	case MoexMarketSelt:
+	// case MoexMarketClassica:
+	// case MoexMarketCredit:
+	// case MoexMarketDeposit:
+	// case MoexMarketForeignShares:
+	// case MoexMarketForeignNdm:
+	// case MoexMarketGcc:
+	// case MoexMarketIndex:
+	// case MoexMarketMoexboard:
+	// case MoexMarketNdm:
+	// case MoexMarketNonresCcp:
+	// case MoexMarketNonresNdm:
+	// case MoexMarketNonresRepo:
+	// case MoexMarketOtc:
+	// case MoexMarketQnv:
+	// case MoexMarketMamc:
+	// case MoexMarketRepo:
+	// case MoexMarketStandard:
+	// case MoexMarketSelt:
 	case MoexMarketShares:
 	default:
 		return false

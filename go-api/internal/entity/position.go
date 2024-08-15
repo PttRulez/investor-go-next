@@ -13,6 +13,6 @@ type Position struct {
 	SecurityType SecurityType
 	ShortName    string
 	TargetPrice  float64
-	Ticker       string
+	Secid        string
 	UserID       int
 }

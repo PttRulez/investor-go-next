@@ -47,9 +47,11 @@ func writeString(w http.ResponseWriter, status int, value string) {
 		return
 	}
 }
+
 func writeValidationErrorsJSON(w http.ResponseWriter, errs validator.ValidationErrors) {
 	writeJSON(w, http.StatusUnprocessableEntity, validationErrsToResponse(errs))
 }
+
 func validationErrsToResponse(errs validator.ValidationErrors) map[string]string {
 	mappedErrors := map[string]string{}
 

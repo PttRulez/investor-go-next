@@ -1,0 +1,10 @@
+components:
+  schemas:
+    CreateExpertRequest:
+      type: object
+      required: [name]
+      properties:
+        avatarUrl:
+          type: string
+        name:
+          type: string

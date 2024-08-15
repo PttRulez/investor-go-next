@@ -1,0 +1,49 @@
+get:
+  summary: Список портфолио юзера
+  responses:
+    "200":
+      description: удачный запрос
+      content:
+        application/json:
+          schema:
+            $ref: ../responses/portfolio.yaml#/components/schemas/PortfolioListResponse
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе
+post:
+  summary: Создание нового портфолио
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/portfolio.yaml#/components/schemas/CreatePortfolioRequest
+  responses:
+    "201":
+      description: портфолио создан
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе
+put:
+  summary: Редактирование портфолио
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/portfolio.yaml#/components/schemas/UpdatePortfolioRequest
+  responses:
+    "200":
+      description: портфолио отредактирован
+    "400":
+      description: неверный формат JSON
+    "404":
+      description: такого портфолио нет или он не пренадлежит юзеру
+    "500":
+      description: другие ошибки, должен быть текст в ответе

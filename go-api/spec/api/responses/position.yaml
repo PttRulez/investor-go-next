@@ -1,0 +1,22 @@
+components:
+  schemas:
+    PositionResponse:
+      amount:
+        type: integer
+      averagePrice:
+        type: number
+        format: float
+      comment:
+        type: string
+      currentPrice:
+        type: number
+        format: float
+      currentCost:
+        type: integer
+      shortName:
+        type: string
+      targetPrice:
+        type: number
+        format: float
+      ticker:
+        type: string

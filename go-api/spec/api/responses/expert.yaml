@@ -1,0 +1,18 @@
+components:
+  schemas:
+    ExpertResponse:
+      type: object
+      required: [id, name]
+      properties:
+        avatarUrl:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        userId:
+          type: integer
+    ExpertListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/ExpertResponse"

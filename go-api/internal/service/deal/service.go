@@ -71,7 +71,7 @@ func (s *Service) UpdatePositionInDB(ctx context.Context, portfolioID int, excha
 		position.Exchange = exchange
 		position.PortfolioID = portfolioID
 		position.SecurityType = securityType
-		position.Ticker = ticker
+		position.Secid = ticker
 		position.UserID = userID
 	}
 
@@ -153,11 +153,11 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 		if errors.Is(err, sql.ErrNoRows) {
 			return service.ErrEntityNotFound
 		}
-		return fmt.Errorf("DealService.DeleteDealById -> %w", err)
+		return fmt.Errorf("DealService.DeleteDealById: %w", err)
 	}
 	err = s.UpdatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker, d.UserID)
 	if err != nil {
-		return fmt.Errorf("DealService.DeleteDealById -> %w", err)
+		return fmt.Errorf("DealService.DeleteDealById: %w", err)
 	}
 
 	return nil

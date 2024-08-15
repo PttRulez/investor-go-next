@@ -1,0 +1,38 @@
+/register:
+  post:
+    summary: Регистрация нового юзера
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../requests/auth.yaml#/components/schemas/RegisterUserRequest
+    responses:
+      "201":
+        description: юзер удачно создан
+      "400":
+        description: неверный формат JSON
+      "422":
+        description: неправильно заполнены поля
+      "500":
+        description: другие ошибки, должен быть текст в ответе
+/login:
+  post:
+    summary: Регистрация нового юзера
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../requests/auth.yaml#/components/schemas/LoginRequest
+    responses:
+      "200":
+        description: успешно залогинен
+        content:
+          application/json:
+            schema:
+              $ref: ../responses/auth.yaml#/components/schemas/LoginResponse
+      "400":
+        description: неверный формат JSON
+      "401":
+        description: Ановтарайзед

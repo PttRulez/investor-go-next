@@ -1,0 +1,26 @@
+components:
+  schemas:
+    CreateOpinionRequest:
+      type: object
+      required: [date, expertId, text]
+      properties:
+        date:
+          type: string
+          format: date
+        exchange:
+          $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        expertId:
+          type: integer
+        securityId:
+          type: integer
+        securityType:
+          $ref: ../shared/enums.yaml#/components/schemas/SecurityType
+        sourceLink:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        text:
+          type: string
+        type:
+          $ref: ../shared/enums.yaml#/components/schemas/OpinionType

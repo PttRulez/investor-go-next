@@ -1,0 +1,18 @@
+delete:
+  summary: Удаление сделки по id
+  parameters:
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник сделки
+  responses:
+    "200":
+      description: Сделка удалена
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такой сделки нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе

@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-chi/chi/v5"
@@ -17,7 +18,8 @@ func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Reque
 		writeError(w, err)
 		return
 	}
-	writeJSON(w, http.StatusOK, moexBond)
+	res := converter.FromMoexBondToMoexBondResponse(*moexBond)
+	writeJSON(w, http.StatusOK, res)
 }
 
 type MoexBondService interface {

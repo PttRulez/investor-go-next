@@ -1,0 +1,22 @@
+get:
+  summary: Получение информации по облигации, торгуемой на мск бирже
+  parameters:
+    - name: secid
+      in: path
+      schema:
+        type: string
+      required: true
+      decription: secid облигации
+  responses:
+    "200":
+      description: удачный запрос
+      content:
+        application/json:
+          schema:
+            $ref: ../responses/moex-securities.yaml#/components/schemas/MoexBondResponse
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе

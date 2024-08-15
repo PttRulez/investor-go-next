@@ -1,0 +1,9 @@
+components:
+  schemas:
+    DealResponse:
+      allOf:
+        - $ref: ../requests/deal.yaml#/components/schemas/CreateDealRequest
+        - type: object
+          properties:
+            id:
+              type: integer

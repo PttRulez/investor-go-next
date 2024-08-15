@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: MOEX ISS API
+  description: Описание API Московской биржи, которое используется в проекте
+  version: 1.0.0
+servers:
+  - url: https://iss.moex.com/iss
+    description: Сервак Московской биржи
+paths:
+  /securities/{secId}.json:
+    get:
+      summary: Получаем полную информацию о бумаге по secID
+      parameters:
+        - name: secId
+          in: path
+          schema:
+            type: string
+          required: true
+          description: secid бумаги, который обычно получаем на фронтенде через поиск на мск бирже
+      responses:
+        "200":
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoexAPISecurityInfoResponse"
+  /engines/stock/markets/{market}/securities.json:
+    get:
+      summary: Получаем цены по тикерам бумаг
+      parameters:
+        - name: market
+          in: path
+          schema:
+            type: string
+          required: true
+          description: market - bonds или shares почти всегда
+        - name: iss.meta
+          in: query
+          schema:
+            type: string
+          required: false
+          description: нужно ставить "off", чтобы убрать лишнюю инфу из запросов
+          default: off
+        - name: description.columns
+          in: query
+          schema:
+            type: string
+          required: true
+          description: список полей, которые нужны в ответе. Иначе прилетит много лишнего
+          default: name,value
+        - name: boards.columns
+          in: query
+          schema:
+            type: string
+          required: true
+          description: список полей, которые нужны в ответе. Иначе прилетит много лишнего
+          default: boardid,market,engine
+      responses:
+        "200":
+          description: Данные получены
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MoexAPICurrentPricesResponse"
+components:
+  schemas:
+    MoexAPISecurityInfoResponse:
+      type: object
+      properties:
+        description:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+        boards:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+                minItems: 3
+                maxItems: 3
+    MoexAPICurrentPricesResponse:
+      type: object
+      properties:
+        securities:
+          type: object
+          properties:
+            data:
+              type: array
+              items:
+                type: array
+                items:
+                  anyOf:
+                minItems: 3
+                maxItems: 3

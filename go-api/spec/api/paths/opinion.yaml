@@ -1,0 +1,17 @@
+post:
+  summary: Создание нового мнения
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/opinion.yaml#/components/schemas/CreateOpinionRequest
+  responses:
+    "201":
+      description: мнение успещно создано
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе

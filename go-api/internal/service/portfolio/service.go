@@ -98,10 +98,10 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		for _, p := range positions {
 			if p.SecurityType == entity.STShare {
 				sharePositions = append(sharePositions, p)
-				shareTickers = append(shareTickers, p.Ticker)
+				shareTickers = append(shareTickers, p.Secid)
 			} else if p.SecurityType == entity.STBond {
 				bondPositions = append(bondPositions, p)
-				bondTickers = append(bondTickers, p.Ticker)
+				bondTickers = append(bondTickers, p.Secid)
 			}
 		}
 		var bondPrices, sharePrices issclient.Prices
@@ -123,11 +123,11 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
 		for _, position := range bondPositions {
-			position.CurrentPrice = bondPrices[position.Ticker][position.Board]
+			position.CurrentPrice = bondPrices[position.Secid][position.Board]
 			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
 		}
 		for _, position := range sharePositions {
-			position.CurrentPrice = sharePrices[position.Ticker][position.Board]
+			position.CurrentPrice = sharePrices[position.Secid][position.Board]
 			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
 		}
 
@@ -184,11 +184,11 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 
 	for i, pos := range bondPositions {
 		result.TotalCost += pos.CurrentCost
-		result.BondPositions[i] = converter.FromPositionToResponse(pos)
+		result.BondPositions[i] = converter.FromPositionToResponse(*pos)
 	}
 	for i, pos := range sharePositions {
 		result.TotalCost += pos.CurrentCost
-		result.SharePositions[i] = converter.FromPositionToResponse(pos)
+		result.SharePositions[i] = converter.FromPositionToResponse(*pos)
 	}
 
 	const percentageMultiplier = 100

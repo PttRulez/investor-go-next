@@ -22,9 +22,9 @@ type ISSecurityInfo struct {
 	ShortName string
 	Secid     string
 	// Только для облигаций
-	CouponPercent   float32
-	CouponValue     float32
-	CouponFrequency int8      // частота выплаты купонов в год
+	CouponPercent   float64
+	CouponValue     float64
+	CouponFrequency int       // частота выплаты купонов в год
 	IssueDate       time.Time // облигации
 	FaceValue       int       // номинальная стоимость
 	MatDate         time.Time // дата погашения облиги
@@ -71,23 +71,23 @@ func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) 
 			result.ShortName = item[1]
 		// Только для облигаций:
 		case "COUPONFREQUENCY":
-			freq, parseErr := strconv.ParseInt(item[1], 10, 8)
+			freq, parseErr := strconv.Atoi(item[1])
 			if parseErr != nil {
 				return nil, parseErr
 			}
-			result.CouponFrequency = int8(freq)
+			result.CouponFrequency = freq
 		case "COUPONPERCENT":
 			percent, parseErr := strconv.ParseFloat(item[1], 32)
 			if parseErr != nil {
 				return nil, parseErr
 			}
-			result.CouponPercent = float32(percent)
+			result.CouponPercent = percent
 		case "COUPONVALUE":
 			percent, parseErr := strconv.ParseFloat(item[1], 32)
 			if parseErr != nil {
 				return nil, parseErr
 			}
-			result.CouponPercent = float32(percent)
+			result.CouponPercent = percent
 		case "ISSUEDATE":
 			t, parseErr := time.Parse("2006-01-02", item[1])
 			if parseErr != nil {

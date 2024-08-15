@@ -8,15 +8,5 @@ type Position struct {
 	CurrentCost  int     `json:"currentCost"`
 	ShortName    string  `json:"shortName"`
 	TargetPrice  float64 `json:"targetPrice"`
-	Ticker       string  `json:"ticker"`
-}
-
-type BondPosition struct {
-	Position
-	Isin string `json:"isin"`
-}
-
-type SharePosition struct {
-	Position
-	Ticker string `json:"ticker"`
+	Secid        string  `json:"secid"`
 }

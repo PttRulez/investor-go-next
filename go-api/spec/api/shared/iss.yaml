@@ -1,0 +1,17 @@
+components:
+  schemas:
+    ISSMoexBoard:
+      type: string
+      enum:
+        - TQBR
+        - CETS
+    ISSMoexEngine:
+      type: string
+      enum:
+        - stock
+        - currency
+    ISSMoexMarket:
+      type: string
+      enum:
+        - bonds
+        - shares

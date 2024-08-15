@@ -5,7 +5,7 @@ import (
 	"github.com/pttrulez/investor-go/internal/entity"
 )
 
-func FromPositionToResponse(d *entity.Position) response.Position {
+func FromPositionToResponse(d entity.Position) response.Position {
 	return response.Position{
 		Amount:       d.Amount,
 		AveragePrice: d.AveragePrice,
@@ -14,6 +14,6 @@ func FromPositionToResponse(d *entity.Position) response.Position {
 		CurrentCost:  d.CurrentCost,
 		ShortName:    d.ShortName,
 		TargetPrice:  d.TargetPrice,
-		Ticker:       d.Ticker,
+		Secid:        d.Secid,
 	}
 }

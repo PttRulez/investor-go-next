@@ -15,8 +15,8 @@ import (
 )
 
 var (
-	errWrongUsername = errors.New("неправильный юзернейм")
-	errWrongPassword = errors.New("неправильный юзернейм")
+	ErrWrongUsername = errors.New("неправильный юзернейм")
+	ErrWrongPassword = errors.New("неправильный пароль")
 )
 
 const tokentExpHours = 6
@@ -26,7 +26,7 @@ func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, er
 
 	user, err := s.userRepo.GetByEmail(ctx, model.Email)
 	if errors.Is(err, database.ErrNotFound) {
-		return "", errWrongUsername
+		return "", ErrWrongUsername
 	}
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
@@ -34,7 +34,7 @@ func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, er
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(model.Password))
 	if err != nil {
-		return "", errWrongPassword
+		return "", ErrWrongPassword
 	}
 
 	claims := jwt.MapClaims{

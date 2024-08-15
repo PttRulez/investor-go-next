@@ -1,0 +1,15 @@
+components:
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      required: [amount, date, portfolioId, type]
+      properties:
+        amount:
+          type: integer
+        date:
+          type: string
+          format: date
+        portfolioId:
+          type: integer
+        type:
+          $ref: ../shared/enums.yaml#/components/schemas/TransactionType

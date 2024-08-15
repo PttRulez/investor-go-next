@@ -1,8 +1,17 @@
 package entity
 
 type Portfolio struct {
-	ID       int
-	Compound bool
-	Name     string
-	UserID   int
+	BondPositions  []Position
+	Cash           int
+	CashoutsSum    int
+	Compound       bool
+	Deals          []Deal
+	DepositsSum    int
+	ID             int
+	Name           string
+	Profitability  int
+	SharePositions []Position
+	TotalCost      int
+	Transactions   []Transaction
+	UserID         int
 }
