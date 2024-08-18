@@ -3,18 +3,23 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 )
 
-func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (*entity.Deal, error) {
+func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (entity.Deal, error) {
 	const op = "DealPostgres.Delete"
 
+	// Удаляем через QueryRowContext т.к нам в сервисе нужна полная инфа по сделке, чтобы
+	// пересчитать позицию, куда входила сделка
 	queryString := `DELETE FROM deals WHERE id = $1 AND user_id = $2 RETURNING *;`
 	row := pg.db.QueryRowContext(ctx, queryString, id, userID)
 
-	var d = new(entity.Deal)
+	var d entity.Deal
+
 	err := row.Scan(
 		d.Amount,
 		d.Date,
@@ -27,8 +32,14 @@ func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (*entity
 		d.Type,
 		d.UserID,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return entity.Deal{}, database.ErrNotFound
+	}
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
+	}
+	if row.Err() != nil {
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, row.Err())
 	}
 
 	return d, nil
@@ -124,12 +135,15 @@ func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange ent
 	return deals, nil
 }
 
-func (pg *DealPostgres) Insert(ctx context.Context, d *entity.Deal) error {
+func (pg *DealPostgres) Insert(ctx context.Context, d entity.Deal) (entity.Deal, error) {
 	const op = "DealPostgres.Insert"
 
-	queryString := `INSERT INTO deals (amount, date, exchange, portfolio_id, price, security_type, ticker, type,
-    	user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`
-	_, err := pg.db.ExecContext(
+	queryString := `INSERT INTO deals (amount, date, exchange, portfolio_id, price,
+		security_type, ticker, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
+
+	var deal entity.Deal
+	err := pg.db.QueryRowContext(
 		ctx,
 		queryString,
 		d.Amount,       // $1
@@ -141,19 +155,32 @@ func (pg *DealPostgres) Insert(ctx context.Context, d *entity.Deal) error {
 		d.Ticker,       // $7
 		d.Type,         // $8
 		d.UserID,       // $9
+	).Scan(
+		&deal.Amount,       // $1
+		&deal.Date,         // $2
+		&deal.Exchange,     // $3
+		&deal.PortfolioID,  // $4
+		&deal.Price,        // $5
+		&deal.SecurityType, // $6
+		&deal.Ticker,       // $7
+		&deal.Type,         // $8
 	)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
 	}
-	return nil
+
+	return deal, nil
 }
 
-func (pg *DealPostgres) Update(ctx context.Context, d *entity.Deal) error {
+func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal, error) {
 	const op = "DealPostgres.Update"
 
 	queryString := `UPDATE deals SET amount = $1, date = $2, exchange = $4, portfolio_id = $5,
-    	price = $6, security_type = $7, ticker = $8, type = $9 WHERE id = $10;`
-	_, err := pg.db.ExecContext(
+		price = $6, security_type = $7, ticker = $8, type = $9 WHERE id = $10
+		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
+
+	var deal entity.Deal
+	err := pg.db.QueryRowContext(
 		ctx,
 		queryString,
 		d.Amount,
@@ -165,11 +192,21 @@ func (pg *DealPostgres) Update(ctx context.Context, d *entity.Deal) error {
 		d.Ticker,
 		d.Type,
 		d.ID,
+	).Scan(
+		&deal.Amount,       // $1
+		&deal.Date,         // $2
+		&deal.Exchange,     // $3
+		&deal.PortfolioID,  // $4
+		&deal.Price,        // $5
+		&deal.SecurityType, // $6
+		&deal.Ticker,       // $7
+		&deal.Type,         // $8
 	)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
 	}
-	return nil
+
+	return deal, nil
 }
 
 type DealPostgres struct {

@@ -3,10 +3,12 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 )
 
 func (pg *PortfolioPostgres) Delete(ctx context.Context, id int, userID int) error {
@@ -14,39 +16,45 @@ func (pg *PortfolioPostgres) Delete(ctx context.Context, id int, userID int) err
 
 	queryString := "DELETE FROM portfolios where id = $1 AND user_id = $2;"
 
-	_, err := pg.db.ExecContext(ctx, queryString, id, userID)
+	result, err := pg.db.ExecContext(ctx, queryString, id, userID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if rowsAffected == 0 {
+		return database.ErrNotFound
 	}
 
 	return nil
 }
 
-func (pg *PortfolioPostgres) GetByID(ctx context.Context, id int, userID int) (*entity.Portfolio, error) {
+func (pg *PortfolioPostgres) GetByID(ctx context.Context, id int, userID int) (entity.Portfolio, error) {
 	const op = "PortfolioPostgres.GetByID"
 
 	queryString := `SELECT * FROM portfolios where id = $1 AND user_id = $2;`
 
-	row := pg.db.QueryRowContext(ctx, queryString, id, userID)
-	if row.Err() != nil {
-		return nil, fmt.Errorf("%s: %w", op, row.Err())
-	}
-
 	var p entity.Portfolio
+	err := pg.db.QueryRowContext(ctx, queryString, id, userID).Scan(&p.ID, &p.Compound, &p.Name, &p.UserID)
 
-	err := row.Scan(&p.ID, &p.Compound, &p.Name, &p.UserID)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Portfolio{}, database.ErrNotFound
+		}
+		return entity.Portfolio{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &p, nil
+	return p, nil
 }
 
-func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, id int) ([]*entity.Portfolio, error) {
+func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio, error) {
 	const op = "PortfolioPostgres.GetListByUserId"
 
-	queryString := `SELECT * FROM portfolios where user_id = $1;`
-	rows, err := pg.db.QueryContext(ctx, queryString, strconv.Itoa(id))
+	queryString := `SELECT id, compound, name FROM portfolios where user_id = $1;`
+	rows, err := pg.db.QueryContext(ctx, queryString, strconv.Itoa(userID))
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -54,8 +62,8 @@ func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, id int) ([]*en
 
 	var portfolios []*entity.Portfolio
 	for rows.Next() {
-		p := entity.Portfolio{}
-		err = rows.Scan(&p.ID, &p.Compound, &p.Name, &p.UserID)
+		var p entity.Portfolio
+		err = rows.Scan(&p.ID, &p.Compound, &p.Name)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -68,26 +76,39 @@ func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, id int) ([]*en
 	return portfolios, nil
 }
 
-func (pg *PortfolioPostgres) Insert(ctx context.Context, p *entity.Portfolio) error {
+func (pg *PortfolioPostgres) Insert(ctx context.Context, p entity.Portfolio) (entity.Portfolio, error) {
 	const op = "PortfolioPostgres.Insert"
 
-	queryString := "INSERT INTO portfolios (compound, name, user_id) VALUES ($1, $2, $3);"
-	_, err := pg.db.ExecContext(ctx, queryString, p.Compound, p.Name, p.UserID)
+	queryString := `INSERT INTO portfolios (compound, name, user_id) VALUES ($1, $2, $3)
+		RETURNING id, compound, name;`
+
+	var result entity.Portfolio
+	err := pg.db.QueryRowContext(ctx, queryString, p.Compound, p.Name, p.UserID).
+		Scan(&result.ID, &result.Compound, &result.Name)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return result, fmt.Errorf("%s: %w", op, err)
 	}
-	return nil
+
+	return entity.Portfolio{}, nil
 }
 
-func (pg *PortfolioPostgres) Update(ctx context.Context, p *entity.Portfolio, userID int) error {
+func (pg *PortfolioPostgres) Update(ctx context.Context, p entity.Portfolio, userID int) (entity.Portfolio, error) {
 	const op = "PortfolioPostgres.Update"
 
-	queryString := "UPDATE portfolios SET compound = $1, name = $2 WHERE id = $3 AND user_id = $4;"
-	_, err := pg.db.ExecContext(ctx, queryString, p.Compound, p.Name, p.ID, userID)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+	queryString := `UPDATE portfolios SET compound = $1, name = $2 WHERE id = $3 AND user_id = $4
+		RETURNING id, compound, name;`
+
+	var up entity.Portfolio
+	err := pg.db.QueryRowContext(ctx, queryString, p.Compound, p.Name, p.ID, userID).
+		Scan(&up.ID, up.Compound, up.Name)
+	if errors.Is(err, sql.ErrNoRows) {
+		return entity.Portfolio{}, database.ErrNotFound
 	}
-	return nil
+	if err != nil {
+		return entity.Portfolio{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return up, nil
 }
 
 type PortfolioPostgres struct {

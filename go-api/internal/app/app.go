@@ -81,13 +81,13 @@ func Run() {
 	dealService := deal.NewDealService(issClient, moexBondService, moexShareService, dealRepo)
 
 	// Controllers init
-	authController := httpcontrollers.NewAuthController(userService, validator)
-	dealController := httpcontrollers.NewDealController(dealService, validator)
-	expertController := httpcontrollers.NewExpertController(expertSerice, validator)
-	moexBondController := httpcontrollers.NewMoexBondController(moexBondService, logger)
-	moexShareController := httpcontrollers.NewMoexShareController(moexShareService)
-	portfolioController := httpcontrollers.NewPortfolioController(portfolioService)
-	transactionController := httpcontrollers.NewCashoutController(transactionService, validator)
+	authController := httpcontrollers.NewAuthController(logger, userService, validator)
+	dealController := httpcontrollers.NewDealController(logger, dealService, validator)
+	expertController := httpcontrollers.NewExpertController(logger, expertSerice, validator)
+	moexBondController := httpcontrollers.NewMoexBondController(logger, moexBondService)
+	moexShareController := httpcontrollers.NewMoexShareController(logger, moexShareService)
+	portfolioController := httpcontrollers.NewPortfolioController(logger, portfolioService)
+	transactionController := httpcontrollers.NewCashoutController(logger, transactionService, validator)
 
 	// Public Routes
 	r.Post("/register", authController.RegisterUser)
@@ -114,6 +114,7 @@ func Run() {
 		r.Route("/expert", func(r chi.Router) {
 			r.Post("/", expertController.CreateNewExpert)
 			r.Get("/", expertController.GetExpertsList)
+			r.Delete("/{id}", expertController.GetExpertsList)
 		})
 
 		// Moex-Bonds

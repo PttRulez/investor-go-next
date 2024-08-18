@@ -2,19 +2,19 @@ package deal
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 	"math"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
 	"github.com/pttrulez/investor-go/internal/service"
 	"github.com/pttrulez/investor-go/internal/service/moexbond"
 	"github.com/pttrulez/investor-go/internal/service/moexshare"
 )
 
-func (s *Service) CreateDeal(ctx context.Context, d *entity.Deal) error {
+func (s *Service) CreateDeal(ctx context.Context, d entity.Deal) (entity.Deal, error) {
 	const op = "DealService.Create"
 
 	// Этот шаг создает запись в бд с бумагой, если её ещё нет
@@ -25,45 +25,87 @@ func (s *Service) CreateDeal(ctx context.Context, d *entity.Deal) error {
 		_, err = s.moexBondService.GetBySecid(ctx, d.Ticker)
 	}
 	if err != nil {
-		return err
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = s.repo.Insert(ctx, d)
+	res, err := s.repo.Insert(ctx, d)
+	if err != nil {
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker, d.UserID)
+	if err != nil {
+		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return res, nil
+}
+
+func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error {
+	const op = "DealService.DeleteDealByID"
+
+	d, err := s.repo.Delete(ctx, id, userID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return service.ErrEntityNotFound
+		}
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker, d.UserID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = s.UpdatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker, d.UserID)
-	if err != nil {
-		return fmt.Errorf("[DealService.Create]: %w", err)
-	}
 	return nil
 }
 
-func (s *Service) UpdatePositionInDB(ctx context.Context, portfolioID int, exchange entity.Exchange,
+func (s *Service) createNewPosition(ctx context.Context, exchange entity.Exchange, ticker string,
+	securityType entity.SecurityType) (entity.Position, error) {
+	const op = "DealService.createNewPosition"
+
+	var position entity.Position
+	if exchange == entity.EXCHMoex && securityType == entity.STShare {
+		share, err := s.moexShareService.GetBySecid(ctx, ticker)
+		if err != nil {
+			return entity.Position{}, fmt.Errorf("%s: %w", op, err)
+		}
+		position.Board = share.Board
+	} else if exchange == entity.EXCHMoex && securityType == entity.STBond {
+		bond, err := s.moexBondService.GetBySecid(ctx, ticker)
+		if err != nil {
+			return entity.Position{}, fmt.Errorf("%s: %w", op, err)
+		}
+		position.Board = bond.Board
+	}
+
+	return position, nil
+}
+
+func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, exchange entity.Exchange,
 	securityType entity.SecurityType, ticker string, userID int) error {
-	const op = "DealService.UpdatePositionInDB"
+	const op = "DealService.updatePositionInDB"
 
 	allDeals, err := s.repo.GetDealListForSecurity(ctx, exchange, portfolioID, securityType, ticker)
 	if err != nil {
-		return fmt.Errorf("DealService.UpdatePositionInDB -> %w", err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	var position *entity.Position
-	oldPosition, err := s.positionRepo.GetForSecurity(
+	var position entity.Position
+	oldPosition, err := s.positionRepo.GetPositionForSecurity(
 		ctx,
 		exchange,
 		portfolioID,
 		securityType,
 		ticker,
 	)
-	if err != nil {
-		return err
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
+		return fmt.Errorf("%s: %w", op, err)
 	}
-	if oldPosition != nil {
+	if errors.Is(err, database.ErrNotFound) {
 		position = oldPosition
 	} else {
-		position, err = s.getPosition(ctx, exchange, ticker, securityType)
+		position, err = s.createNewPosition(ctx, exchange, ticker, securityType)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -113,67 +155,29 @@ func (s *Service) UpdatePositionInDB(ctx context.Context, portfolioID int, excha
 	if position.ID == 0 {
 		err = s.positionRepo.Insert(ctx, position)
 		if err != nil {
-			return fmt.Errorf("DealService.UpdatePositionInDB -> %w", err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
 	} else {
 		err = s.positionRepo.Update(ctx, position)
 		if err != nil {
-			return fmt.Errorf("DealService.UpdatePositionInDB -> %w", err)
+			return fmt.Errorf("%s: %w", op, err)
 		}
-	}
-
-	return nil
-}
-
-func (s *Service) getPosition(ctx context.Context, exchange entity.Exchange, ticker string,
-	securityType entity.SecurityType) (*entity.Position, error) {
-	const op = "getPosition"
-
-	position := new(entity.Position)
-	if exchange == entity.EXCHMoex && securityType == entity.STShare {
-		share, err := s.moexShareService.GetBySecid(ctx, ticker)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-		position.Board = share.Board
-	} else if exchange == entity.EXCHMoex && securityType == entity.STBond {
-		bond, err := s.moexBondService.GetBySecid(ctx, ticker)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-		position.Board = bond.Board
-	}
-
-	return position, nil
-}
-
-func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error {
-	d, err := s.repo.Delete(ctx, id, userID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return service.ErrEntityNotFound
-		}
-		return fmt.Errorf("DealService.DeleteDealById: %w", err)
-	}
-	err = s.UpdatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker, d.UserID)
-	if err != nil {
-		return fmt.Errorf("DealService.DeleteDealById: %w", err)
 	}
 
 	return nil
 }
 
 type Repository interface {
-	Insert(ctx context.Context, d *entity.Deal) error
+	Insert(ctx context.Context, d entity.Deal) (entity.Deal, error)
 	GetDealListForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
 		securityType entity.SecurityType, ticker string) ([]*entity.Deal, error)
-	Delete(ctx context.Context, id int, userID int) (*entity.Deal, error)
+	Delete(ctx context.Context, id int, userID int) (entity.Deal, error)
 }
 type PositionRepo interface {
-	GetForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-		securityType entity.SecurityType, ticker string) (*entity.Position, error)
-	Insert(ctx context.Context, p *entity.Position) error
-	Update(ctx context.Context, p *entity.Position) error
+	GetPositionForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
+		securityType entity.SecurityType, ticker string) (entity.Position, error)
+	Insert(ctx context.Context, p entity.Position) error
+	Update(ctx context.Context, p entity.Position) error
 }
 
 type Service struct {

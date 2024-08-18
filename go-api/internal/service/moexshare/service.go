@@ -2,38 +2,37 @@ package moexshare
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
 func (s *Service) GetBySecid(ctx context.Context, secID string) (*entity.Share, error) {
+	const op = "MoexShareService.GetBySecid"
+
+	// Пробуем достать из нашей бд
 	share, err := s.repo.GetBySecid(ctx, secID)
 
-	if errors.Is(err, sql.ErrNoRows) {
-		// ищем её же в бд
-		share, err = s.repo.GetBySecid(ctx, secID)
+	// Если её там нет то делаем запрос на МОЕХ и записываем в бд
+	if errors.Is(err, database.ErrNotFound) {
+		var err error
+		share, err = s.createNewShareFromMoex(ctx, secID)
 		if err != nil {
-			return nil, err
-		}
-
-		if share.Market != entity.MoexMarketShares {
-			return nil, service.NewArgumentsError(fmt.Sprintf(
-				"secid %s не принадлежит рынку акций, рынок тикера  - %s", secID, share.Market))
+			return nil, fmt.Errorf("%s.createNewShareFromMoex, (secid %s): %w", op, secID, err)
 		}
 	} else if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	// если уже была в базе, то просто возвращаем
 	return share, nil
 }
 
-func (s *Service) CreateNewShareFromMoex(ctx context.Context, secID string) (*entity.Share, error) {
+func (s *Service) createNewShareFromMoex(ctx context.Context, secID string) (*entity.Share, error) {
 	// если бумаги нет в БД то делаем запрос
 	// на информацию по бумаге из апишки московской биржи
 	secInfo, err := s.issClient.GetSecurityInfoBySecid(ctx, secID)

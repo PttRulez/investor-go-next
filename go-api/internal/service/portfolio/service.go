@@ -9,15 +9,17 @@ import (
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
 	"github.com/pttrulez/investor-go/internal/controller/model/response"
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
+	"github.com/pttrulez/investor-go/internal/service"
 	"github.com/pttrulez/investor-go/internal/utils"
+	"golang.org/x/sync/errgroup"
 )
 
 func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	userID int) (*response.FullPortfolio, error) {
+	const op = "PortfolioService.GetFullPortfolioByID"
 	var (
-		done   = make(chan struct{})
-		errCh  = make(chan error)
 		result = &response.FullPortfolio{
 			Deals:        []response.Deal{},
 			Transactions: []response.Transaction{},
@@ -26,33 +28,32 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		bondPositions  = make([]*entity.Position, 0)
 		sharePositions = make([]*entity.Position, 0)
 		transactions   = make([]entity.Transaction, 0)
+		eg             = errgroup.Group{}
 	)
 
 	// Базовая инфа о портфолио
-	go func() {
-		pdb, err := s.GetPortfolioByID(ctx, portfolioID, userID)
+	eg.Go(func() error {
+		p, err := s.GetPortfolioByID(ctx, portfolioID, userID)
 		if errors.Is(err, sql.ErrNoRows) {
-			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
+			return service.ErrEntityNotFound
 		}
 		if err != nil {
-			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
-			return
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
-		result.ID = pdb.ID
-		result.Compound = pdb.Compound
-		result.Name = pdb.Name
+		result.ID = p.ID
+		result.Compound = p.Compound
+		result.Name = p.Name
 
-		done <- struct{}{}
-	}()
+		return nil
+	})
 
 	// сделки
-	go func() {
+	eg.Go(func() error {
 		var err error
 		deals, err = s.dealRepository.GetDealListByPortoflioID(ctx, portfolioID, userID)
 		if err != nil {
-			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
-			return
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
 		// var bondDealsCount, shareDealsCount int
@@ -71,16 +72,15 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		//	}
 		//}
 
-		done <- struct{}{}
-	}()
+		return nil
+	})
 
 	// позиции
-	go func() {
+	eg.Go(func() error {
 		// получили массив позиций по айди портфолио
 		positions, err := s.positionRepo.GetListByPortfolioID(ctx, portfolioID, userID)
 		if err != nil {
-			errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
-			return
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
 		var bondPositionsCount, sharePositionsCount int
@@ -109,15 +109,13 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		if bondPositionsCount > 0 {
 			bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds, bondTickers)
 			if err != nil {
-				errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
-				return
+				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 		if sharePositionsCount > 0 {
 			sharePrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds, shareTickers)
 			if err != nil {
-				errCh <- fmt.Errorf("<-[PortfolioService.GetPortfolio]: \n%w", err)
-				return
+				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 
@@ -131,30 +129,23 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
 		}
 
-		done <- struct{}{}
-	}()
+		return nil
+	})
 
 	// транзакции
-	go func() {
+	eg.Go(func() error {
 		var err error
 		transactions, err = s.transactionRepo.GetListByPortfolioID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
 		if err != nil {
-			errCh <- fmt.Errorf("[PortfolioService.GetPortfolio]: %w", err)
-			return
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
-		done <- struct{}{}
-	}()
+		return nil
+	})
 
-	routinesWorking := 4
-
-	for routinesWorking > 0 {
-		select {
-		case <-done:
-			routinesWorking--
-		case err := <-errCh:
-			return nil, err
-		}
+	err := eg.Wait()
+	if err != nil {
+		return nil, err
 	}
 
 	for _, t := range transactions {
@@ -200,28 +191,67 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	return result, nil
 }
 
-func (s *Service) CreatePortfolio(ctx context.Context, p *entity.Portfolio) error {
-	return s.repo.Insert(ctx, p)
+func (s *Service) CreatePortfolio(ctx context.Context, p entity.Portfolio) (entity.Portfolio, error) {
+	const op = "PortfolioPostgres.Insert"
+
+	portfolio, err := s.repo.Insert(ctx, p)
+	if err != nil {
+		return entity.Portfolio{}, fmt.Errorf("%s:, %w", op, err)
+	}
+
+	return portfolio, nil
 }
 
-func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio, error) {
+func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio,
+	error) {
 	return s.repo.GetListByUserID(ctx, userID)
 }
 
 func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
-	userID int) (*entity.Portfolio, error) {
-	return s.repo.GetByID(ctx, portfolioID, userID)
+	userID int) (entity.Portfolio, error) {
+	const op = "PortfolioService.GetPortfolioByID"
+
+	portfolio, err := s.repo.GetByID(ctx, portfolioID, userID)
+
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return entity.Portfolio{}, service.ErrEntityNotFound
+		}
+		return entity.Portfolio{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return portfolio, nil
 }
 
 func (s *Service) DeletePortfolio(ctx context.Context, portfolioID int, userID int) error {
-	if _, err := s.GetPortfolioByID(ctx, portfolioID, userID); err != nil {
-		return err
+	const op = "PortfolioService.DeletePortfolio"
+
+	err := s.repo.Delete(ctx, portfolioID, userID)
+
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return service.ErrEntityNotFound
+		}
+		return fmt.Errorf("%s: %w", op, err)
 	}
-	return s.repo.Delete(ctx, portfolioID, userID)
+
+	return err
 }
 
-func (s *Service) UpdatePortfolio(ctx context.Context, portfolio *entity.Portfolio, userID int) error {
-	return s.repo.Update(ctx, portfolio, userID)
+func (s *Service) UpdatePortfolio(ctx context.Context, portfolio entity.Portfolio,
+	userID int) (entity.Portfolio, error) {
+	const op = "PortfolioService.UpdatePortfolio"
+
+	updatedPortoflio, err := s.repo.Update(ctx, portfolio, userID)
+
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			return entity.Portfolio{}, service.ErrEntityNotFound
+		}
+		return entity.Portfolio{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return updatedPortoflio, err
 }
 
 type Service struct {
@@ -234,10 +264,10 @@ type Service struct {
 
 type Repository interface {
 	Delete(ctx context.Context, id int, userID int) error
-	GetByID(ctx context.Context, id int, userID int) (*entity.Portfolio, error)
+	GetByID(ctx context.Context, id int, userID int) (entity.Portfolio, error)
 	GetListByUserID(ctx context.Context, id int) ([]*entity.Portfolio, error)
-	Insert(ctx context.Context, p *entity.Portfolio) error
-	Update(ctx context.Context, p *entity.Portfolio, userID int) error
+	Insert(ctx context.Context, p entity.Portfolio) (entity.Portfolio, error)
+	Update(ctx context.Context, p entity.Portfolio, userID int) (entity.Portfolio, error)
 }
 type DealRepository interface {
 	GetDealListByPortoflioID(ctx context.Context, portfolioID int, userID int) ([]*entity.Deal, error)

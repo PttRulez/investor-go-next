@@ -2,6 +2,7 @@ package httpcontrollers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/pttrulez/investor-go/internal/controller/model/converter"
@@ -11,15 +12,19 @@ import (
 )
 
 func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Request) {
+	const op = "MoexBondController.GetInfoBySecid"
+
 	ctx := r.Context()
+
 	moexBond, err := c.moexBondService.GetBySecid(ctx, chi.URLParam(r, "secid"))
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
 		c.logger.Error(err)
 		writeError(w, err)
 		return
 	}
-	res := converter.FromMoexBondToMoexBondResponse(*moexBond)
-	writeJSON(w, http.StatusOK, res)
+
+	writeJSON(w, http.StatusOK, converter.FromMoexBondToMoexBondResponse(*moexBond))
 }
 
 type MoexBondService interface {
@@ -30,7 +35,7 @@ type MoexBondController struct {
 	moexBondService MoexBondService
 }
 
-func NewMoexBondController(moexService MoexBondService, logger Logger) *MoexBondController {
+func NewMoexBondController(logger Logger, moexService MoexBondService) *MoexBondController {
 	return &MoexBondController{
 		logger:          logger,
 		moexBondService: moexService,

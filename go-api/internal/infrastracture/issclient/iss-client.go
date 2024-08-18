@@ -32,10 +32,12 @@ type ISSecurityInfo struct {
 }
 
 func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) (*ISSecurityInfo, error) {
+	const op = "issclient.GetSecurityInfoBySecid"
+
 	uri := fmt.Sprintf("%s/securities/%s.json", api.baseURL, secid)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker http_controllers.NewRequest]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	params := url.Values{}
@@ -47,19 +49,19 @@ func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) 
 
 	resp, err := api.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker controller.client.Do(req)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker ReadAll(body)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	var data MoexAPIResponseSecurityInfo
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetSecurityByTicker json.Unmarshal(body)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	result := ISSecurityInfo{}
@@ -71,39 +73,39 @@ func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) 
 			result.ShortName = item[1]
 		// Только для облигаций:
 		case "COUPONFREQUENCY":
-			freq, parseErr := strconv.Atoi(item[1])
-			if parseErr != nil {
-				return nil, parseErr
+			freq, err := strconv.Atoi(item[1])
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.CouponFrequency = freq
 		case "COUPONPERCENT":
-			percent, parseErr := strconv.ParseFloat(item[1], 32)
-			if parseErr != nil {
-				return nil, parseErr
+			percent, err := strconv.ParseFloat(item[1], 32)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.CouponPercent = percent
 		case "COUPONVALUE":
-			percent, parseErr := strconv.ParseFloat(item[1], 32)
-			if parseErr != nil {
-				return nil, parseErr
+			percent, err := strconv.ParseFloat(item[1], 32)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.CouponPercent = percent
 		case "ISSUEDATE":
-			t, parseErr := time.Parse("2006-01-02", item[1])
-			if parseErr != nil {
-				return nil, parseErr
+			t, err := time.Parse("2006-01-02", item[1])
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.IssueDate = t
 		case "MATDATE":
-			t, parseErr := time.Parse("2006-01-02", item[1])
-			if parseErr != nil {
-				return nil, parseErr
+			t, err := time.Parse("2006-01-02", item[1])
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.MatDate = t
 		case "FACEVALUE":
-			faceValue, parseErr := strconv.Atoi(item[1])
-			if parseErr != nil {
-				return nil, parseErr
+			faceValue, err := strconv.Atoi(item[1])
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", op, err)
 			}
 			result.FaceValue = faceValue
 		}
@@ -121,10 +123,12 @@ type Prices map[string]map[entity.ISSMoexBoard]float64
 
 func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
 	tickers []string) (Prices, error) {
+	const op = "issclient.GetStocksCurrentPrices"
+
 	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseURL, market)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices http_controllers.NewRequest]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	params := url.Values{}
@@ -135,36 +139,36 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 
 	resp, err := api.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices client.Do(req)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ReadAll(body)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	var data MoexAPIResponseCurrentPrices
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-		return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices json.Unmarshal(body)]: %w", err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	var m Prices
 	for _, i := range data.Securities.Data {
 		ticker, ok := i[0].(string)
 		if !ok {
-			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+			return nil, fmt.Errorf("%s: failed to cast ticker from issreponse", op)
 		}
 
 		board, ok := i[1].(entity.ISSMoexBoard)
 		if !ok {
-			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+			return nil, fmt.Errorf("%s: failed to cast board from issreponse", op)
 		}
 
 		price, ok := i[2].(float64)
 		if !ok {
-			return nil, fmt.Errorf("[IssClient.GetStocksCurrentPrices ticker]: %w", err)
+			return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
 		}
 
 		m[ticker][board] = price

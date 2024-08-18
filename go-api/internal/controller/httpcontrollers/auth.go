@@ -68,12 +68,14 @@ type UserService interface {
 }
 
 type AuthController struct {
+	logger      Logger
 	userService UserService
 	validator   *validator.Validate
 }
 
-func NewAuthController(userService UserService, validator *validator.Validate) *AuthController {
+func NewAuthController(logger Logger, userService UserService, validator *validator.Validate) *AuthController {
 	return &AuthController{
+		logger:      logger,
 		userService: userService,
 		validator:   validator,
 	}

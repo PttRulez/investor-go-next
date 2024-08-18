@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 )
 
 type PositionPostgres struct {
@@ -16,14 +18,15 @@ func NewPositionPostgres(db *sql.DB) *PositionPostgres {
 	return &PositionPostgres{db: db}
 }
 
-func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-	securityType entity.SecurityType, ticker string) (*entity.Position, error) {
+func (pg *PositionPostgres) GetPositionForSecurity(ctx context.Context,
+	exchange entity.Exchange, portfolioID int,
+	securityType entity.SecurityType, ticker string) (entity.Position, error) {
 	const op = "PositionPostgres.GetForSecurity"
 
 	queryString := `SELECT * FROM positions
     WHERE exchange = $1 AND portfolio_id = $2 AND security_type = $3 AND ticker = $4;`
 
-	var p = new(entity.Position)
+	var p entity.Position
 
 	row := pg.db.QueryRowContext(
 		ctx,
@@ -47,8 +50,11 @@ func (pg *PositionPostgres) GetForSecurity(ctx context.Context, exchange entity.
 		p.TargetPrice,
 		p.ShortName,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return entity.Position{}, database.ErrNotFound
+	}
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return entity.Position{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return p, nil
@@ -100,7 +106,7 @@ func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, us
 	return positions, nil
 }
 
-func (pg *PositionPostgres) Insert(ctx context.Context, p *entity.Position) error {
+func (pg *PositionPostgres) Insert(ctx context.Context, p entity.Position) error {
 	const op = "PositionPostgres.Insert"
 
 	queryString := `INSERT INTO positions (
@@ -137,7 +143,7 @@ func (pg *PositionPostgres) Insert(ctx context.Context, p *entity.Position) erro
 	return nil
 }
 
-func (pg *PositionPostgres) Update(ctx context.Context, p *entity.Position) error {
+func (pg *PositionPostgres) Update(ctx context.Context, p entity.Position) error {
 	const op = "PositionPostgres.Update"
 
 	queryString := `UPDATE positions SET amount = $1, average_price = $2, comment = $3, exchange = $4,

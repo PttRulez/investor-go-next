@@ -18,7 +18,7 @@ import (
 )
 
 func (c *TransactionController) CreateNewTransaction(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
+	const op = "ExpertController.CreateNewExpert"
 
 	// Анмаршалим данные
 	var tData api.CreateTransactionRequest
@@ -43,16 +43,22 @@ func (c *TransactionController) CreateNewTransaction(w http.ResponseWriter, r *h
 	}
 
 	// Получаем айди юзера и создаем транзакцию
-	t.UserID = utils.GetCurrentUserID(r.Context())
-	err = c.transactionService.CreateTransaction(ctx, &t)
+	ctx := r.Context()
+	t.UserID = utils.GetCurrentUserID(ctx)
+	tr, err := c.transactionService.CreateTransaction(ctx, t)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
+		c.logger.Error(err)
 		writeError(w, err)
+		return
 	}
 
-	writeString(w, http.StatusCreated, "Транзакция создана")
+	writeJSON(w, http.StatusCreated, tr)
 }
 
 func (c *TransactionController) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
+	const op = "ExpertController.DeleteTransaction"
+
 	cashoutID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
 		writeString(w, http.StatusBadRequest, fmt.Sprintf("Проблема с конвертацией айди %s: %s",
@@ -60,26 +66,34 @@ func (c *TransactionController) DeleteTransaction(w http.ResponseWriter, r *http
 			err.Error()))
 	}
 
-	err = c.transactionService.DeleteTransaction(r.Context(), cashoutID, utils.GetCurrentUserID(r.Context()))
+	ctx := r.Context()
+	err = c.transactionService.DeleteTransaction(ctx, cashoutID, utils.GetCurrentUserID(ctx))
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
+		c.logger.Error(err)
 		writeError(w, err)
+		return
 	}
 
 	writeString(w, http.StatusOK, "Транзакция удалена")
 }
 
 type TransactionService interface {
-	CreateTransaction(ctx context.Context, transactionData *entity.Transaction) error
+	CreateTransaction(ctx context.Context, transactionData entity.Transaction) (
+		entity.Transaction, error)
 	DeleteTransaction(ctx context.Context, transactionID int, userID int) error
 }
 
 type TransactionController struct {
+	logger             Logger
 	transactionService TransactionService
 	validator          *validator.Validate
 }
 
-func NewCashoutController(transactionService TransactionService, validator *validator.Validate) *TransactionController {
+func NewCashoutController(logger Logger, transactionService TransactionService,
+	validator *validator.Validate) *TransactionController {
 	return &TransactionController{
+		logger:             logger,
 		transactionService: transactionService,
 		validator:          validator,
 	}

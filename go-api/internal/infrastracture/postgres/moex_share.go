@@ -3,9 +3,11 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 
 	"github.com/lib/pq"
 )
@@ -28,6 +30,9 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 		&share.ShortName,
 		&share.Secid,
 	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, database.ErrNotFound
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

@@ -18,13 +18,15 @@ import (
 )
 
 func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
+	const op = "DealController.CreateDeal"
+
 	ctx := r.Context()
 
 	// Анмаршалим данные
 	var dealReq api.CreateDealRequest
 	var err error
 	if err = json.NewDecoder(r.Body).Decode(&dealReq); err != nil {
-		writeJSON(w, http.StatusBadRequest, err.Error())
+		writeString(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	// Валидация пришедших данных
@@ -40,12 +42,15 @@ func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 		writeString(w, http.StatusBadRequest, err.Error())
 	}
 
-	err = c.dealService.CreateDeal(ctx, &deal)
+	result, err := c.dealService.CreateDeal(ctx, deal)
 	if err != nil {
+		err = fmt.Errorf("%s: %w", op, err)
+		c.logger.Error(err)
 		writeError(w, err)
+		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	writeJSON(w, http.StatusCreated, result)
 }
 
 func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
@@ -70,18 +75,21 @@ func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 }
 
 type DealService interface {
-	CreateDeal(ctx context.Context, d *entity.Deal) error
+	CreateDeal(ctx context.Context, d entity.Deal) (entity.Deal, error)
 	DeleteDealByID(ctx context.Context, id int, userID int) error
 }
 
 type DealController struct {
+	logger      Logger
 	dealService DealService
 	validator   *validator.Validate
 }
 
-func NewDealController(dealService DealService, validator *validator.Validate) *DealController {
+func NewDealController(logger Logger, dealService DealService,
+	validator *validator.Validate) *DealController {
 	return &DealController{
 		dealService: dealService,
+		logger:      logger,
 		validator:   validator,
 	}
 }
