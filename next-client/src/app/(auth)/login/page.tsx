@@ -1,14 +1,19 @@
 'use client';
 import { FC, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { Box, TextField } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import { signIn } from 'next-auth/react';
 import { LoginData } from '@/validation';
 import { useRouter } from 'next/navigation';
 
 const Login: FC = () => {
-  const { handleSubmit, register } = useForm<LoginData>();
+  const {
+    formState: { errors },
+    handleSubmit,
+    setError,
+    register,
+  } = useForm<LoginData>();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -24,6 +29,8 @@ const Login: FC = () => {
       setLoading(false);
       if (loginData?.ok) {
         router.push('/');
+      } else if (loginData) {
+        setError('root', { message: String(loginData.error) });
       }
     } catch (e) {
       setLoading(false);
@@ -50,24 +57,33 @@ const Login: FC = () => {
           rowGap: 4,
           minWidth: 500,
           border: '1px solid',
-          borderColor: 'grey.A400',
+          borderColor: 'primary.dark',
           borderRadius: 6,
           padding: 4,
         }}
       >
-        <TextField label="Логин" variant="standard" {...register('email')} />
         <TextField
+          autoComplete="off"
+          label="Логин"
+          variant="standard"
+          {...register('email')}
+        />
+        <TextField
+          autoComplete="off"
           label="Пароль"
           variant="standard"
           type="password"
           {...register('password')}
         />
-        <LoadingButton
-          variant="outlined"
-          color="inherit"
-          type="submit"
-          loading={loading}
+        <Typography
+          sx={{
+            color: 'error.main',
+            fontWeight: 'bold',
+          }}
         >
+          {errors.root ? errors.root.message : ''}
+        </Typography>
+        <LoadingButton variant="outlined" type="submit" loading={loading}>
           Логин
         </LoadingButton>
       </Box>

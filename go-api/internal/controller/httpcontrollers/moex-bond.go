@@ -24,11 +24,11 @@ func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	writeJSON(w, http.StatusOK, converter.FromMoexBondToMoexBondResponse(*moexBond))
+	writeJSON(w, http.StatusOK, converter.FromMoexBondToMoexBondResponse(moexBond))
 }
 
 type MoexBondService interface {
-	GetBySecid(ctx context.Context, isin string) (*entity.Bond, error)
+	GetBySecid(ctx context.Context, isin string) (entity.Bond, error)
 }
 type MoexBondController struct {
 	logger          Logger

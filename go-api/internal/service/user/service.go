@@ -55,14 +55,14 @@ func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, er
 }
 
 func (s *Service) RegisterUser(ctx context.Context, user *entity.User) error {
-	const op = "UserService.LoginUser"
+	const op = "UserService.RegisterUser"
 
 	// Check if user with this email already exists
 	existingUser, err := s.userRepo.GetByEmail(ctx, user.Email)
 	if existingUser != nil {
 		return errors.New("такой юзер уже существует")
 	}
-	if err != nil {
+	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -74,7 +74,7 @@ func (s *Service) RegisterUser(ctx context.Context, user *entity.User) error {
 	// Creating new user
 	err = s.userRepo.Insert(ctx, user)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
 	return nil

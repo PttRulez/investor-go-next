@@ -41,6 +41,7 @@ func Run() {
 	}
 
 	r := chi.NewRouter()
+	logger.Info(fmt.Sprintf("cfg.AllowedCors: %v", cfg.AllowedCors))
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedCors,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -185,6 +186,7 @@ func Run() {
 	}()
 
 	// Run Server
+	logger.Info(fmt.Sprintf("Listening %v", cfg.APIPort))
 	err = srv.ListenAndServe()
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)

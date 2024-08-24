@@ -10,7 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
 import { PortfolioActionsMap } from '../components/PortfolioTable/PortfolioTableToolbar';
 import TransactionForm from '../components/TransactionForm/TransactionForm';
-import TransactionsTable from '../components/TransactionsTable';
+import { useRouter } from 'next/navigation';
 import { DealType } from '@/types/enums';
 
 export default function Portfolio({ params }: { params: { id: string } }) {
@@ -18,12 +18,18 @@ export default function Portfolio({ params }: { params: { id: string } }) {
     false,
   );
   const [activeTab, setActiveTab] = useState<string>('portfolio');
+  const router = useRouter();
 
   const client = useQueryClient();
   const { data: portfolio } = useQuery({
     queryKey: ['portfolio', parseInt(params.id)],
     queryFn: async () => {
       const portfolio = await investorService.portfolio.getPortfolio(params.id);
+      console.log('portfolio', portfolio);
+      if (!portfolio) {
+        console.log('PUSHING');
+        router.push(`/portfolios`);
+      }
       return {
         ...portfolio,
       };

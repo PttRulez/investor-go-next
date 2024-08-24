@@ -133,7 +133,7 @@ const PortfolioTable = ({
         },
       },
     ],
-    [],
+    [onChooseTransaction],
   );
   type PositionRow = IMoexBondPositionResponse | IMoexSharePositionResponse;
 

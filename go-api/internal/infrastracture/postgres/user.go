@@ -30,6 +30,9 @@ func (pg *UserPostgres) GetByEmail(ctx context.Context, email string) (*entity.U
 
 	var u entity.User
 	err := row.Scan(&u.ID, &u.Email, &u.HashedPassword, &u.Name, &u.Role)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, database.ErrNotFound
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

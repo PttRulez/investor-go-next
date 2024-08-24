@@ -6,20 +6,26 @@ import {
   FormText,
   FormDatePicker,
 } from '@pttrulez/mui-based-ui';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import {
+  ChangeHandler,
+  Controller,
+  SubmitHandler,
+  useForm,
+} from 'react-hook-form';
 import { FC, useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import MoexSearch from '@/components/ui/StocksSearch/MoexSearch';
 import investorService from '@/axios/investor/investor.service';
 import dayjs, { Dayjs } from 'dayjs';
 import { MoexSearchAutocompleteOption } from '@/components/ui/StocksSearch/types';
 import { getSecurityTypeFromMoexSecType } from '@/utils/helpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DealType, Exchange } from '@/types/enums';
+import { DealType, Exchange, MoexSecurityType } from '@/types/enums';
 import {
   CreateMoexShareDealData,
   CreateMoexShareDealSchema,
 } from '@/validation';
+import { MoexSecurityGroup } from '@/types/apis/go-api';
 
 interface DealFormProps {
   afterSuccessfulSubmit: () => void;
@@ -52,6 +58,7 @@ const CreateDealForm: FC<DealFormProps> = ({
   const client = useQueryClient();
   const [ticker, setTicker] = useState<string | null>(null);
 
+  // запрос на создание сделки
   const createDeal = useMutation(
     (formData: CreateMoexShareDealData) =>
       investorService.deal.createDeal(formData),
@@ -66,9 +73,39 @@ const CreateDealForm: FC<DealFormProps> = ({
   const onSubmit: SubmitHandler<CreateMoexShareDealData> = async data => {
     if (!ticker) return;
     const shareInfo = await investorService.moexShare.getByTicker(ticker);
-    
+
     data.securityId = shareInfo.id;
     createDeal.mutate(data);
+  };
+
+  let shareGroups: Array<MoexSecurityGroup> = [
+    MoexSecurityGroup.stock_shares,
+    MoexSecurityGroup.stock_dr,
+  ];
+
+  let bondGroups: Array<MoexSecurityGroup> = [
+    MoexSecurityGroup.stock_bonds,
+    MoexSecurityGroup.stock_eurobond,
+  ];
+
+  const onSecChange = async (
+    _: React.SyntheticEvent,
+    secInfo: MoexSearchAutocompleteOption | null,
+  ) => {
+    if (!secInfo) {
+      console.log('BOMZHIHA !value');
+      return;
+    }
+
+    if (shareGroups.includes(secInfo.group)) {
+      let a = await investorService.moexShare.getByTicker(secInfo.ticker);
+      console.log('received share info from our api', a);
+    } else if (bondGroups.includes(secInfo.group)) {
+      let a = await investorService.moexBond.getByTicker(secInfo.ticker);
+      console.log('received bond info from our api', a);
+    }
+    console.log('BOMZHIHA Щсрщлщ', secInfo);
+    setTicker(secInfo?.ticker ?? null);
   };
 
   return (
@@ -78,7 +115,7 @@ const CreateDealForm: FC<DealFormProps> = ({
         name="securityId"
         render={({ field }) => (
           <MoexSearch
-            onChange={(e, value) => setTicker(value?.ticker ?? null)}
+            onChange={onSecChange}
             error={!!formState.errors.securityId}
             helperText={formState.errors.securityId?.message}
           />

@@ -28,6 +28,11 @@ func (c *AuthController) LoginUser(w http.ResponseWriter, r *http.Request) {
 		writeString(w, http.StatusUnauthorized, err.Error())
 		return
 	}
+	if err != nil {
+		c.logger.Error(err)
+		writeString(w, http.StatusInternalServerError, "Не удалось авторизоваться")
+		return
+	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"token": tokenString})
 }
@@ -55,6 +60,7 @@ func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err := c.userService.RegisterUser(ctx, converter.FromRegisterRequestToUser(registerData))
 	if err != nil {
+		c.logger.Error(err)
 		writeError(w, err)
 		return
 	}

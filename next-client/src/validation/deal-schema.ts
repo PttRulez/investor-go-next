@@ -1,4 +1,4 @@
-import { DealType } from '@/types/enums';
+import { DealType, Exchange, SecurityType } from '@/types/enums';
 import { z } from 'zod';
 
 export const CreateMoexShareDealSchema = z.object({
@@ -10,13 +10,17 @@ export const CreateMoexShareDealSchema = z.object({
     })
     .int()
     .positive(),
+  comission: z.number(),
   date: z.date(),
+  exchange: z.nativeEnum(Exchange),
   portfolioId: z.number(),
   price: z.number({
     errorMap: _ => ({
       message: 'Введите стоимость сделки',
     }),
   }),
+  securityId: z.number(),
+  securityType: z.nativeEnum(SecurityType),
   ticker: z.number({
     errorMap: _ => ({
       message: 'ВЫберите бумагу',

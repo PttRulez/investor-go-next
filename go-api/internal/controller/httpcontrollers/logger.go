@@ -1,6 +1,6 @@
 package httpcontrollers
 
 type Logger interface {
-	Info(err error)
+	Info(s string)
 	Error(err error)
 }

@@ -24,11 +24,11 @@ func (c *MoexShareController) GetInfoBySecid(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	writeJSON(w, http.StatusOK, converter.FromMoexShareToMoexShareResponse(*moexShare))
+	writeJSON(w, http.StatusOK, converter.FromMoexShareToMoexShareResponse(moexShare))
 }
 
 type MoexShareService interface {
-	GetBySecid(ctx context.Context, ticker string) (*entity.Share, error)
+	GetBySecid(ctx context.Context, secID string) (entity.Share, error)
 }
 type MoexShareController struct {
 	logger          Logger

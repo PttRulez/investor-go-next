@@ -13,10 +13,11 @@ import (
 )
 
 func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
-	*entity.Share, error) {
+	entity.Share, error) {
 	const op = "MoexSharesPostgres.GetBySecid"
 
-	querySting := `SELECT * FROM moex_shares WHERE secid = $1;`
+	querySting := `SELECT id, board, engine, lotsize, market, name, shortname, secid
+		FROM moex_shares WHERE secid = $1;`
 
 	row := pg.db.QueryRowContext(ctx, querySting, secid)
 
@@ -25,19 +26,20 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 		&share.ID,
 		&share.Board,
 		&share.Engine,
+		&share.LotSize,
 		&share.Market,
 		&share.Name,
 		&share.ShortName,
 		&share.Secid,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, database.ErrNotFound
+		return entity.Share{}, database.ErrNotFound
 	}
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return entity.Share{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return &share, nil
+	return share, nil
 }
 
 func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
@@ -69,19 +71,22 @@ func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
 	return shares, nil
 }
 
-func (pg *MoexSharesPostgres) Insert(ctx context.Context, share *entity.Share) error {
+func (pg *MoexSharesPostgres) Insert(ctx context.Context, s entity.Share) (entity.Share, error) {
 	const op = "MoexSharesPostgres.Insert"
 
-	querySting := `INSERT INTO moex_shares (board, engine, market, name, shortname, secid)
-    VALUES ($1, $2, $3, $4, $5, $6) RETURNING *;`
+	querySting := `INSERT INTO moex_shares (board, engine, lotsize, market, name, shortname, secid)
+    VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING
+		id, board, engine, lotsize, market, name, shortname, secid;`
 
-	_, err := pg.db.ExecContext(ctx, querySting, share.Board, share.Engine, share.Market,
-		share.Name, share.ShortName, share.Secid)
+	var r entity.Share
+	err := pg.db.QueryRowContext(ctx, querySting, s.Board, s.Engine, s.LotSize,
+		s.Market, s.Name, s.ShortName, s.Secid).
+		Scan(&r.ID, &r.Board, &r.Engine, &r.LotSize, &r.Market, &r.Name, &r.ShortName, &r.Secid)
 	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
+		return entity.Share{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return nil
+	return r, nil
 }
 
 type MoexSharesPostgres struct {

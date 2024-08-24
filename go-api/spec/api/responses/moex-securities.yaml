@@ -2,13 +2,15 @@ components:
   schemas:
     MoexSecurityResponse:
       type: object
-      required: [board, engine, id, market, name, secid, shortName]
+      required: [board, engine, id, lotSize, market, name, secid, shortName]
       properties:
         board:
           $ref: ../shared/iss.yaml#/components/schemas/ISSMoexBoard
         engine:
           $ref: ../shared/iss.yaml#/components/schemas/ISSMoexEngine
         id:
+          type: integer
+        lotSize:
           type: integer
         market:
           $ref: ../shared/iss.yaml#/components/schemas/ISSMoexMarket

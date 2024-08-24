@@ -55,6 +55,7 @@ export enum MoexBoard {
 export enum MoexSecurityType {
   common_share = 'common_share', // 'акция обыкновенная'
   preferred_share = 'preferred_share', // 'акция привелигированная'
+  depositary_receipt = 'depositary_receipt', // 'депозитарная расписка'
 
   corporate_bond = 'corporate_bond', // 'корпоративная облигация'
   exchange_bond = 'exchange_bond', // 'облигация'

@@ -25,6 +25,7 @@ func (c *PortfolioController) CreateNewPortfolio(w http.ResponseWriter, r *http.
 
 	var req api.CreatePortfolioRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		c.logger.Error(err)
 		writeString(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -47,6 +48,7 @@ func (c *PortfolioController) CreateNewPortfolio(w http.ResponseWriter, r *http.
 		writeError(w, err)
 		return
 	}
+
 	writeJSON(w, http.StatusCreated, portfolio)
 }
 

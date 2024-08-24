@@ -6,6 +6,7 @@ type SecurityCommonInfo struct {
 	Board     ISSMoexBoard
 	Engine    ISSMoexEngine
 	ID        int
+	LotSize   int
 	Market    ISSMoexMarket
 	Name      string
 	Secid     string

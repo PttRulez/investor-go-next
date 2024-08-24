@@ -3,16 +3,17 @@
 import { MoexSecurityType } from '@/types/enums';
 
 export const moexStockTypesRU: Record<MoexSecurityType, string> = {
-  stock_index_if: 'iNAV облигаций',
   common_share: 'акция обыкновенная',
-  preferred_share: 'акция привелигированная',
-  exchange_bond: 'облигация',
   corporate_bond: 'корпоративная облигация',
-  ofz_bond: 'ОФЗ',
-  futures: 'фьючерс',
-  public_ppif: 'публичный ПИФ',
+  depositary_receipt: 'депозитарная расписка',
+  exchange_bond: 'облигация',
   exchange_ppif: 'биржевой ПИФ',
+  futures: 'фьючерс',
+  ofz_bond: 'ОФЗ',
+  preferred_share: 'акция привелигированная',
+  public_ppif: 'публичный ПИФ',
   stock_index: 'индекс',
+  stock_index_if: 'iNAV облигаций',
 };
 
 // export const moexStockTypeToGeneralType = {

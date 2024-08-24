@@ -25,6 +25,7 @@ const options: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
+        console.log('credentials', credentials);
         if (!credentials) return null;
 
         try {
@@ -32,12 +33,16 @@ const options: NextAuthOptions = {
             `${process.env.NEXT_PUBLIC_INVESTOR_API_INTERNAL_URL!}/login`,
             credentials,
           );
+          console.log(
+            `${process.env.NEXT_PUBLIC_INVESTOR_API_INTERNAL_URL!}/login`,
+            response,
+          );
           if (!response) {
             return null;
           }
           return response.data;
         } catch (e: any) {
-          return null;
+          throw new Error(e.response.data);
         }
       },
     }),

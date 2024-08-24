@@ -1,24 +1,21 @@
 package logger
 
-import "log/slog"
-
-type Logger interface {
-	Info(err error)
-	Error(err error)
-}
+import (
+	"log/slog"
+)
 
 type Log struct {
 	slog *slog.Logger
 }
 
-func NewLogger() Logger {
+func NewLogger() *Log {
 	return &Log{
 		slog: slog.Default(),
 	}
 }
 
-func (l *Log) Info(err error) {
-	l.slog.Info(err.Error())
+func (l *Log) Info(s string) {
+	l.slog.Info(s)
 }
 
 func (l *Log) Error(err error) {

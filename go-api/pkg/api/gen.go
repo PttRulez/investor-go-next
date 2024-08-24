@@ -203,6 +203,7 @@ type MoexBondResponse struct {
 	FaceValue int                `json:"faceValue"`
 	Id        int                `json:"id"`
 	IssueDate openapi_types.Date `json:"issueDate"`
+	LotSize   int                `json:"lotSize"`
 	Market    ISSMoexMarket      `json:"market"`
 	MatDate   openapi_types.Date `json:"matDate"`
 	Name      string             `json:"name"`
@@ -215,6 +216,7 @@ type MoexSecurityResponse struct {
 	Board     ISSMoexBoard  `json:"board"`
 	Engine    ISSMoexEngine `json:"engine"`
 	Id        int           `json:"id"`
+	LotSize   int           `json:"lotSize"`
 	Market    ISSMoexMarket `json:"market"`
 	Name      string        `json:"name"`
 	Secid     string        `json:"secid"`

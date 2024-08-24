@@ -1,7 +1,7 @@
 'use client';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { Box, TextField } from '@mui/material';
+import { Box, TextField, Typography } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 import investorService from '@/axios/investor/investor.service';
 import { useMutation } from '@tanstack/react-query';
@@ -10,13 +10,19 @@ import { RegisterData } from '@/validation';
 
 const Register: FC = () => {
   const { handleSubmit, register } = useForm<RegisterData>();
+  const [error, setError] = useState<string>('');
+
   const router = useRouter();
 
   const registerUser = useMutation(
     (formData: RegisterData) => investorService.auth.register(formData),
     {
       onSuccess: () => {
+        console.log('onSuccess');
         router.push('/login');
+      },
+      onError(error, variables, context) {
+        setError(error + '');
       },
     },
   );
@@ -53,15 +59,42 @@ const Register: FC = () => {
         <TextField
           label="Имя или никнейм"
           variant="standard"
+          sx={{
+            '.MuiInputLabel-formControl.Mui-focused': {
+              color: 'primary.dark',
+            },
+          }}
           {...register('name')}
         />
-        <TextField label="Email" variant="standard" {...register('email')} />
+        <TextField
+          label="Email"
+          variant="standard"
+          {...register('email')}
+          sx={{
+            '.MuiInputLabel-formControl.Mui-focused': {
+              color: 'primary.dark',
+            },
+          }}
+        />
         <TextField
           label="Пароль"
           variant="standard"
           type="password"
+          sx={{
+            '.MuiInputLabel-formControl.Mui-focused': {
+              color: 'primary.dark',
+            },
+          }}
           {...register('password')}
         />
+        <Typography
+          sx={{
+            color: 'error.main',
+            fontWeight: 'bold',
+          }}
+        >
+          {error}
+        </Typography>
         <LoadingButton
           variant="outlined"
           color="inherit"

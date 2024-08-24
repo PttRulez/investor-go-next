@@ -27,3 +27,6 @@ migrate_up:
 
 migrate_down:
 	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" down
+
+migrate_reset:
+	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" reset
