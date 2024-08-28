@@ -6,8 +6,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
-	"github.com/pttrulez/investor-go/internal/controller/model/response"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/infrastracture/database"
 	"github.com/pttrulez/investor-go/internal/infrastracture/issclient"
@@ -17,16 +15,13 @@ import (
 )
 
 func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
-	userID int) (*response.FullPortfolio, error) {
+	userID int) (entity.Portfolio, error) {
 	const op = "PortfolioService.GetFullPortfolioByID"
 	var (
-		result = &response.FullPortfolio{
-			Deals:        []response.Deal{},
-			Transactions: []response.Transaction{},
-		}
-		deals          []*entity.Deal
-		bondPositions  = make([]*entity.Position, 0)
-		sharePositions = make([]*entity.Position, 0)
+		result         entity.Portfolio
+		deals          []entity.Deal
+		bondPositions  = make([]entity.Position, 0)
+		sharePositions = make([]entity.Position, 0)
 		transactions   = make([]entity.Transaction, 0)
 		eg             = errgroup.Group{}
 	)
@@ -56,22 +51,6 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 			return fmt.Errorf("%s: %w", op, err)
 		}
 
-		// var bondDealsCount, shareDealsCount int
-		// for _, d := range deals {
-		//	if d.SecurityType == types.STBond {
-		//		bondDealsCount++
-		//	} else if d.SecurityType == types.STShare {
-		//		shareDealsCount++
-		//	}
-		// }
-		// for _, d := range deals {
-		//	if d.SecurityType == types.STShare {
-		//		shareDeals = append(shareDeals, d)
-		//	} else if d.SecurityType == types.STBond {
-		//		bondDeals = append(bondDeals, d)
-		//	}
-		//}
-
 		return nil
 	})
 
@@ -91,42 +70,55 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 				sharePositionsCount++
 			}
 		}
-		sharePositions = make([]*entity.Position, 0, bondPositionsCount)
-		bondPositions = make([]*entity.Position, 0, sharePositionsCount)
-		bondTickers := make([]string, 0, bondPositionsCount)
-		shareTickers := make([]string, 0, sharePositionsCount)
+
+		sharePositions = make([]entity.Position, 0, bondPositionsCount)
+		bondPositions = make([]entity.Position, 0, sharePositionsCount)
+		bondBoards := make(map[string]entity.ISSMoexBoard)
+		shareBoards := make(map[string]entity.ISSMoexBoard)
+
 		for _, p := range positions {
 			if p.SecurityType == entity.STShare {
 				sharePositions = append(sharePositions, p)
-				shareTickers = append(shareTickers, p.Secid)
+				shareBoards[p.Secid] = p.Board
 			} else if p.SecurityType == entity.STBond {
 				bondPositions = append(bondPositions, p)
-				bondTickers = append(bondTickers, p.Secid)
+				bondBoards[p.Secid] = p.Board
 			}
 		}
-		var bondPrices, sharePrices issclient.Prices
+
+		var bondPrices, sharePrices map[string]float64
 
 		if bondPositionsCount > 0 {
-			bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds, bondTickers)
+			bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds,
+				bondBoards)
 			if err != nil {
 				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 		if sharePositionsCount > 0 {
-			sharePrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketBonds, shareTickers)
+			sharePrices, err = s.issClient.GetStocksCurrentPrices(ctx, entity.MoexMarketShares,
+				shareBoards)
 			if err != nil {
 				return fmt.Errorf("%s: %w", op, err)
 			}
 		}
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
-		for _, position := range bondPositions {
-			position.CurrentPrice = bondPrices[position.Secid][position.Board]
-			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
+		const faceValue = 1000
+		const hundredPercents = 100
+		for i := range len(bondPositions) {
+			bondPositions[i].CurrentPrice = bondPrices[bondPositions[i].Secid]
+			bondPositions[i].CurrentCost = int(
+				(bondPositions[i].CurrentPrice / hundredPercents) * faceValue *
+					float64(bondPositions[i].Amount))
 		}
-		for _, position := range sharePositions {
-			position.CurrentPrice = sharePrices[position.Secid][position.Board]
-			position.CurrentCost = int(position.CurrentPrice * float64(position.Amount))
+
+		fmt.Printf("sharePrices %#v", sharePrices)
+
+		for i := range len(sharePositions) {
+			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Secid]
+			sharePositions[i].CurrentCost = int(
+				sharePositions[i].CurrentPrice * float64(sharePositions[i].Amount))
 		}
 
 		return nil
@@ -145,7 +137,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 
 	err := eg.Wait()
 	if err != nil {
-		return nil, err
+		return entity.Portfolio{}, err
 	}
 
 	for _, t := range transactions {
@@ -154,11 +146,12 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		} else if t.Type == entity.TTDeposit {
 			result.DepositsSum += t.Amount
 		}
-		result.Transactions = append(result.Transactions, converter.FromTransactionToResponse(t))
+		result.Transactions = append(result.Transactions, t)
 	}
 
-	spentToBuys := 0
-	receivedFromSells := 0
+	var spentToBuys int
+	var receivedFromSells int
+	var spentToComissions int
 
 	// сделки
 	for _, d := range deals {
@@ -167,24 +160,27 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		} else {
 			receivedFromSells += d.Amount * int(d.Price)
 		}
+		spentToComissions += int(d.Commission)
 	}
 
 	// позиции
-	result.BondPositions = make([]response.Position, len(bondPositions))
-	result.SharePositions = make([]response.Position, len(bondPositions))
+	result.BondPositions = make([]entity.Position, len(bondPositions))
+	result.SharePositions = make([]entity.Position, len(sharePositions))
 
-	for i, pos := range bondPositions {
-		result.TotalCost += pos.CurrentCost
-		result.BondPositions[i] = converter.FromPositionToResponse(*pos)
+	for i := range len(bondPositions) {
+		result.TotalCost += bondPositions[i].CurrentCost
+		result.BondPositions[i] = bondPositions[i]
 	}
-	for i, pos := range sharePositions {
-		result.TotalCost += pos.CurrentCost
-		result.SharePositions[i] = converter.FromPositionToResponse(*pos)
+
+	for i := range len(sharePositions) {
+		result.TotalCost += sharePositions[i].CurrentCost
+		result.SharePositions[i] = sharePositions[i]
 	}
 
 	const percentageMultiplier = 100
 	result.Cash = result.DepositsSum - result.CashoutsSum - spentToBuys + receivedFromSells
 	result.TotalCost += result.Cash
+	result.TotalCost -= spentToComissions
 	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum)/
 		float64(result.DepositsSum) - 1) * percentageMultiplier)
 
@@ -202,7 +198,7 @@ func (s *Service) CreatePortfolio(ctx context.Context, p entity.Portfolio) (enti
 	return portfolio, nil
 }
 
-func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio,
+func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]entity.Portfolio,
 	error) {
 	return s.repo.GetListByUserID(ctx, userID)
 }
@@ -265,15 +261,15 @@ type Service struct {
 type Repository interface {
 	Delete(ctx context.Context, id int, userID int) error
 	GetByID(ctx context.Context, id int, userID int) (entity.Portfolio, error)
-	GetListByUserID(ctx context.Context, id int) ([]*entity.Portfolio, error)
+	GetListByUserID(ctx context.Context, id int) ([]entity.Portfolio, error)
 	Insert(ctx context.Context, p entity.Portfolio) (entity.Portfolio, error)
 	Update(ctx context.Context, p entity.Portfolio, userID int) (entity.Portfolio, error)
 }
 type DealRepository interface {
-	GetDealListByPortoflioID(ctx context.Context, portfolioID int, userID int) ([]*entity.Deal, error)
+	GetDealListByPortoflioID(ctx context.Context, portfolioID int, userID int) ([]entity.Deal, error)
 }
 type PositionRepository interface {
-	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]*entity.Position, error)
+	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]entity.Position, error)
 }
 type TransactionRepository interface {
 	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]entity.Transaction, error)

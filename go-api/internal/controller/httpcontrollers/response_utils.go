@@ -27,6 +27,7 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	encoder.SetEscapeHTML(true)
 	err := encoder.Encode(value)
 	if err != nil {
+		fmt.Println("encoder.Encode(value):", err)
 		return
 	}
 
@@ -35,6 +36,7 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 
 	_, err = w.Write(buf.Bytes())
 	if err != nil {
+		fmt.Println("w.Write(buf.Bytes()):", err)
 		return
 	}
 }
@@ -56,6 +58,7 @@ func validationErrsToResponse(errs validator.ValidationErrors) map[string]string
 	mappedErrors := map[string]string{}
 
 	for _, err := range errs {
+		fmt.Printf("validationErrsToResponse err: %#v\n", err.Field())
 		switch err.ActualTag() {
 		case "required":
 			mappedErrors[err.Field()] += fmt.Sprintf("Поле %s обязательно для заполнения", err.Field())
@@ -67,7 +70,7 @@ func validationErrsToResponse(errs validator.ValidationErrors) map[string]string
 				err.Field(),
 			)
 		case "is-exchange":
-			mappedErrors[err.Field()] += "Неверное имя биржи. на данный момент поддерживаются только следующие: Moex"
+			mappedErrors[err.Field()] += "Неверное имя биржи. на данный момент поддерживаются только следующие: MOEX"
 		case "securityType":
 			mappedErrors[err.Field()] += "Указан неправильный тип бумаги"
 		case "dealType":

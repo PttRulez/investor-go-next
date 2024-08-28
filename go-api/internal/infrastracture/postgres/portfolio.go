@@ -50,7 +50,7 @@ func (pg *PortfolioPostgres) GetByID(ctx context.Context, id int, userID int) (e
 	return p, nil
 }
 
-func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio, error) {
+func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, userID int) ([]entity.Portfolio, error) {
 	const op = "PortfolioPostgres.GetListByUserId"
 
 	queryString := `SELECT id, compound, name FROM portfolios where user_id = $1;`
@@ -60,14 +60,14 @@ func (pg *PortfolioPostgres) GetListByUserID(ctx context.Context, userID int) ([
 	}
 	defer rows.Close()
 
-	var portfolios []*entity.Portfolio
+	var portfolios []entity.Portfolio
 	for rows.Next() {
 		var p entity.Portfolio
 		err = rows.Scan(&p.ID, &p.Compound, &p.Name)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		portfolios = append(portfolios, &p)
+		portfolios = append(portfolios, p)
 	}
 	if rows.Err() != nil {
 		return nil, fmt.Errorf("%s: %w", op, rows.Err())

@@ -18,6 +18,8 @@ paths:
     $ref: ./paths/moex-share.yaml
   /opinion:
     $ref: ./paths/opinion.yaml
+  /opinion/list:
+    $ref: ./paths/opinionlist.yaml
   /portfolio:
     $ref: ./paths/portfolio.yaml
   /portfolio/{id}:

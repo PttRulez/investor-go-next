@@ -1,5 +1,5 @@
 import { IDealResponse } from '@/types/apis/go-api';
-import { CreateMoexShareDealData, UpdateDealData } from '@/validation';
+import { CreateDealData, UpdateDealData } from '@/validation';
 import { AxiosInstance } from 'axios';
 
 export class InvestorDeal {
@@ -9,8 +9,8 @@ export class InvestorDeal {
     this.api = api;
   }
 
-  async createDeal(data: CreateMoexShareDealData): Promise<IDealResponse> {
-    const res = await this.api.post<IDealResponse>('/deal/moex-share', data);
+  async createDeal(data: CreateDealData): Promise<IDealResponse> {
+    const res = await this.api.post<IDealResponse>('/deal', data);
     return res.data;
   }
 
@@ -18,8 +18,6 @@ export class InvestorDeal {
     const res = await this.api.delete<IDealResponse>(`/deal/${id}`);
     return res.data;
   }
-
-  updateDeal(data: UpdateDealData) {
-    return this.api.post(`/deals/moex-share/${data.id}`, data);
-  }
 }
+
+// 2024-08-25T09:00:26.130Z

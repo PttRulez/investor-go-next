@@ -16,8 +16,8 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 	entity.Share, error) {
 	const op = "MoexSharesPostgres.GetBySecid"
 
-	querySting := `SELECT id, board, engine, lotsize, market, name, shortname, secid
-		FROM moex_shares WHERE secid = $1;`
+	querySting := `SELECT id, board, engine, lotsize, market, name, price_decimals,
+		shortname, secid FROM moex_shares WHERE secid = $1;`
 
 	row := pg.db.QueryRowContext(ctx, querySting, secid)
 
@@ -29,6 +29,7 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 		&share.LotSize,
 		&share.Market,
 		&share.Name,
+		&share.PriceDecimals,
 		&share.ShortName,
 		&share.Secid,
 	)
@@ -43,10 +44,11 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 }
 
 func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
-	[]*entity.Share, error) {
+	[]entity.Share, error) {
 	const op = "MoexSharesPostgres.GetListByIDs"
 
-	queryString := "SELECT * FROM moex_shares WHERE id = ANY($1)"
+	queryString := `SELECT id, board, engine, lotsize, market, name, price_decimals,
+		shortname, secid FROM moex_shares WHERE id = ANY($1)`
 
 	rows, err := pg.db.QueryContext(ctx, queryString, pq.Array(ids))
 	if err != nil {
@@ -54,15 +56,15 @@ func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
 	}
 	defer rows.Close()
 
-	var shares []*entity.Share
+	var shares []entity.Share
 	for rows.Next() {
 		var share entity.Share
 		err = rows.Scan(&share.ID, &share.Board, &share.Engine, &share.Market, &share.Name,
-			&share.ShortName, &share.Secid)
+			&share.PriceDecimals, &share.ShortName, &share.Secid)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		shares = append(shares, &share)
+		shares = append(shares, share)
 	}
 	if rows.Err() != nil {
 		return nil, fmt.Errorf("%s: %w", op, rows.Err())
@@ -74,14 +76,15 @@ func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
 func (pg *MoexSharesPostgres) Insert(ctx context.Context, s entity.Share) (entity.Share, error) {
 	const op = "MoexSharesPostgres.Insert"
 
-	querySting := `INSERT INTO moex_shares (board, engine, lotsize, market, name, shortname, secid)
-    VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING
-		id, board, engine, lotsize, market, name, shortname, secid;`
+	querySting := `INSERT INTO moex_shares (board, engine, lotsize, market, name, price_decimals,
+		shortname, secid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING
+		id, board, engine, lotsize, market, name, price_decimals, shortname, secid;`
 
 	var r entity.Share
 	err := pg.db.QueryRowContext(ctx, querySting, s.Board, s.Engine, s.LotSize,
-		s.Market, s.Name, s.ShortName, s.Secid).
-		Scan(&r.ID, &r.Board, &r.Engine, &r.LotSize, &r.Market, &r.Name, &r.ShortName, &r.Secid)
+		s.Market, s.Name, &s.PriceDecimals, s.ShortName, s.Secid).
+		Scan(&r.ID, &r.Board, &r.Engine, &r.LotSize, &r.Market, &r.Name, &r.PriceDecimals,
+			&r.ShortName, &r.Secid)
 	if err != nil {
 		return entity.Share{}, fmt.Errorf("%s: %w", op, err)
 	}

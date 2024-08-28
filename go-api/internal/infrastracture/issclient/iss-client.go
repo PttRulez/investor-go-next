@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/pttrulez/investor-go/internal/entity"
+	"github.com/pttrulez/investor-go/internal/utils"
 )
 
 type ISSSecInfo struct {
@@ -40,7 +41,8 @@ type ISSSecInfo struct {
 }
 
 type ISSFullSecurityInfo struct {
-	LotSize int
+	LotSize       int
+	PriceDecimals int
 }
 
 func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) (ISSSecInfo, error) {
@@ -174,7 +176,7 @@ func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine entity.ISS
 
 	uri := fmt.Sprintf("%s/engines/%s/markets/%s/boards/%s/securities/%s.json", api.baseURL,
 		engine, market, board, secid)
-	fmt.Println("URI:", uri)
+
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return ISSFullSecurityInfo{}, fmt.Errorf("%s: %w", op, err)
@@ -183,7 +185,7 @@ func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine entity.ISS
 	// фильтруем только то что нам нужно
 	params := url.Values{}
 	params.Add("iss.meta", "off")
-	params.Add("securities.columns", "SECID,LOTSIZE")
+	params.Add("securities.columns", "LOTSIZE,PREVPRICE")
 	params.Add("marketdata.columns", "off")
 	req.URL.RawQuery = params.Encode()
 
@@ -197,25 +199,29 @@ func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine entity.ISS
 	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
 		return ISSFullSecurityInfo{}, fmt.Errorf("%s (failed to Unmarshal) : %w", op, err)
 	}
-	fmt.Printf("%+v\n", data)
 
 	var result ISSFullSecurityInfo
-	lotSizeFloat, ok := data.Securities.Data[0][1].(float64)
+	lotSizeFloat, ok := data.Securities.Data[0][0].(float64)
 	if !ok {
 		return ISSFullSecurityInfo{}, fmt.Errorf("%s (failed to TypeCast lotSize (%v) from Data) : %w",
+			op, data.Securities.Data[0][0], err)
+	}
+	prevPrice, ok := data.Securities.Data[0][1].(float64)
+	if !ok {
+		return ISSFullSecurityInfo{}, fmt.Errorf("%s (failed to TypeCast prevPrice (%v) from Data) : %w",
 			op, data.Securities.Data[0][1], err)
 	}
+
 	lotSize := int(lotSizeFloat)
 
 	result.LotSize = lotSize
+	result.PriceDecimals = utils.SignsAfterDot(prevPrice)
 
 	return result, nil
 }
 
-type Prices map[string]map[entity.ISSMoexBoard]float64
-
 func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
-	tickers []string) (Prices, error) {
+	secidInfos map[string]entity.ISSMoexBoard) (map[string]float64, error) {
 	const op = "issclient.GetStocksCurrentPrices"
 
 	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseURL, market)
@@ -224,9 +230,14 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
+	secids := make([]string, 0, len(secidInfos))
+	for secid := range secidInfos {
+		secids = append(secids, secid)
+	}
+
 	params := url.Values{}
 	params.Add("iss.meta", "off")
-	params.Add("securities", url.QueryEscape(strings.Join(tickers, ",")))
+	params.Add("securities", strings.Join(secids, ","))
 	params.Add("securities.columns", "SECID,BOARDID,PREVPRICE")
 	req.URL.RawQuery = params.Encode()
 
@@ -240,6 +251,8 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	fmt.Println("req.Uri", req.URL.String())
+	fmt.Println("body", string(body))
 
 	var data MoexAPIResponseCurrentPrices
 	err = json.Unmarshal(body, &data)
@@ -247,25 +260,32 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	var m Prices
+	fmt.Println("data", data)
+
+	var m = make(map[string]float64)
 	for _, i := range data.Securities.Data {
-		ticker, ok := i[0].(string)
+		secid, ok := i[0].(string)
 		if !ok {
 			return nil, fmt.Errorf("%s: failed to cast ticker from issreponse", op)
 		}
 
-		board, ok := i[1].(entity.ISSMoexBoard)
+		board, ok := i[1].(string)
 		if !ok {
-			return nil, fmt.Errorf("%s: failed to cast board from issreponse", op)
+			return nil, fmt.Errorf("%s: failed to cast %v board from issreponse", i[1], op)
 		}
 
 		price, ok := i[2].(float64)
 		if !ok {
 			return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
 		}
-
-		m[ticker][board] = price
+		fmt.Println("secid", secid, "board", board, "price", price)
+		fmt.Println("secidInfos", secidInfos)
+		v, ok := secidInfos[secid]
+		if ok && string(v) == board {
+			m[secid] = price
+		}
 	}
+
 	return m, nil
 }
 

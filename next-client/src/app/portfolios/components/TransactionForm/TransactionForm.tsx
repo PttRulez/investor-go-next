@@ -10,6 +10,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Button from '@mui/material/Button';
 import { CreateTransactionData, CreateTransactionSchema } from '@/validation';
 import { TransactionType } from '@/types/enums';
+import { useEffect } from 'react';
 
 type Props = {
   afterSuccessfulSubmit: () => void;
@@ -46,6 +47,9 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
     createTransaction.mutate(data);
   };
 
+  useEffect(() => {
+    console.log('watchAll', watchAll);
+  }, [watchAll]);
   return (
     <Box
       onSubmit={handleSubmit(onSubmit)}
@@ -70,6 +74,9 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
           helperText={formState.errors.amount?.message}
           label={'Сумма кэшаута'}
           name={'amount'}
+          onChange={e => {
+            setValue('amount', parseInt(e.target.value));
+          }}
           type="number"
           value={watchAll.amount}
         />

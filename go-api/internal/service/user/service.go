@@ -21,7 +21,7 @@ var (
 
 const tokentExpHours = 6
 
-func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, error) {
+func (s *Service) LoginUser(ctx context.Context, model entity.User) (string, error) {
 	const op = "UserService.LoginUser"
 
 	user, err := s.userRepo.GetByEmail(ctx, model.Email)
@@ -54,12 +54,12 @@ func (s *Service) LoginUser(ctx context.Context, model *entity.User) (string, er
 	return tokenString, nil
 }
 
-func (s *Service) RegisterUser(ctx context.Context, user *entity.User) error {
+func (s *Service) RegisterUser(ctx context.Context, user entity.User) error {
 	const op = "UserService.RegisterUser"
 
 	// Check if user with this email already exists
 	existingUser, err := s.userRepo.GetByEmail(ctx, user.Email)
-	if existingUser != nil {
+	if existingUser.ID != 0 {
 		return errors.New("такой юзер уже существует")
 	}
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
@@ -81,8 +81,8 @@ func (s *Service) RegisterUser(ctx context.Context, user *entity.User) error {
 }
 
 type Repository interface {
-	Insert(ctx context.Context, u *entity.User) error
-	GetByEmail(ctx context.Context, email string) (*entity.User, error)
+	Insert(ctx context.Context, u entity.User) error
+	GetByEmail(ctx context.Context, email string) (entity.User, error)
 }
 
 type Service struct {

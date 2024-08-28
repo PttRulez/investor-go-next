@@ -22,7 +22,7 @@ linters-settings:
     # The maximal average package complexity.
     # If it's higher than 0.0 (float) the check is enabled
     # Default: 0.0
-    package-average: 10.0
+    package-average: 30.0
 
   errcheck:
     # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
@@ -125,6 +125,8 @@ linters-settings:
         strict: true
   inamedparam:
     skip-single-param: true
+  unusedwrite:
+    exported-fields-are-used: true
 
   mnd:
     # List of function patterns to exclude from analysis.

@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/utils"
 	"github.com/pttrulez/investor-go/pkg/api"
@@ -92,7 +92,7 @@ func (c *ExpertController) GetExpertsList(w http.ResponseWriter, r *http.Request
 	// Собираем полученный список экспертов в формат http response'a
 	expertsResponse := make([]api.ExpertResponse, 0, len(experts))
 	for _, e := range experts {
-		expertsResponse = append(expertsResponse, converter.FromExpertToExpertResponse(*e))
+		expertsResponse = append(expertsResponse, converter.FromExpertToExpertResponse(e))
 	}
 
 	writeJSON(w, http.StatusOK, expertsResponse)
@@ -101,7 +101,7 @@ func (c *ExpertController) GetExpertsList(w http.ResponseWriter, r *http.Request
 type ExpertService interface {
 	CreateNewExpert(ctx context.Context, expert entity.Expert) (entity.Expert, error)
 	DeleteExpert(ctx context.Context, id int, userID int) error
-	GetListByUserID(ctx context.Context, userID int) ([]*entity.Expert, error)
+	GetListByUserID(ctx context.Context, userID int) ([]entity.Expert, error)
 }
 
 type ExpertController struct {

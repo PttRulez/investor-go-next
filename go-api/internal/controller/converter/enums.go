@@ -42,6 +42,24 @@ func dealType(d api.DealType) (entity.DealType, error) {
 	}
 }
 
+func opinionType(o api.OpinionType) (entity.OpinionType, error) {
+	switch o {
+	case api.FLAT:
+		return entity.Flat, nil
+	case api.GENERAL:
+		return entity.General, nil
+	case api.GROWTH:
+		return entity.Growth, nil
+	case api.REDUCTION:
+		return entity.Reduction, nil
+	default:
+		return entity.OpinionType(""), WrongEnumValueError{
+			enumName: "OpinionType",
+			value:    string(o),
+		}
+	}
+}
+
 func securityType(e api.SecurityType) (entity.SecurityType, error) {
 	switch e {
 	case api.BOND:

@@ -78,7 +78,8 @@ func (pg *Transaction) Insert(ctx context.Context, t entity.Transaction) (entity
 		VALUES ($1, $2, $3, $4, $5) RETURNING id, amount, date, portfolio_id, type;`
 
 	var res entity.Transaction
-	err := pg.db.QueryRowContext(ctx, queryString, t.Amount, t.Date, t.PortfolioID, t.Type).
+	err := pg.db.QueryRowContext(ctx, queryString, t.Amount, t.Date, t.PortfolioID, t.Type,
+		t.UserID).
 		Scan(&res.ID, &res.Amount, &res.Date, &res.PortfolioID, &res.Type)
 	if err != nil {
 		return entity.Transaction{}, fmt.Errorf("%s: %w", op, err)

@@ -25,14 +25,14 @@ export default function Portfolio({ params }: { params: { id: string } }) {
     queryKey: ['portfolio', parseInt(params.id)],
     queryFn: async () => {
       const portfolio = await investorService.portfolio.getPortfolio(params.id);
-      console.log('portfolio', portfolio);
       if (!portfolio) {
-        console.log('PUSHING');
-        router.push(`/portfolios`);
+        // router.push(`/portfolios`);
+        console.log('portfolio', portfolio);
+      } else {
+        return {
+          ...portfolio,
+        };
       }
-      return {
-        ...portfolio,
-      };
     },
     onSuccess: () => {
       client.invalidateQueries(['prices']);

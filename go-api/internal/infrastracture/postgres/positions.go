@@ -21,34 +21,44 @@ func NewPositionPostgres(db *sql.DB) *PositionPostgres {
 func (pg *PositionPostgres) GetPositionForSecurity(ctx context.Context,
 	exchange entity.Exchange, portfolioID int,
 	securityType entity.SecurityType, ticker string) (entity.Position, error) {
-	const op = "PositionPostgres.GetForSecurity"
+	const op = "PositionPostgres.GetPositionForSecurity"
 
-	queryString := `SELECT * FROM positions
+	queryString := `SELECT
+		id,
+		amount,
+		average_price,
+	  board,
+		comment,
+		exchange,
+		portfolio_id,
+		security_type,
+		shortname,
+		ticker,
+		target_price
+    FROM positions
     WHERE exchange = $1 AND portfolio_id = $2 AND security_type = $3 AND ticker = $4;`
 
 	var p entity.Position
 
-	row := pg.db.QueryRowContext(
+	err := pg.db.QueryRowContext(
 		ctx,
 		queryString,
 		exchange,
 		portfolioID,
 		securityType,
 		ticker,
-	)
-
-	err := row.Scan(
-		p.ID,
-		p.Amount,
-		p.AveragePrice,
-		p.Board,
-		p.Comment,
-		p.Exchange,
-		p.PortfolioID,
-		p.SecurityType,
-		p.Secid,
-		p.TargetPrice,
-		p.ShortName,
+	).Scan(
+		&p.ID,
+		&p.Amount,
+		&p.AveragePrice,
+		&p.Board,
+		&p.Comment,
+		&p.Exchange,
+		&p.PortfolioID,
+		&p.SecurityType,
+		&p.ShortName,
+		&p.Secid,
+		&p.TargetPrice,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return entity.Position{}, database.ErrNotFound
@@ -61,7 +71,7 @@ func (pg *PositionPostgres) GetPositionForSecurity(ctx context.Context,
 }
 
 func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, userID int) (
-	[]*entity.Position, error) {
+	[]entity.Position, error) {
 	const op = "PositionPostgres.GetListByPortfolioId"
 
 	queryString := `
@@ -75,24 +85,24 @@ func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, us
 	}
 	defer rows.Close()
 
-	var positions []*entity.Position
+	var positions []entity.Position
 
 	for rows.Next() {
-		var p = new(entity.Position)
+		var p entity.Position
 
 		err = rows.Scan(
-			p.ID,
-			p.Amount,
-			p.AveragePrice,
-			p.Board,
-			p.Comment,
-			p.Exchange,
-			p.PortfolioID,
-			p.SecurityType,
-			p.ShortName,
-			p.Secid,
-			p.TargetPrice,
-			p.UserID,
+			&p.ID,
+			&p.Amount,
+			&p.AveragePrice,
+			&p.Board,
+			&p.Comment,
+			&p.Exchange,
+			&p.PortfolioID,
+			&p.SecurityType,
+			&p.ShortName,
+			&p.Secid,
+			&p.TargetPrice,
+			&p.UserID,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
@@ -112,17 +122,17 @@ func (pg *PositionPostgres) Insert(ctx context.Context, p entity.Position) error
 	queryString := `INSERT INTO positions (
 		amount,
 		average_price,
-	   	board,
+	  board,
 		comment,
 		exchange,
 		portfolio_id,
 		security_type,
-		short_name,
+		shortname,
 		ticker,
 		target_price,
 		user_id
     ) 
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) ;`
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ;`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		p.Amount,
@@ -147,7 +157,7 @@ func (pg *PositionPostgres) Update(ctx context.Context, p entity.Position) error
 	const op = "PositionPostgres.Update"
 
 	queryString := `UPDATE positions SET amount = $1, average_price = $2, comment = $3, exchange = $4,
-		portfolio_id = $5, security_type = $6, short_name = $7, ticker = $8, target_price = $9 WHERE id = $10;`
+		portfolio_id = $5, security_type = $6, shortname = $7, ticker = $8, target_price = $9 WHERE id = $10;`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		p.Amount,

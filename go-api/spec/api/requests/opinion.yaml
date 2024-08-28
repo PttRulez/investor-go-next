@@ -2,17 +2,23 @@ components:
   schemas:
     CreateOpinionRequest:
       type: object
-      required: [date, expertId, text]
+      required: [date, expertId, exchange, securityId, securityType, text, type]
       properties:
         date:
           type: string
           format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
         exchange:
           $ref: ../shared/enums.yaml#/components/schemas/Exchange
         expertId:
           type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
         securityId:
           type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
         securityType:
           $ref: ../shared/enums.yaml#/components/schemas/SecurityType
         sourceLink:
@@ -22,5 +28,7 @@ components:
           format: double
         text:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
         type:
           $ref: ../shared/enums.yaml#/components/schemas/OpinionType

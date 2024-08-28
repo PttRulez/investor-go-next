@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 
 	"github.com/go-chi/chi/v5"

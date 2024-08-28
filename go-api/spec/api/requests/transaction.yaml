@@ -8,7 +8,7 @@ components:
           type: integer
         date:
           type: string
-          format: date
+          format: date-time
         portfolioId:
           type: integer
         type:

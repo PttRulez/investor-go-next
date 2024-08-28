@@ -158,6 +158,47 @@ paths:
           description: неправильно заполнены поля
         '500':
           description: другие ошибки, должен быть текст в ответе
+  /opinion/list:
+    get:
+      summary: Получение списка мнений
+      parameters:
+        - name: expertId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: id эксперта
+        - name: securityId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: id бумаги
+        - name: exchange
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Биржа
+        - name: securityType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: тип бумаги SHARE BOND ...
+      responses:
+        '200':
+          description: список отправлен
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpinionResponse'
+        '400':
+          description: неверный запрос
+        '500':
+          description: другие ошибки, должен быть текст в ответе
   /portfolio:
     get:
       summary: Список портфолио юзера
@@ -316,6 +357,8 @@ components:
       type: string
       enum:
         - MOEX
+      x-oapi-codegen-extra-tags:
+        validate: required,is-exchange
     SecurityType:
       type: string
       enum:
@@ -325,6 +368,8 @@ components:
         - INDEX
         - PIF
         - SHARE
+      x-oapi-codegen-extra-tags:
+        validate: required,securityType
     DealType:
       type: string
       enum:
@@ -339,7 +384,7 @@ components:
         - exchange
         - portfolioId
         - price
-        - securityId
+        - secId
         - securityType
         - type
         - ticker
@@ -351,7 +396,7 @@ components:
           format: double
         date:
           type: string
-          format: date
+          format: date-time
         exchange:
           $ref: '#/components/schemas/Exchange'
         portfolioId:
@@ -359,14 +404,12 @@ components:
         price:
           type: number
           format: double
-        securityId:
-          type: integer
+        secId:
+          type: string
         securityType:
           $ref: '#/components/schemas/SecurityType'
         type:
           $ref: '#/components/schemas/DealType'
-        ticker:
-          type: string
     ExpertResponse:
       type: object
       required:
@@ -494,13 +537,61 @@ components:
         - GENERAL
         - GROWTH
         - REDUCTION
+      x-oapi-codegen-extra-tags:
+        validate: required,opinionType
     CreateOpinionRequest:
       type: object
       required:
         - date
         - expertId
+        - exchange
+        - securityId
+        - securityType
         - text
+        - type
       properties:
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        expertId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        securityId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        sourceLink:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        text:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        type:
+          $ref: '#/components/schemas/OpinionType'
+    OpinionResponse:
+      type: object
+      required:
+        - id
+        - date
+        - expertId
+        - exchange
+        - securityId
+        - securityType
+        - text
+        - type
+      properties:
+        id:
+          type: integer
         date:
           type: string
           format: date
@@ -562,25 +653,37 @@ components:
         compound:
           type: boolean
     PositionResponse:
-      amount:
-        type: integer
-      averagePrice:
-        type: number
-        format: float
-      comment:
-        type: string
-      currentPrice:
-        type: number
-        format: float
-      currentCost:
-        type: integer
-      shortName:
-        type: string
-      targetPrice:
-        type: number
-        format: float
-      ticker:
-        type: string
+      type: object
+      required:
+        - amount
+        - averagePrice
+        - currentPrice
+        - currentCost
+        - securityType
+        - shortName
+        - ticker
+      properties:
+        amount:
+          type: integer
+        averagePrice:
+          type: number
+          format: double
+        comment:
+          type: string
+        currentPrice:
+          type: number
+          format: double
+        currentCost:
+          type: integer
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        shortName:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        ticker:
+          type: string
     DealResponse:
       allOf:
         - $ref: '#/components/schemas/CreateDealRequest'
@@ -605,7 +708,7 @@ components:
           type: integer
         date:
           type: string
-          format: date
+          format: date-time
         portfolioId:
           type: integer
         type:
@@ -614,6 +717,8 @@ components:
       allOf:
         - $ref: '#/components/schemas/CreateTransactionRequest'
         - type: object
+          required:
+            - id
           properties:
             id:
               type: integer
@@ -626,7 +731,7 @@ components:
             $ref: '#/components/schemas/PositionResponse'
         cash:
           type: integer
-        cashoutSum:
+        cashoutsSum:
           type: integer
         compound:
           type: boolean
@@ -655,7 +760,7 @@ components:
       required:
         - bondPositions
         - cash
-        - cashoutSum
+        - cashoutsSum
         - compound
         - deals
         - depositsSum

@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
+	"strings"
 	"syscall"
 	"time"
 
@@ -26,6 +28,7 @@ import (
 	"github.com/pttrulez/investor-go/internal/service/expert"
 	"github.com/pttrulez/investor-go/internal/service/moexbond"
 	"github.com/pttrulez/investor-go/internal/service/moexshare"
+	"github.com/pttrulez/investor-go/internal/service/opinion"
 	"github.com/pttrulez/investor-go/internal/service/portfolio"
 	"github.com/pttrulez/investor-go/internal/service/transaction"
 	"github.com/pttrulez/investor-go/internal/service/user"
@@ -36,6 +39,14 @@ func Run() {
 
 	logger := logger.NewLogger()
 	validator, err := requestvalidator.NewValidator()
+	validator.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		//nolint:mnd // Функция взята из примера от разработчика пакета validate
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
 	if err != nil {
 		panic("Failed to create validator")
 	}
@@ -63,6 +74,7 @@ func Run() {
 	expertRepo := postgres.NewExpertPostgres(db)
 	moexBondRepo := postgres.NewMoexBondsPostgres(db)
 	moexShareRepo := postgres.NewMoexSharesPostgres(db)
+	opinionRepo := postgres.NewOpinionPostgres(db)
 	portfolioRepo := postgres.NewPortfolioPostgres(db)
 	positionRepo := postgres.NewPositionPostgres(db)
 	transactionRepo := postgres.NewTransactionPostgres(db)
@@ -75,11 +87,13 @@ func Run() {
 	expertSerice := expert.NewExpertService(expertRepo)
 	moexBondService := moexbond.NewMoexBondService(moexBondRepo, issClient)
 	moexShareService := moexshare.NewMoexShareService(moexShareRepo, issClient)
+	opinionService := opinion.NewOpinionService(opinionRepo)
 	portfolioService := portfolio.NewPortfolioService(dealRepo, issClient, positionRepo,
 		portfolioRepo, transactionRepo)
 	transactionService := transaction.NewTransactionService(transactionRepo, portfolioRepo)
 	userService := user.NewUserService(userRepo, tokenAuth)
-	dealService := deal.NewDealService(issClient, moexBondService, moexShareService, dealRepo)
+	dealService := deal.NewDealService(issClient, moexBondService, moexShareService,
+		positionRepo, dealRepo)
 
 	// Controllers init
 	authController := httpcontrollers.NewAuthController(logger, userService, validator)
@@ -87,6 +101,7 @@ func Run() {
 	expertController := httpcontrollers.NewExpertController(logger, expertSerice, validator)
 	moexBondController := httpcontrollers.NewMoexBondController(logger, moexBondService)
 	moexShareController := httpcontrollers.NewMoexShareController(logger, moexShareService)
+	opinionController := httpcontrollers.NewOpinionController(logger, opinionService, validator)
 	portfolioController := httpcontrollers.NewPortfolioController(logger, portfolioService)
 	transactionController := httpcontrollers.NewCashoutController(logger, transactionService, validator)
 
@@ -126,6 +141,13 @@ func Run() {
 		// Moex-Shares
 		r.Route("/moex-share", func(r chi.Router) {
 			r.Get("/{secid}", moexShareController.GetInfoBySecid)
+		})
+
+		// Moex-Shares
+		r.Route("/opinion", func(r chi.Router) {
+			r.Delete("/{id}", opinionController.DeleteOpinion)
+			r.Post("/", opinionController.CreateOpinion)
+			r.Post("/list", opinionController.GetOpinionsList)
 		})
 
 		// Portfolios

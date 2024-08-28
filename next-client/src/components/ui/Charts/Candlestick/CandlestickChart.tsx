@@ -5,8 +5,10 @@ import { SxProps } from '@mui/material';
 
 interface CandleChartProps extends BoxProps {
   data: CandlestickData[];
-  sx?: SxProps;
 }
+
+const boxPadding = 20;
+const backgroundColor = 'white';
 
 const CandlestickChart = ({ sx, data }: CandleChartProps) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -19,14 +21,15 @@ const CandlestickChart = ({ sx, data }: CandleChartProps) => {
     };
 
     const chartOptions = {
+      autoSize: true,
       layout: {
         textColor: 'black',
         background: {
           type: ColorType.Solid,
-          color: 'white',
+          color: backgroundColor,
         },
       },
-      width: chartContainerRef.current.clientWidth,
+      // width: 'inherit', // chartContainerRef.current.clientWidth - boxPadding * 2,
       height: 300,
     };
 
@@ -60,7 +63,16 @@ const CandlestickChart = ({ sx, data }: CandleChartProps) => {
     };
   }, [data]);
 
-  return <Box ref={chartContainerRef} sx={sx} />;
+  return (
+    <Box
+      ref={chartContainerRef}
+      sx={{
+        padding: `${boxPadding}px`,
+        backgroundColor: backgroundColor,
+        ...sx,
+      }}
+    />
+  );
 };
 
 export default CandlestickChart;

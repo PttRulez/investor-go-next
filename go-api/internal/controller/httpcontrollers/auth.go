@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/service/user"
 	"github.com/pttrulez/investor-go/pkg/api"
@@ -69,8 +69,8 @@ func (c *AuthController) RegisterUser(w http.ResponseWriter, r *http.Request) {
 }
 
 type UserService interface {
-	LoginUser(ctx context.Context, user *entity.User) (string, error)
-	RegisterUser(ctx context.Context, user *entity.User) error
+	LoginUser(ctx context.Context, user entity.User) (string, error)
+	RegisterUser(ctx context.Context, user entity.User) error
 }
 
 type AuthController struct {

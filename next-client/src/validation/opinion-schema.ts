@@ -2,7 +2,7 @@ import { Exchange, OpinionType, SecurityType } from '@/types/enums';
 import { z } from 'zod';
 
 export const CreateOpinionSchema = z.object({
-  date: z.date(),
+  date: z.string(),
   exchange: z.nativeEnum(Exchange),
   expertId: z.number(),
   text: z.string(),

@@ -517,10 +517,10 @@
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
 
-"@pttrulez/mui-based-ui@^1.0.4":
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/@pttrulez/mui-based-ui/-/mui-based-ui-1.0.4.tgz#b9cc22e6e3db02173e9bc5c6d0542e4495c23d56"
-  integrity sha512-f+VOdRTkq8lrYtAJqBwEgfbI2jrGJ7IUqTGA2aw+SZ7jaJRkLqiNl50tk1zEHy4WADx9Z33dnsWMiZOFn+RACQ==
+"@pttrulez/mui-based-ui@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.yarnpkg.com/@pttrulez/mui-based-ui/-/mui-based-ui-1.0.5.tgz#289b4bac1e48e1a5b222c608e0b1595ae7dd1fe7"
+  integrity sha512-6KPVzKmyeTHJASePwltSOVlPiepu6k0sxnb+5h88rsrGXIzG5oWnEgVCc/fw/plEsPVGHJ8NrVl4eFw0F07nQQ==
   dependencies:
     "@emotion/react" "^11.11.3"
     "@emotion/styled" "^11.11.0"
@@ -3151,6 +3151,7 @@ streamsearch@^1.1.0:
   integrity sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==
 
 "string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0:
+  name string-width-cjs
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==

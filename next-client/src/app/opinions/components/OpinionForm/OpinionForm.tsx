@@ -39,7 +39,7 @@ const OpinionForm = ({
   const { control, formState, handleSubmit, resetField, setValue, watch } =
     useForm<CreateOpinionData>({
       defaultValues: {
-        date: dayjs().toDate(),
+        date: dayjs().format('YYYY-MM-DD'),
         exchange: Exchange.MOEX,
         securityId,
         securityType,
@@ -115,7 +115,7 @@ const OpinionForm = ({
             handleClear={() => resetField('date')}
             onChange={(newValue: Dayjs | null) => {
               if (newValue) {
-                setValue('date', newValue?.toDate());
+                setValue('date', newValue?.format('YYYY-MM-DD'));
               } else {
                 resetField('date');
               }
@@ -172,6 +172,16 @@ const OpinionForm = ({
             helperText={formState.errors.targetPrice?.message}
             label={'Целевая цена'}
             name={'targetPrice'}
+            onChange={(e: any) => {
+              console.log(
+                'e.target.value',
+                e.target.value,
+                e.target.value != '',
+              );
+              if (e.target.value != '') {
+                setValue('targetPrice', parseFloat(e.target.value));
+              }
+            }}
             type="number"
             value={watchAll.targetPrice}
           />

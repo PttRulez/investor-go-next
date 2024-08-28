@@ -1,0 +1,40 @@
+get:
+  summary: Получение списка мнений
+  parameters:
+    - name: expertId
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: id эксперта
+    - name: securityId
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: id бумаги
+    - name: exchange
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Биржа
+    - name: securityType
+      in: query
+      required: false
+      schema:
+        type: string
+      description: тип бумаги SHARE BOND ...
+  responses:
+    "200":
+      description: список отправлен
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: ../responses/opinion.yaml#/components/schemas/OpinionResponse
+    "400":
+      description: неверный запрос
+    "500":
+      description: другие ошибки, должен быть текст в ответе

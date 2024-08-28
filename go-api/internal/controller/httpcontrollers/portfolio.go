@@ -8,18 +8,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
+	"github.com/go-playground/validator/v10"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 	"github.com/pttrulez/investor-go/internal/entity"
 	"github.com/pttrulez/investor-go/internal/utils"
 	"github.com/pttrulez/investor-go/pkg/api"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
-	"github.com/pttrulez/investor-go/internal/controller/model/response"
 )
 
 func (c *PortfolioController) CreateNewPortfolio(w http.ResponseWriter, r *http.Request) {
-	const op = "ExpertController.CreateNewExpert"
+	const op = "PortfolioController.CreateNewPortfolio"
 
 	ctx := r.Context()
 
@@ -67,7 +65,7 @@ func (c *PortfolioController) GetListOfPortfoliosOfCurrentUser(w http.ResponseWr
 
 	var res []api.PortfolioResponse
 	for _, portfolio := range portfolios {
-		res = append(res, converter.FromPortfolioToPortfolioResponse(*portfolio))
+		res = append(res, converter.FromPortfolioToPortfolioResponse(portfolio))
 	}
 
 	writeJSON(w, http.StatusOK, res)
@@ -75,7 +73,6 @@ func (c *PortfolioController) GetListOfPortfoliosOfCurrentUser(w http.ResponseWr
 
 func (c *PortfolioController) GetPortfolioByID(w http.ResponseWriter, r *http.Request) {
 	const op = "PortfolioController.GetPortfolioByID"
-
 	ctx := r.Context()
 	portfolioID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
@@ -94,7 +91,7 @@ func (c *PortfolioController) GetPortfolioByID(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	writeJSON(w, http.StatusOK, portfolio)
+	writeJSON(w, http.StatusOK, converter.FromPortfolioToFullPortfolioResponse(portfolio))
 }
 
 func (c *PortfolioController) DeletePortfolio(w http.ResponseWriter, r *http.Request) {
@@ -151,9 +148,10 @@ type PortfolioService interface {
 	DeletePortfolio(ctx context.Context, portfolioID int, userID int) error
 	CreatePortfolio(ctx context.Context, p entity.Portfolio) (entity.Portfolio, error)
 	GetFullPortfolioByID(ctx context.Context, portfolioID int,
-		userID int) (*response.FullPortfolio, error)
-	GetListByUserID(ctx context.Context, userID int) ([]*entity.Portfolio, error)
-	UpdatePortfolio(ctx context.Context, portfolio entity.Portfolio, userID int) (entity.Portfolio, error)
+		userID int) (entity.Portfolio, error)
+	GetListByUserID(ctx context.Context, userID int) ([]entity.Portfolio, error)
+	UpdatePortfolio(ctx context.Context, portfolio entity.Portfolio, userID int) (
+		entity.Portfolio, error)
 }
 type PortfolioController struct {
 	logger           Logger

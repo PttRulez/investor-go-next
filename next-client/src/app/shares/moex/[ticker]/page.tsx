@@ -75,7 +75,12 @@ const MoexSharePage = (): JSX.Element => {
         + Мнение
       </Button>
       {chartData && (
-        <CandlestickChart sx={{ marginBottom: '50px' }} data={chartData} />
+        <CandlestickChart
+          sx={{
+            marginBottom: '50px',
+          }}
+          data={chartData}
+        />
       )}
       {shareData && (
         <OpinionsTable

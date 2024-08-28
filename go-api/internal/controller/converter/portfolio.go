@@ -52,7 +52,7 @@ func FromPortfolioToFullPortfolioResponse(portfolio entity.Portfolio) api.FullPo
 	return api.FullPortfolioResponse{
 		BondPositions:  bondPositions,
 		Cash:           portfolio.Cash,
-		CashoutSum:     portfolio.CashoutsSum,
+		CashoutsSum:    portfolio.CashoutsSum,
 		Compound:       portfolio.Compound,
 		Deals:          deals,
 		DepositsSum:    portfolio.DepositsSum,
@@ -60,5 +60,6 @@ func FromPortfolioToFullPortfolioResponse(portfolio entity.Portfolio) api.FullPo
 		Name:           portfolio.Name,
 		Profitability:  portfolio.Profitability,
 		SharePositions: sharePositions,
+		TotalCost:      portfolio.TotalCost,
 	}
 }

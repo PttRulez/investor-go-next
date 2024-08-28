@@ -15,6 +15,7 @@ type SecurityCommonInfo struct {
 
 type Share struct {
 	SecurityCommonInfo
+	PriceDecimals int
 }
 
 type Bond struct {

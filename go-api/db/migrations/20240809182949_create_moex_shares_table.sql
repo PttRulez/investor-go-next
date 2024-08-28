@@ -7,6 +7,7 @@ create table if not exists moex_shares (
 	lotsize integer not null,
 	market varchar(50) not null,
 	name varchar(120) not null,
+	price_decimals integer not null,
 	shortname varchar(50) not null,
 	secid varchar(10) not null unique
 );

@@ -1,3 +1,4 @@
+import { signOut } from 'next-auth/react';
 import { IMenuItem } from './MenuItem';
 
 const menu = (loggedIn: boolean): IMenuItem[] => {
@@ -26,7 +27,10 @@ const menu = (loggedIn: boolean): IMenuItem[] => {
       {
         title: 'Выйти',
         iconName: 'Logout',
-        link: '/controller/auth/signout',
+        onClick: () => {
+          signOut();
+        },
+        // link: '/controller/auth/signout',
         active: false,
       },
     ];

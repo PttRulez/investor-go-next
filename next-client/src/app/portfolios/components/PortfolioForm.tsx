@@ -61,7 +61,6 @@ export default function PortfolioForm({
     <Box onSubmit={handleSubmit(onSubmit)} sx={{ backgroundColor: 'white' }}>
       <Stack component="form" gap="20px">
         <FormText
-          // @ts-ignore
           control={control}
           name="name"
           label="Название"

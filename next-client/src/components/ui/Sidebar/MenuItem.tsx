@@ -15,6 +15,7 @@ export interface IMenuItem {
   title: string;
   iconName?: string;
   link?: string;
+  onClick?: () => void;
   children?: IMenuItem[];
   active: boolean;
 }
@@ -58,12 +59,24 @@ const CollapsingMenuItem: FC<{ item: IMenuItem }> = ({ item }) => {
 const SimpleMenuItem: FC<{ item: IMenuItem }> = ({ item }) => {
   const { link, title, iconName } = item;
   const router = useRouter();
-  return (
+  return item.onClick ? (
     <StyledListItemButton
+      className={cn({ active: item.active })}
+      onClick={item.onClick}
+      sx={{ paddingY: 2 }}
+    >
+      <ListItemIcon>
+        {Muicon[iconName as keyof typeof Muicon] &&
+          React.createElement(Muicon[iconName as keyof typeof Muicon])}
+      </ListItemIcon>
+      <ListItemText primary={title} />
+    </StyledListItemButton>
+  ) : (
+    <StyledListItemButton
+      className={cn({ active: item.active })}
       component={Link}
       href={link!}
       sx={{ paddingY: 2 }}
-      className={cn({ active: item.active })}
     >
       <ListItemIcon>
         {Muicon[iconName as keyof typeof Muicon] &&

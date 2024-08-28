@@ -9,6 +9,8 @@ components:
       type: string
       enum:
         - MOEX
+      x-oapi-codegen-extra-tags:
+        validate: required,is-exchange
     OpinionType:
       type: string
       enum:
@@ -16,6 +18,8 @@ components:
         - GENERAL
         - GROWTH
         - REDUCTION
+      x-oapi-codegen-extra-tags:
+        validate: required,opinionType
     Role:
       type: string
       enum:
@@ -30,6 +34,8 @@ components:
         - INDEX
         - PIF
         - SHARE
+      x-oapi-codegen-extra-tags:
+        validate: required,securityType
     TransactionType:
       type: string
       enum:

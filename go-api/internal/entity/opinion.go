@@ -1,20 +1,16 @@
 package entity
 
-import (
-	"time"
-)
-
 type Opinion struct {
-	Date         *time.Time
-	Exchange     *Exchange
+	Date         Date
+	Exchange     Exchange
 	ExpertID     int
 	ID           int
-	SecurityID   *int
-	SecurityType *SecurityType
+	SecurityID   int
+	SecurityType SecurityType
 	SourceLink   *string
 	TargetPrice  *float64
 	Text         string
-	Type         *OpinionType
+	Type         OpinionType
 	UserID       int
 }
 
@@ -37,4 +33,11 @@ func (e OpinionType) Validate() bool {
 		return false
 	}
 	return true
+}
+
+type OpinionFilters struct {
+	ExpertID     *int
+	SecurityID   *int
+	Exchange     *Exchange
+	SecurityType *SecurityType
 }

@@ -4,9 +4,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/pttrulez/investor-go/internal/entity"
-
 	"github.com/go-playground/validator/v10"
+	"github.com/pttrulez/investor-go/pkg/api"
 )
 
 func NewValidator() (*validator.Validate, error) {
@@ -23,7 +22,7 @@ func NewValidator() (*validator.Validate, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = validate.RegisterValidation("opinionType", ValidatePrice)
+	err = validate.RegisterValidation("opinionType", ValidateOpinion)
 	if err != nil {
 		return nil, err
 	}
@@ -43,18 +42,18 @@ func NewValidator() (*validator.Validate, error) {
 }
 
 func ValidateExchange(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.Exchange).Validate()
+	return fl.Field().Interface().(api.Exchange).Validate()
 }
 func ValidateDealType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.DealType).Validate()
+	return fl.Field().Interface().(api.DealType).Validate()
 }
 
 func ValidateMoexMarket(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.ISSMoexMarket).Validate()
+	return fl.Field().Interface().(api.ISSMoexMarket).Validate()
 }
 
 func ValidateOpinion(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.OpinionType).Validate()
+	return fl.Field().Interface().(api.OpinionType).Validate()
 }
 
 func ValidatePrice(fl validator.FieldLevel) bool {
@@ -67,12 +66,12 @@ func ValidatePrice(fl validator.FieldLevel) bool {
 }
 
 func ValidateRole(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.Exchange).Validate()
+	return fl.Field().Interface().(api.Exchange).Validate()
 }
 
 func ValidateSecurityType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.SecurityType).Validate()
+	return fl.Field().Interface().(api.SecurityType).Validate()
 }
 func ValidateTransactionType(fl validator.FieldLevel) bool {
-	return fl.Field().Interface().(entity.TransactionType).Validate()
+	return fl.Field().Interface().(api.TransactionType).Validate()
 }

@@ -40,7 +40,7 @@ func (pg *MoexBondsPostgres) GetBySecid(ctx context.Context, secid string) (enti
 }
 
 func (pg *MoexBondsPostgres) GetListByIDs(ctx context.Context, ids []int) (
-	[]*entity.Bond, error) {
+	[]entity.Bond, error) {
 	const op = "MoexBondsPostgres.GetListByIDs"
 
 	queryString := "SELECT * FROM moex_bonds WHERE id = ANY($1)"
@@ -51,7 +51,7 @@ func (pg *MoexBondsPostgres) GetListByIDs(ctx context.Context, ids []int) (
 	}
 	defer rows.Close()
 
-	var bonds []*entity.Bond
+	var bonds []entity.Bond
 
 	for rows.Next() {
 		var bond entity.Bond
@@ -60,7 +60,7 @@ func (pg *MoexBondsPostgres) GetListByIDs(ctx context.Context, ids []int) (
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		bonds = append(bonds, &bond)
+		bonds = append(bonds, bond)
 	}
 
 	if err = rows.Err(); err != nil {

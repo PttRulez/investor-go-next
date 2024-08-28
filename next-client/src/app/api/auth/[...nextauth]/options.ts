@@ -8,6 +8,7 @@ import axios from 'axios';
 const options: NextAuthOptions = {
   pages: {
     signIn: '/login',
+    signOut: '/auth/signout',
   },
   providers: [
     CredentialsProvider({

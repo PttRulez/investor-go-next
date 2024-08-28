@@ -10,7 +10,7 @@ components:
           exchange,
           portfolioId,
           price,
-          securityId,
+          secId,
           securityType,
           type,
           ticker,
@@ -23,7 +23,7 @@ components:
           format: double
         date:
           type: string
-          format: date
+          format: date-time
         exchange:
           $ref: ../shared/enums.yaml#/components/schemas/Exchange
         portfolioId:
@@ -31,11 +31,9 @@ components:
         price:
           type: number
           format: double
-        securityId:
-          type: integer
+        secId:
+          type: string
         securityType:
           $ref: ../shared/enums.yaml#/components/schemas/SecurityType
         type:
           $ref: ../shared/enums.yaml#/components/schemas/DealType
-        ticker:
-          type: string

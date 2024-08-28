@@ -34,7 +34,7 @@ func (s *Service) DeleteExpert(ctx context.Context, id int, userID int) error {
 
 	return err
 }
-func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]*entity.Expert, error) {
+func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]entity.Expert, error) {
 	const op = "ExpertService.GetListByUserID"
 
 	e, err := s.repo.GetListByUserID(ctx, userID)
@@ -76,7 +76,7 @@ type Repository interface {
 	Delete(ctx context.Context, id int, userID int) error
 	Update(ctx context.Context, expert entity.Expert, userID int) (entity.Expert, error)
 	GetOneByID(ctx context.Context, id int, userID int) (entity.Expert, error)
-	GetListByUserID(ctx context.Context, userID int) ([]*entity.Expert, error)
+	GetListByUserID(ctx context.Context, userID int) ([]entity.Expert, error)
 }
 type Service struct {
 	repo Repository

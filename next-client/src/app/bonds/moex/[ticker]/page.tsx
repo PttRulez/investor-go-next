@@ -4,7 +4,7 @@ import { moexService } from '@/axios/moex/moex.service';
 import investorService from '@/axios/investor/investor.service';
 import { useQuery } from '@tanstack/react-query';
 import CandlestickChart from '@/components/ui/Charts/Candlestick/CandlestickChart';
-import { Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useParams } from 'next/navigation';
 import { dependOn } from '@/utils/react-query';
 import { CandlestickData } from 'lightweight-charts';
@@ -49,15 +49,27 @@ const MoexBondTicker = (): JSX.Element => {
   }, [historyData]);
 
   return (
-    <>
+    <Box
+      sx={{
+        maxWidth: '1600px',
+        margin: 'auto',
+      }}
+    >
       <Typography
         variant={'h1'}
         sx={{ backgroundColor: 'red', margin: 'auto' }}
       >
         {stockName}
       </Typography>
-      {chartData && <CandlestickChart data={chartData} />}
-    </>
+      {chartData && (
+        <CandlestickChart
+          data={chartData}
+          sx={{
+            padding: '20px',
+          }}
+        />
+      )}
+    </Box>
   );
 };
 

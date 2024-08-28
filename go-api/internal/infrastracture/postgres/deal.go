@@ -22,13 +22,14 @@ func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (entity.
 
 	err := row.Scan(
 		d.Amount,
+		d.Commission,
 		d.Date,
 		d.Exchange,
 		d.ID,
 		d.PortfolioID,
 		d.Price,
 		d.SecurityType,
-		d.Ticker,
+		d.Secid,
 		d.Type,
 		d.UserID,
 	)
@@ -46,7 +47,7 @@ func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (entity.
 }
 
 func (pg *DealPostgres) GetDealListByPortoflioID(ctx context.Context,
-	portfolioID int, userID int) ([]*entity.Deal, error) {
+	portfolioID int, userID int) ([]entity.Deal, error) {
 	const op = "DealPostgres.GetDealListByPortoflioID"
 
 	queryString := `SELECT * FROM deals
@@ -59,25 +60,26 @@ func (pg *DealPostgres) GetDealListByPortoflioID(ctx context.Context,
 	}
 	defer rows.Close()
 
-	var deals []*entity.Deal
+	var deals []entity.Deal
 	for rows.Next() {
 		var deal = entity.Deal{}
 		e := rows.Scan(
 			&deal.Amount,
+			&deal.Commission,
 			&deal.Date,
 			&deal.Exchange,
 			&deal.ID,
 			&deal.PortfolioID,
 			&deal.Price,
 			&deal.SecurityType,
-			&deal.Ticker,
+			&deal.Secid,
 			&deal.Type,
 			&deal.UserID,
 		)
 		if e != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		deals = append(deals, &deal)
+		deals = append(deals, deal)
 	}
 	if rows.Err() != nil {
 		return nil, fmt.Errorf("%s: %w", op, rows.Err())
@@ -87,12 +89,13 @@ func (pg *DealPostgres) GetDealListByPortoflioID(ctx context.Context,
 }
 
 func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-	securityType entity.SecurityType, ticker string) ([]*entity.Deal, error) {
+	securityType entity.SecurityType, secid string) ([]entity.Deal, error) {
 	const op = "DealPostgres.GetDealListForSecurity"
 
-	queryString := `SELECT d.*
+	queryString := `SELECT amount, commission, date, exchange, id, portfolio_id, price,
+		security_type, secid, type
 		FROM deals d 
-		WHERE d.exchange = $1 AND d.security_type = $2 AND d.ticker = $3 AND d.portfolio_id = $4
+		WHERE d.exchange = $1 AND d.security_type = $2 AND d.secid = $3 AND d.portfolio_id = $4
 		ORDER BY d.date DESC, d.id DESC;`
 
 	rows, err := pg.db.QueryContext(
@@ -100,36 +103,37 @@ func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange ent
 		queryString,
 		exchange,
 		securityType,
-		ticker,
+		secid,
 		portfolioID,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s (QueryContext): %w", op, err)
 	}
 	defer rows.Close()
 
-	var deals []*entity.Deal
+	var deals []entity.Deal
 	for rows.Next() {
-		var deal = new(entity.Deal)
+		var deal entity.Deal
 		e := rows.Scan(
-			deal.Amount,
-			deal.Date,
-			deal.Exchange,
-			deal.ID,
-			deal.PortfolioID,
-			deal.Price,
-			deal.SecurityType,
-			deal.Ticker,
-			deal.Type,
+			&deal.Amount,
+			&deal.Commission,
+			&deal.Date,
+			&deal.Exchange,
+			&deal.ID,
+			&deal.PortfolioID,
+			&deal.Price,
+			&deal.SecurityType,
+			&deal.Secid,
+			&deal.Type,
 		)
 		if e != nil {
-			return nil, fmt.Errorf("%s: %w", op, err)
+			return nil, fmt.Errorf("%s (rows.Scan): %w", op, e)
 		}
 		deals = append(deals, deal)
 	}
 
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("%s: %w", op, rows.Err())
+		return nil, fmt.Errorf("%s (rows.Err()): %w", op, rows.Err())
 	}
 
 	return deals, nil
@@ -138,32 +142,36 @@ func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange ent
 func (pg *DealPostgres) Insert(ctx context.Context, d entity.Deal) (entity.Deal, error) {
 	const op = "DealPostgres.Insert"
 
-	queryString := `INSERT INTO deals (amount, date, exchange, portfolio_id, price,
-		security_type, ticker, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
+	queryString := `INSERT INTO deals (amount, commission, date, exchange, portfolio_id, price,
+		security_type, secid, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING amount, commission, date, exchange, id, portfolio_id, price, security_type,
+		secid, type;`
 
 	var deal entity.Deal
 	err := pg.db.QueryRowContext(
 		ctx,
 		queryString,
-		d.Amount,       // $1
-		d.Date,         // $2
-		d.Exchange,     // $3
-		d.PortfolioID,  // $4
-		d.Price,        // $5
-		d.SecurityType, // $6
-		d.Ticker,       // $7
-		d.Type,         // $8
-		d.UserID,       // $9
+		d.Amount,
+		d.Commission,
+		d.Date,
+		d.Exchange,
+		d.PortfolioID,
+		d.Price,
+		d.SecurityType,
+		d.Secid,
+		d.Type,
+		d.UserID,
 	).Scan(
-		&deal.Amount,       // $1
-		&deal.Date,         // $2
-		&deal.Exchange,     // $3
-		&deal.PortfolioID,  // $4
-		&deal.Price,        // $5
-		&deal.SecurityType, // $6
-		&deal.Ticker,       // $7
-		&deal.Type,         // $8
+		&deal.Amount,
+		&deal.Commission,
+		&deal.Date,
+		&deal.Exchange,
+		&deal.ID,
+		&deal.PortfolioID,
+		&deal.Price,
+		&deal.SecurityType,
+		&deal.Secid,
+		&deal.Type,
 	)
 	if err != nil {
 		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
@@ -176,8 +184,8 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 	const op = "DealPostgres.Update"
 
 	queryString := `UPDATE deals SET amount = $1, date = $2, exchange = $4, portfolio_id = $5,
-		price = $6, security_type = $7, ticker = $8, type = $9 WHERE id = $10
-		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
+		price = $6, security_type = $7, secid = $8, type = $9 WHERE id = $10
+		RETURNING amount, date, exchange, portfolio_id, price, security_type, secid, type;`
 
 	var deal entity.Deal
 	err := pg.db.QueryRowContext(
@@ -189,7 +197,7 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 		d.PortfolioID,
 		d.Price,
 		d.SecurityType,
-		d.Ticker,
+		d.Secid,
 		d.Type,
 		d.ID,
 	).Scan(
@@ -199,7 +207,7 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 		&deal.PortfolioID,  // $4
 		&deal.Price,        // $5
 		&deal.SecurityType, // $6
-		&deal.Ticker,       // $7
+		&deal.Secid,        // $7
 		&deal.Type,         // $8
 	)
 	if err != nil {

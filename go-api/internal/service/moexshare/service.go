@@ -65,6 +65,7 @@ func (s *Service) createNewShareFromMoex(ctx context.Context, secID string) (ent
 
 	// Это всё что нам нужно было из фулинфо
 	share.LotSize = fullInfo.LotSize
+	share.PriceDecimals = fullInfo.PriceDecimals
 
 	// сохраняем в бд
 	share, err = s.repo.Insert(ctx, share)

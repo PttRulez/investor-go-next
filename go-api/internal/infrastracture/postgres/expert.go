@@ -50,7 +50,7 @@ func (pg *ExpertPostgres) GetOneByID(ctx context.Context, id int, userID int) (e
 	return e, nil
 }
 
-func (pg *ExpertPostgres) GetListByUserID(ctx context.Context, userID int) ([]*entity.Expert, error) {
+func (pg *ExpertPostgres) GetListByUserID(ctx context.Context, userID int) ([]entity.Expert, error) {
 	const op = "ExpertPostgres.GetListByUserID"
 
 	queryString := "SELECT * FROM experts WHERE user_id = $1;"
@@ -60,7 +60,7 @@ func (pg *ExpertPostgres) GetListByUserID(ctx context.Context, userID int) ([]*e
 	}
 	defer rows.Close()
 
-	var experts []*entity.Expert
+	var experts []entity.Expert
 
 	for rows.Next() {
 		var e entity.Expert
@@ -68,7 +68,7 @@ func (pg *ExpertPostgres) GetListByUserID(ctx context.Context, userID int) ([]*e
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		experts = append(experts, &e)
+		experts = append(experts, e)
 	}
 	if rows.Err() != nil {
 		return nil, fmt.Errorf("%s: %w", op, rows.Err())

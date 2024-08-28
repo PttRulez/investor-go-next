@@ -14,7 +14,7 @@ import (
 	"github.com/pttrulez/investor-go/pkg/api"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 )
 
 func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
@@ -26,9 +26,11 @@ func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 	var dealReq api.CreateDealRequest
 	var err error
 	if err = json.NewDecoder(r.Body).Decode(&dealReq); err != nil {
+		c.logger.Error(err)
 		writeString(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
 	// Валидация пришедших данных
 	if err = c.validator.Struct(dealReq); err != nil {
 		var validateErr validator.ValidationErrors
@@ -37,8 +39,10 @@ func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deal, err := converter.FromCreateDealRequestToDeal(dealReq)
+	deal, err := converter.FromCreateDealRequestToDeal(ctx, dealReq)
+
 	if err != nil {
+		c.logger.Error(err)
 		writeString(w, http.StatusBadRequest, err.Error())
 	}
 
@@ -54,12 +58,15 @@ func (c *DealController) CreateDeal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
+	const op = "DealController.DeleteDeal"
+
 	ctx := r.Context()
 
 	i := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(i)
 	if err != nil {
-		writeString(w, http.StatusBadRequest, fmt.Sprintf("Проблема с конвертацией айди %s: %s",
+		writeString(w, http.StatusBadRequest, fmt.Sprintf(
+			"Проблема с конвертацией айди %s: %s",
 			chi.URLParam(r, "id"),
 			err.Error()))
 	}
@@ -68,7 +75,7 @@ func (c *DealController) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 
 	err = c.dealService.DeleteDealByID(ctx, id, userID)
 	if err != nil {
-		writeError(w, fmt.Errorf("[DealController.DeleteDeal] %w", err))
+		writeError(w, fmt.Errorf("%s, %w", op, err))
 	}
 
 	w.WriteHeader(http.StatusOK)

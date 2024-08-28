@@ -4,6 +4,8 @@
 package api
 
 import (
+	"time"
+
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -72,16 +74,15 @@ const (
 
 // CreateDealRequest defines model for CreateDealRequest.
 type CreateDealRequest struct {
-	Amount       int                `json:"amount"`
-	Comission    float64            `json:"comission"`
-	Date         openapi_types.Date `json:"date"`
-	Exchange     Exchange           `json:"exchange"`
-	PortfolioId  int                `json:"portfolioId"`
-	Price        float64            `json:"price"`
-	SecurityId   int                `json:"securityId"`
-	SecurityType SecurityType       `json:"securityType"`
-	Ticker       string             `json:"ticker"`
-	Type         DealType           `json:"type"`
+	Amount       int          `json:"amount"`
+	Comission    float64      `json:"comission"`
+	Date         time.Time    `json:"date"`
+	Exchange     Exchange     `json:"exchange" validate:"required,is-exchange"`
+	PortfolioId  int          `json:"portfolioId"`
+	Price        float64      `json:"price"`
+	SecId        string       `json:"secId"`
+	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
+	Type         DealType     `json:"type"`
 }
 
 // CreateExpertRequest defines model for CreateExpertRequest.
@@ -92,15 +93,15 @@ type CreateExpertRequest struct {
 
 // CreateOpinionRequest defines model for CreateOpinionRequest.
 type CreateOpinionRequest struct {
-	Date         openapi_types.Date `json:"date"`
-	Exchange     *Exchange          `json:"exchange,omitempty"`
-	ExpertId     int                `json:"expertId"`
-	SecurityId   *int               `json:"securityId,omitempty"`
-	SecurityType *SecurityType      `json:"securityType,omitempty"`
+	Date         openapi_types.Date `json:"date" validate:"required"`
+	Exchange     Exchange           `json:"exchange" validate:"required,is-exchange"`
+	ExpertId     int                `json:"expertId" validate:"required"`
+	SecurityId   int                `json:"securityId" validate:"required"`
+	SecurityType SecurityType       `json:"securityType" validate:"required,securityType"`
 	SourceLink   *string            `json:"sourceLink,omitempty"`
 	TargetPrice  *float64           `json:"targetPrice,omitempty"`
-	Text         string             `json:"text"`
-	Type         *OpinionType       `json:"type,omitempty"`
+	Text         string             `json:"text" validate:"required"`
+	Type         OpinionType        `json:"type" validate:"required,opinionType"`
 }
 
 // CreatePortfolioRequest defines model for CreatePortfolioRequest.
@@ -111,25 +112,24 @@ type CreatePortfolioRequest struct {
 
 // CreateTransactionRequest defines model for CreateTransactionRequest.
 type CreateTransactionRequest struct {
-	Amount      int                `json:"amount"`
-	Date        openapi_types.Date `json:"date"`
-	PortfolioId int                `json:"portfolioId"`
-	Type        TransactionType    `json:"type"`
+	Amount      int             `json:"amount"`
+	Date        time.Time       `json:"date"`
+	PortfolioId int             `json:"portfolioId"`
+	Type        TransactionType `json:"type"`
 }
 
 // DealResponse defines model for DealResponse.
 type DealResponse struct {
-	Amount       int                `json:"amount"`
-	Comission    float64            `json:"comission"`
-	Date         openapi_types.Date `json:"date"`
-	Exchange     Exchange           `json:"exchange"`
-	Id           *int               `json:"id,omitempty"`
-	PortfolioId  int                `json:"portfolioId"`
-	Price        float64            `json:"price"`
-	SecurityId   int                `json:"securityId"`
-	SecurityType SecurityType       `json:"securityType"`
-	Ticker       string             `json:"ticker"`
-	Type         DealType           `json:"type"`
+	Amount       int          `json:"amount"`
+	Comission    float64      `json:"comission"`
+	Date         time.Time    `json:"date"`
+	Exchange     Exchange     `json:"exchange" validate:"required,is-exchange"`
+	Id           *int         `json:"id,omitempty"`
+	PortfolioId  int          `json:"portfolioId"`
+	Price        float64      `json:"price"`
+	SecId        string       `json:"secId"`
+	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
+	Type         DealType     `json:"type"`
 }
 
 // DealType defines model for DealType.
@@ -153,7 +153,7 @@ type ExpertResponse struct {
 type FullPortfolioResponse struct {
 	BondPositions  []PositionResponse    `json:"bondPositions"`
 	Cash           int                   `json:"cash"`
-	CashoutSum     int                   `json:"cashoutSum"`
+	CashoutsSum    int                   `json:"cashoutsSum"`
 	Compound       bool                  `json:"compound"`
 	Deals          []DealResponse        `json:"deals"`
 	DepositsSum    int                   `json:"depositsSum"`
@@ -226,6 +226,20 @@ type MoexSecurityResponse struct {
 // MoexShareResponse defines model for MoexShareResponse.
 type MoexShareResponse = MoexSecurityResponse
 
+// OpinionResponse defines model for OpinionResponse.
+type OpinionResponse struct {
+	Date         openapi_types.Date `json:"date"`
+	Exchange     Exchange           `json:"exchange" validate:"required,is-exchange"`
+	ExpertId     int                `json:"expertId"`
+	Id           int                `json:"id"`
+	SecurityId   int                `json:"securityId"`
+	SecurityType SecurityType       `json:"securityType" validate:"required,securityType"`
+	SourceLink   *string            `json:"sourceLink,omitempty"`
+	TargetPrice  *float64           `json:"targetPrice,omitempty"`
+	Text         string             `json:"text"`
+	Type         OpinionType        `json:"type" validate:"required,opinionType"`
+}
+
 // OpinionType defines model for OpinionType.
 type OpinionType string
 
@@ -241,7 +255,17 @@ type PortfolioResponse struct {
 }
 
 // PositionResponse defines model for PositionResponse.
-type PositionResponse = interface{}
+type PositionResponse struct {
+	Amount       int          `json:"amount"`
+	AveragePrice float64      `json:"averagePrice"`
+	Comment      *string      `json:"comment,omitempty"`
+	CurrentCost  int          `json:"currentCost"`
+	CurrentPrice float64      `json:"currentPrice"`
+	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
+	ShortName    string       `json:"shortName"`
+	TargetPrice  *float64     `json:"targetPrice,omitempty"`
+	Ticker       string       `json:"ticker"`
+}
 
 // RegisterUserRequest defines model for RegisterUserRequest.
 type RegisterUserRequest struct {
@@ -259,11 +283,11 @@ type SecurityType string
 
 // TransactionResponse defines model for TransactionResponse.
 type TransactionResponse struct {
-	Amount      int                `json:"amount"`
-	Date        openapi_types.Date `json:"date"`
-	Id          *int               `json:"id,omitempty"`
-	PortfolioId int                `json:"portfolioId"`
-	Type        TransactionType    `json:"type"`
+	Amount      int             `json:"amount"`
+	Date        time.Time       `json:"date"`
+	Id          int             `json:"id"`
+	PortfolioId int             `json:"portfolioId"`
+	Type        TransactionType `json:"type"`
 }
 
 // TransactionType defines model for TransactionType.
@@ -274,6 +298,21 @@ type UpdatePortfolioRequest struct {
 	Compound *bool   `json:"compound,omitempty"`
 	Id       int     `json:"id"`
 	Name     *string `json:"name,omitempty"`
+}
+
+// GetOpinionListParams defines parameters for GetOpinionList.
+type GetOpinionListParams struct {
+	// ExpertId id эксперта
+	ExpertId *int `form:"expertId,omitempty" json:"expertId,omitempty"`
+
+	// SecurityId id бумаги
+	SecurityId *int `form:"securityId,omitempty" json:"securityId,omitempty"`
+
+	// Exchange Биржа
+	Exchange *string `form:"exchange,omitempty" json:"exchange,omitempty"`
+
+	// SecurityType тип бумаги SHARE BOND ...
+	SecurityType *string `form:"securityType,omitempty" json:"securityType,omitempty"`
 }
 
 // PostDealJSONRequestBody defines body for PostDeal for application/json ContentType.

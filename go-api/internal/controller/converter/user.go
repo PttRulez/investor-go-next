@@ -5,7 +5,7 @@ import (
 	"github.com/pttrulez/investor-go/pkg/api"
 )
 
-func FromRegisterRequestToUser(dto api.RegisterUserRequest) *entity.User {
+func FromRegisterRequestToUser(dto api.RegisterUserRequest) entity.User {
 	user := entity.User{
 		Email:    dto.Email,
 		Name:     dto.Name,
@@ -27,11 +27,11 @@ func FromRegisterRequestToUser(dto api.RegisterUserRequest) *entity.User {
 		user.Role = role
 	}
 
-	return &user
+	return user
 }
 
-func FromLoginRequestToUser(dto api.LoginRequest) *entity.User {
-	return &entity.User{
+func FromLoginRequestToUser(dto api.LoginRequest) entity.User {
+	return entity.User{
 		Email:    dto.Email,
 		Password: dto.Password,
 	}

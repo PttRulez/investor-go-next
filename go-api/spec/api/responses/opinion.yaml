@@ -1,0 +1,29 @@
+components:
+  schemas:
+    OpinionResponse:
+      type: object
+      required:
+        [id, date, expertId, exchange, securityId, securityType, text, type]
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        exchange:
+          $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        expertId:
+          type: integer
+        securityId:
+          type: integer
+        securityType:
+          $ref: ../shared/enums.yaml#/components/schemas/SecurityType
+        sourceLink:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        text:
+          type: string
+        type:
+          $ref: ../shared/enums.yaml#/components/schemas/OpinionType

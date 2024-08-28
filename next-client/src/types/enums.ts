@@ -1,5 +1,5 @@
 export enum Exchange {
-  MOEX = 'Moex',
+  MOEX = 'MOEX',
 }
 
 export enum DealType {

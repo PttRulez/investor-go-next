@@ -14,11 +14,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/controller/model/converter"
+	"github.com/pttrulez/investor-go/internal/controller/converter"
 )
 
 func (c *TransactionController) CreateNewTransaction(w http.ResponseWriter, r *http.Request) {
-	const op = "ExpertController.CreateNewExpert"
+	const op = "CreateNewTransaction.CreateNewTransaction"
+	ctx := r.Context()
 
 	// Анмаршалим данные
 	var tData api.CreateTransactionRequest
@@ -36,14 +37,13 @@ func (c *TransactionController) CreateNewTransaction(w http.ResponseWriter, r *h
 	}
 
 	// Конвертируем реквест в модель
-	t, err := converter.FromCreateTransactionRequestToTransaction(tData)
+	t, err := converter.FromCreateTransactionRequestToTransaction(ctx, tData)
 	if err != nil {
 		writeString(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Получаем айди юзера и создаем транзакцию
-	ctx := r.Context()
 	t.UserID = utils.GetCurrentUserID(ctx)
 	tr, err := c.transactionService.CreateTransaction(ctx, t)
 	if err != nil {

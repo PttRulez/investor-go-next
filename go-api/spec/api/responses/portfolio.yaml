@@ -25,7 +25,7 @@ components:
             $ref: position.yaml#/components/schemas/PositionResponse
         cash:
           type: integer
-        cashoutSum:
+        cashoutsSum:
           type: integer
         compound:
           type: boolean
@@ -55,7 +55,7 @@ components:
         [
           bondPositions,
           cash,
-          cashoutSum,
+          cashoutsSum,
           compound,
           deals,
           depositsSum,

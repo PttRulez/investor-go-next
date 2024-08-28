@@ -18,7 +18,7 @@ export default function Home() {
   });
 
   const router = useRouter();
-
+  console.log('session', session);
   if (!session?.user) return;
 
   const changeHandler: MoexSearchHandler = async (e, value, reason) => {

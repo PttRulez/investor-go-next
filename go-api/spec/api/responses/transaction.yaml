@@ -4,6 +4,7 @@ components:
       allOf:
         - $ref: ../requests/transaction.yaml#/components/schemas/CreateTransactionRequest
         - type: object
+          required: [id]
           properties:
             id:
               type: integer

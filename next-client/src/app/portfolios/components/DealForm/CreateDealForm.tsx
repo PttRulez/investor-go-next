@@ -1,18 +1,14 @@
 'use client';
 
-import { Button } from '@mui/material';
-import {
-  DefaultFormBox,
-  FormText,
-  FormDatePicker,
-} from '@pttrulez/mui-based-ui';
+import { Button, TextField } from '@mui/material';
+import { DefaultFormBox, FormText, FormDatePicker } from '@pttrulez';
 import {
   ChangeHandler,
   Controller,
   SubmitHandler,
   useForm,
 } from 'react-hook-form';
-import { FC, useEffect, useState } from 'react';
+import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import MoexSearch from '@/components/ui/StocksSearch/MoexSearch';
 import investorService from '@/axios/investor/investor.service';
@@ -20,11 +16,13 @@ import dayjs, { Dayjs } from 'dayjs';
 import { MoexSearchAutocompleteOption } from '@/components/ui/StocksSearch/types';
 import { getSecurityTypeFromMoexSecType } from '@/utils/helpers';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { DealType, Exchange, MoexSecurityType } from '@/types/enums';
 import {
-  CreateMoexShareDealData,
-  CreateMoexShareDealSchema,
-} from '@/validation';
+  DealType,
+  Exchange,
+  MoexSecurityType,
+  SecurityType,
+} from '@/types/enums';
+import { CreateDealData, CreateDealSchema } from '@/validation';
 import { MoexSecurityGroup } from '@/types/apis/go-api';
 
 interface DealFormProps {
@@ -38,54 +36,44 @@ const CreateDealForm: FC<DealFormProps> = ({
   dealType,
   portfolioId,
 }) => {
-  const {
-    clearErrors,
-    control,
-    formState,
-    handleSubmit,
-    resetField,
-    setValue,
-    watch,
-  } = useForm<CreateMoexShareDealData>({
-    defaultValues: {
-      date: dayjs().toDate(),
-      portfolioId,
-      type: dealType,
-    },
-    resolver: zodResolver(CreateMoexShareDealSchema),
-  });
+  const { control, formState, handleSubmit, resetField, setValue, watch } =
+    useForm<CreateDealData>({
+      defaultValues: {
+        comission: 0,
+        date: dayjs().toDate(),
+        exchange: Exchange.MOEX,
+        portfolioId,
+        type: dealType,
+      },
+      resolver: zodResolver(CreateDealSchema),
+    });
   const watchAll = watch();
   const client = useQueryClient();
-  const [ticker, setTicker] = useState<string | null>(null);
 
   // запрос на создание сделки
-  const createDeal = useMutation(
-    (formData: CreateMoexShareDealData) =>
+  const createDeal = useMutation({
+    mutationFn: (formData: CreateDealData) =>
       investorService.deal.createDeal(formData),
-    {
-      onSuccess: deal => {
-        afterSuccessfulSubmit();
-        client.invalidateQueries({ queryKey: ['portfolio', deal.portfolioId] });
-      },
+    onSuccess: deal => {
+      afterSuccessfulSubmit();
+      client.invalidateQueries({ queryKey: ['portfolio', portfolioId] });
     },
-  );
+  });
 
-  const onSubmit: SubmitHandler<CreateMoexShareDealData> = async data => {
-    if (!ticker) return;
-    const shareInfo = await investorService.moexShare.getByTicker(ticker);
-
-    data.securityId = shareInfo.id;
+  const onSubmit: SubmitHandler<CreateDealData> = async data => {
     createDeal.mutate(data);
   };
 
-  let shareGroups: Array<MoexSecurityGroup> = [
-    MoexSecurityGroup.stock_shares,
-    MoexSecurityGroup.stock_dr,
+  const shareTypes: Array<MoexSecurityType> = [
+    MoexSecurityType.common_share,
+    MoexSecurityType.depositary_receipt,
+    MoexSecurityType.preferred_share,
   ];
 
-  let bondGroups: Array<MoexSecurityGroup> = [
-    MoexSecurityGroup.stock_bonds,
-    MoexSecurityGroup.stock_eurobond,
+  const bondTypes: Array<MoexSecurityType> = [
+    MoexSecurityType.corporate_bond,
+    MoexSecurityType.exchange_bond,
+    MoexSecurityType.ofz_bond,
   ];
 
   const onSecChange = async (
@@ -93,41 +81,49 @@ const CreateDealForm: FC<DealFormProps> = ({
     secInfo: MoexSearchAutocompleteOption | null,
   ) => {
     if (!secInfo) {
-      console.log('BOMZHIHA !value');
+      resetField('secid');
+      resetField('securityType');
       return;
     }
 
-    if (shareGroups.includes(secInfo.group)) {
-      let a = await investorService.moexShare.getByTicker(secInfo.ticker);
-      console.log('received share info from our api', a);
-    } else if (bondGroups.includes(secInfo.group)) {
-      let a = await investorService.moexBond.getByTicker(secInfo.ticker);
-      console.log('received bond info from our api', a);
+    setValue('secid', secInfo.ticker);
+    if (shareTypes.includes(secInfo.type)) {
+      setValue('securityType', SecurityType.SHARE);
+    } else if (bondTypes.includes(secInfo.type)) {
+      setValue('securityType', SecurityType.BOND);
+    } else {
+      console.log('securityType', secInfo.type, 'не обработан');
+      resetField('securityType');
     }
-    console.log('BOMZHIHA Щсрщлщ', secInfo);
-    setTicker(secInfo?.ticker ?? null);
   };
+
+  useEffect(() => {
+    console.log('formState.errors', formState.errors);
+  }, [formState.errors]);
 
   return (
     <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
       <Controller
         control={control}
-        name="securityId"
+        name="secid"
         render={({ field }) => (
           <MoexSearch
             onChange={onSecChange}
-            error={!!formState.errors.securityId}
-            helperText={formState.errors.securityId?.message}
+            error={!!formState.errors.secid}
+            helperText={formState.errors.secid?.message}
           />
         )}
       />
       <FormText
         control={control}
         error={!!formState.errors.amount}
-        handleClear={() => setValue('amount', 0)}
+        handleClear={() => resetField('amount')}
         helperText={formState.errors.amount?.message}
         label={'Кол-во бумаг'}
         name={'amount'}
+        onChange={(e: any) => {
+          setValue('amount', parseInt(e.target.value));
+        }}
         type="number"
         value={watchAll.amount}
       />
@@ -135,12 +131,39 @@ const CreateDealForm: FC<DealFormProps> = ({
         control={control}
         decimal
         error={!!formState.errors.price}
-        handleClear={() => setValue('price', 0)}
+        handleClear={() => resetField('price')}
         helperText={formState.errors.price?.message}
         label={'Цена покупки'}
         name={'price'}
+        onChange={(e: any) => {
+          if (e.target.value != '') {
+            setValue('price', parseFloat(e.target.value));
+          }
+        }}
         type="number"
+        inputProps={{
+          step: 'any',
+        }}
         value={watchAll.price}
+      />
+      <FormText
+        control={control}
+        decimal
+        error={!!formState.errors.price}
+        handleClear={() => resetField('price')}
+        helperText={formState.errors.price?.message}
+        label={'Комиссия'}
+        name={'comission'}
+        onChange={(e: any) => {
+          if (e.target.value != '') {
+            setValue('comission', parseFloat(e.target.value));
+          }
+        }}
+        type="number"
+        inputProps={{
+          step: 'any',
+        }}
+        value={watchAll.comission}
       />
       <FormDatePicker
         control={control}
