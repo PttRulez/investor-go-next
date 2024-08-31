@@ -29,7 +29,7 @@ func (pg *DealPostgres) Delete(ctx context.Context, id int, userID int) (entity.
 		d.PortfolioID,
 		d.Price,
 		d.SecurityType,
-		d.Secid,
+		d.Ticker,
 		d.Type,
 		d.UserID,
 	)
@@ -72,7 +72,7 @@ func (pg *DealPostgres) GetDealListByPortoflioID(ctx context.Context,
 			&deal.PortfolioID,
 			&deal.Price,
 			&deal.SecurityType,
-			&deal.Secid,
+			&deal.Ticker,
 			&deal.Type,
 			&deal.UserID,
 		)
@@ -89,13 +89,13 @@ func (pg *DealPostgres) GetDealListByPortoflioID(ctx context.Context,
 }
 
 func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-	securityType entity.SecurityType, secid string) ([]entity.Deal, error) {
+	securityType entity.SecurityType, ticker string) ([]entity.Deal, error) {
 	const op = "DealPostgres.GetDealListForSecurity"
 
 	queryString := `SELECT amount, commission, date, exchange, id, portfolio_id, price,
-		security_type, secid, type
+		security_type, ticker, type
 		FROM deals d 
-		WHERE d.exchange = $1 AND d.security_type = $2 AND d.secid = $3 AND d.portfolio_id = $4
+		WHERE d.exchange = $1 AND d.security_type = $2 AND d.ticker = $3 AND d.portfolio_id = $4
 		ORDER BY d.date DESC, d.id DESC;`
 
 	rows, err := pg.db.QueryContext(
@@ -103,7 +103,7 @@ func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange ent
 		queryString,
 		exchange,
 		securityType,
-		secid,
+		ticker,
 		portfolioID,
 	)
 	if err != nil {
@@ -123,7 +123,7 @@ func (pg *DealPostgres) GetDealListForSecurity(ctx context.Context, exchange ent
 			&deal.PortfolioID,
 			&deal.Price,
 			&deal.SecurityType,
-			&deal.Secid,
+			&deal.Ticker,
 			&deal.Type,
 		)
 		if e != nil {
@@ -143,9 +143,9 @@ func (pg *DealPostgres) Insert(ctx context.Context, d entity.Deal) (entity.Deal,
 	const op = "DealPostgres.Insert"
 
 	queryString := `INSERT INTO deals (amount, commission, date, exchange, portfolio_id, price,
-		security_type, secid, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		security_type, ticker, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING amount, commission, date, exchange, id, portfolio_id, price, security_type,
-		secid, type;`
+		ticker, type;`
 
 	var deal entity.Deal
 	err := pg.db.QueryRowContext(
@@ -158,7 +158,7 @@ func (pg *DealPostgres) Insert(ctx context.Context, d entity.Deal) (entity.Deal,
 		d.PortfolioID,
 		d.Price,
 		d.SecurityType,
-		d.Secid,
+		d.Ticker,
 		d.Type,
 		d.UserID,
 	).Scan(
@@ -170,7 +170,7 @@ func (pg *DealPostgres) Insert(ctx context.Context, d entity.Deal) (entity.Deal,
 		&deal.PortfolioID,
 		&deal.Price,
 		&deal.SecurityType,
-		&deal.Secid,
+		&deal.Ticker,
 		&deal.Type,
 	)
 	if err != nil {
@@ -184,8 +184,8 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 	const op = "DealPostgres.Update"
 
 	queryString := `UPDATE deals SET amount = $1, date = $2, exchange = $4, portfolio_id = $5,
-		price = $6, security_type = $7, secid = $8, type = $9 WHERE id = $10
-		RETURNING amount, date, exchange, portfolio_id, price, security_type, secid, type;`
+		price = $6, security_type = $7, ticker = $8, type = $9 WHERE id = $10
+		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
 
 	var deal entity.Deal
 	err := pg.db.QueryRowContext(
@@ -197,7 +197,7 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 		d.PortfolioID,
 		d.Price,
 		d.SecurityType,
-		d.Secid,
+		d.Ticker,
 		d.Type,
 		d.ID,
 	).Scan(
@@ -207,7 +207,7 @@ func (pg *DealPostgres) Update(ctx context.Context, d entity.Deal) (entity.Deal,
 		&deal.PortfolioID,  // $4
 		&deal.Price,        // $5
 		&deal.SecurityType, // $6
-		&deal.Secid,        // $7
+		&deal.Ticker,       // $7
 		&deal.Type,         // $8
 	)
 	if err != nil {

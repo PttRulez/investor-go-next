@@ -23,7 +23,7 @@ export const CreateDealSchema = z.object({
       message: 'Введите стоимость сделки',
     }),
   }),
-  secid: z.string({
+  ticker: z.string({
     errorMap: _ => ({
       message: 'Выберите бумагу',
     }),

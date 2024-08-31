@@ -12,14 +12,14 @@ import (
 	"github.com/lib/pq"
 )
 
-func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
+func (pg *MoexSharesPostgres) GetByTicker(ctx context.Context, ticker string) (
 	entity.Share, error) {
-	const op = "MoexSharesPostgres.GetBySecid"
+	const op = "MoexSharesPostgres.GetByTicker"
 
 	querySting := `SELECT id, board, engine, lotsize, market, name, price_decimals,
-		shortname, secid FROM moex_shares WHERE secid = $1;`
+		shortname, ticker FROM moex_shares WHERE ticker = $1;`
 
-	row := pg.db.QueryRowContext(ctx, querySting, secid)
+	row := pg.db.QueryRowContext(ctx, querySting, ticker)
 
 	var share entity.Share
 	err := row.Scan(
@@ -31,7 +31,7 @@ func (pg *MoexSharesPostgres) GetBySecid(ctx context.Context, secid string) (
 		&share.Name,
 		&share.PriceDecimals,
 		&share.ShortName,
-		&share.Secid,
+		&share.Ticker,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return entity.Share{}, database.ErrNotFound
@@ -48,7 +48,7 @@ func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
 	const op = "MoexSharesPostgres.GetListByIDs"
 
 	queryString := `SELECT id, board, engine, lotsize, market, name, price_decimals,
-		shortname, secid FROM moex_shares WHERE id = ANY($1)`
+		shortname, ticker FROM moex_shares WHERE id = ANY($1)`
 
 	rows, err := pg.db.QueryContext(ctx, queryString, pq.Array(ids))
 	if err != nil {
@@ -60,7 +60,7 @@ func (pg *MoexSharesPostgres) GetListByIDs(ctx context.Context, ids []int) (
 	for rows.Next() {
 		var share entity.Share
 		err = rows.Scan(&share.ID, &share.Board, &share.Engine, &share.Market, &share.Name,
-			&share.PriceDecimals, &share.ShortName, &share.Secid)
+			&share.PriceDecimals, &share.ShortName, &share.Ticker)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
@@ -77,14 +77,14 @@ func (pg *MoexSharesPostgres) Insert(ctx context.Context, s entity.Share) (entit
 	const op = "MoexSharesPostgres.Insert"
 
 	querySting := `INSERT INTO moex_shares (board, engine, lotsize, market, name, price_decimals,
-		shortname, secid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING
-		id, board, engine, lotsize, market, name, price_decimals, shortname, secid;`
+		shortname, ticker) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING
+		id, board, engine, lotsize, market, name, price_decimals, shortname, ticker;`
 
 	var r entity.Share
 	err := pg.db.QueryRowContext(ctx, querySting, s.Board, s.Engine, s.LotSize,
-		s.Market, s.Name, &s.PriceDecimals, s.ShortName, s.Secid).
+		s.Market, s.Name, &s.PriceDecimals, s.ShortName, s.Ticker).
 		Scan(&r.ID, &r.Board, &r.Engine, &r.LotSize, &r.Market, &r.Name, &r.PriceDecimals,
-			&r.ShortName, &r.Secid)
+			&r.ShortName, &r.Ticker)
 	if err != nil {
 		return entity.Share{}, fmt.Errorf("%s: %w", op, err)
 	}

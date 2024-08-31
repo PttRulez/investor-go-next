@@ -79,10 +79,10 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		for _, p := range positions {
 			if p.SecurityType == entity.STShare {
 				sharePositions = append(sharePositions, p)
-				shareBoards[p.Secid] = p.Board
+				shareBoards[p.Ticker] = p.Board
 			} else if p.SecurityType == entity.STBond {
 				bondPositions = append(bondPositions, p)
-				bondBoards[p.Secid] = p.Board
+				bondBoards[p.Ticker] = p.Board
 			}
 		}
 
@@ -107,7 +107,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		const faceValue = 1000
 		const hundredPercents = 100
 		for i := range len(bondPositions) {
-			bondPositions[i].CurrentPrice = bondPrices[bondPositions[i].Secid]
+			bondPositions[i].CurrentPrice = bondPrices[bondPositions[i].Ticker]
 			bondPositions[i].CurrentCost = int(
 				(bondPositions[i].CurrentPrice / hundredPercents) * faceValue *
 					float64(bondPositions[i].Amount))
@@ -116,7 +116,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		fmt.Printf("sharePrices %#v", sharePrices)
 
 		for i := range len(sharePositions) {
-			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Secid]
+			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Ticker]
 			sharePositions[i].CurrentCost = int(
 				sharePositions[i].CurrentPrice * float64(sharePositions[i].Amount))
 		}

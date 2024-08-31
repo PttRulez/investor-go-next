@@ -23,10 +23,10 @@ func (s *Service) CreateDeal(ctx context.Context, d entity.Deal) (entity.Deal, e
 	fmt.Printf("CreateDeal d %+v\n", d)
 	if d.Exchange == entity.EXCHMoex && d.SecurityType == entity.STShare {
 		var share entity.Share
-		share, err = s.moexShareService.GetBySecid(ctx, d.Secid)
+		share, err = s.moexShareService.GetByTicker(ctx, d.Ticker)
 		decimalCount = share.PriceDecimals
 	} else if d.Exchange == entity.EXCHMoex && d.SecurityType == entity.STBond {
-		_, err = s.moexBondService.GetBySecid(ctx, d.Secid)
+		_, err = s.moexBondService.GetByTicker(ctx, d.Ticker)
 		decimalCount = 2
 	}
 	if err != nil {
@@ -39,7 +39,7 @@ func (s *Service) CreateDeal(ctx context.Context, d entity.Deal) (entity.Deal, e
 		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Secid,
+	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
 		d.UserID, decimalCount)
 	if err != nil {
 		return entity.Deal{}, fmt.Errorf("%s: %w", op, err)
@@ -61,14 +61,14 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 
 	var decimalCount = 2
 	if d.SecurityType == entity.STShare {
-		share, err := s.moexShareService.GetBySecid(ctx, d.Secid)
+		share, err := s.moexShareService.GetByTicker(ctx, d.Ticker)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
 		decimalCount = share.PriceDecimals
 	}
 
-	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Secid,
+	err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
 		d.UserID, decimalCount)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -78,24 +78,24 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 }
 
 func (s *Service) createNewPosition(ctx context.Context, exchange entity.Exchange, portfolioID int,
-	secid string, securityType entity.SecurityType) (entity.Position, error) {
+	ticker string, securityType entity.SecurityType) (entity.Position, error) {
 	const op = "DealService.createNewPosition"
 
 	position := entity.Position{
 		PortfolioID:  portfolioID,
-		Secid:        secid,
+		Ticker:       ticker,
 		SecurityType: securityType,
 	}
 
 	if exchange == entity.EXCHMoex && securityType == entity.STShare {
-		share, err := s.moexShareService.GetBySecid(ctx, secid)
+		share, err := s.moexShareService.GetByTicker(ctx, ticker)
 		if err != nil {
 			return entity.Position{}, fmt.Errorf("%s: %w", op, err)
 		}
 		position.Board = share.Board
 		position.ShortName = share.ShortName
 	} else if exchange == entity.EXCHMoex && securityType == entity.STBond {
-		bond, err := s.moexBondService.GetBySecid(ctx, secid)
+		bond, err := s.moexBondService.GetByTicker(ctx, ticker)
 		if err != nil {
 			return entity.Position{}, fmt.Errorf("%s: %w", op, err)
 		}
@@ -107,10 +107,10 @@ func (s *Service) createNewPosition(ctx context.Context, exchange entity.Exchang
 }
 
 func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, exchange entity.Exchange,
-	securityType entity.SecurityType, secid string, userID int, decimalCount int) error {
+	securityType entity.SecurityType, ticker string, userID int, decimalCount int) error {
 	const op = "DealService.updatePositionInDB"
 
-	allDeals, err := s.repo.GetDealListForSecurity(ctx, exchange, portfolioID, securityType, secid)
+	allDeals, err := s.repo.GetDealListForSecurity(ctx, exchange, portfolioID, securityType, ticker)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -121,13 +121,13 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 		exchange,
 		portfolioID,
 		securityType,
-		secid,
+		ticker,
 	)
 	if err != nil && !errors.Is(err, database.ErrNotFound) {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 	if errors.Is(err, database.ErrNotFound) {
-		position, err = s.createNewPosition(ctx, exchange, portfolioID, secid, securityType)
+		position, err = s.createNewPosition(ctx, exchange, portfolioID, ticker, securityType)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -135,7 +135,7 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 		position.Exchange = exchange
 		position.PortfolioID = portfolioID
 		position.SecurityType = securityType
-		position.Secid = secid
+		position.Ticker = ticker
 		position.UserID = userID
 	} else {
 		position = oldPosition
@@ -189,15 +189,15 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 type Repository interface {
 	Insert(ctx context.Context, d entity.Deal) (entity.Deal, error)
 	GetDealListForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-		securityType entity.SecurityType, secid string) ([]entity.Deal, error)
+		securityType entity.SecurityType, ticker string) ([]entity.Deal, error)
 	Delete(ctx context.Context, id int, userID int) (entity.Deal, error)
 }
 type MoexShareRepo interface {
-	GetBySecid(ctx context.Context, secid string) (entity.Share, error)
+	GetByTicker(ctx context.Context, ticker string) (entity.Share, error)
 }
 type PositionRepo interface {
 	GetPositionForSecurity(ctx context.Context, exchange entity.Exchange, portfolioID int,
-		securityType entity.SecurityType, secid string) (entity.Position, error)
+		securityType entity.SecurityType, ticker string) (entity.Position, error)
 	Insert(ctx context.Context, p entity.Position) error
 	Update(ctx context.Context, p entity.Position) error
 }

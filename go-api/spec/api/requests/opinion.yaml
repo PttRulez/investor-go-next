@@ -2,7 +2,8 @@ components:
   schemas:
     CreateOpinionRequest:
       type: object
-      required: [date, expertId, exchange, securityId, securityType, text, type]
+      required:
+        [date, expertId, exchange, securityId, securityType, text, ticker, type]
       properties:
         date:
           type: string
@@ -27,6 +28,10 @@ components:
           type: number
           format: double
         text:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
           type: string
           x-oapi-codegen-extra-tags:
             validate: required

@@ -3,6 +3,7 @@ import { SecurityType, MoexSecurityType } from '@/types/enums';
 const map = {
   [MoexSecurityType.common_share]: SecurityType.SHARE,
   [MoexSecurityType.preferred_share]: SecurityType.SHARE,
+  [MoexSecurityType.depositary_receipt]: SecurityType.SHARE,
 
   [MoexSecurityType.corporate_bond]: SecurityType.BOND,
   [MoexSecurityType.exchange_bond]: SecurityType.BOND,

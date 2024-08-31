@@ -9,7 +9,7 @@ create table if not exists moex_shares (
 	name varchar(120) not null,
 	price_decimals integer not null,
 	shortname varchar(50) not null,
-	secid varchar(10) not null unique
+	ticker varchar(10) not null unique
 );
 -- +goose StatementEnd
 

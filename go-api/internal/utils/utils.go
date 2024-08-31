@@ -15,6 +15,10 @@ func GetCurrentUserID(ctx context.Context) int {
 
 func SignsAfterDot(f float64) int {
 	s := fmt.Sprintf("%v", f)
-	decimalPart := strings.Split(s, ".")[1]
+	parts := strings.Split(s, ".")
+	if len(parts) == 1 {
+		return 0
+	}
+	decimalPart := parts[1]
 	return len(decimalPart)
 }

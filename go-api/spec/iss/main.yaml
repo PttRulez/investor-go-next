@@ -7,16 +7,16 @@ servers:
   - url: https://iss.moex.com/iss
     description: Сервак Московской биржи
 paths:
-  /securities/{secId}.json:
+  /securities/{ticker}.json:
     get:
-      summary: Получаем полную информацию о бумаге по secID
+      summary: Получаем полную информацию о бумаге по ticker
       parameters:
-        - name: secId
+        - name: ticker
           in: path
           schema:
             type: string
           required: true
-          description: secid бумаги, который обычно получаем на фронтенде через поиск на мск бирже
+          description: ticker бумаги, который обычно получаем на фронтенде через поиск на мск бирже
       responses:
         "200":
           description: Данные получены

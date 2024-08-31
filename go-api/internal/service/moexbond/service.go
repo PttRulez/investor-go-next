@@ -11,18 +11,18 @@ import (
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
-func (s *Service) GetBySecid(ctx context.Context, secID string) (entity.Bond, error) {
-	const op = "MoexBondService.GetBySecid"
+func (s *Service) GetByTicker(ctx context.Context, ticker string) (entity.Bond, error) {
+	const op = "MoexBondService.GetByTicker"
 
 	// Пробуем достать из нашей бд
-	bond, err := s.repo.GetBySecid(ctx, secID)
+	bond, err := s.repo.GetByTicker(ctx, ticker)
 
 	// Если её там нет то делаем запрос на МОЕХ и записываем в бд
 	if errors.Is(err, database.ErrNotFound) {
 		var err error
-		bond, err = s.createNewBondFromMoex(ctx, secID)
+		bond, err = s.createNewBondFromMoex(ctx, ticker)
 		if err != nil {
-			return entity.Bond{}, fmt.Errorf("%s.createNewBondFromMoex, (secid %s): %w", op, secID, err)
+			return entity.Bond{}, fmt.Errorf("%s.createNewBondFromMoex, (ticker %s): %w", op, ticker, err)
 		}
 	} else if err != nil {
 		return entity.Bond{}, fmt.Errorf("%s: %w", op, err)
@@ -32,10 +32,10 @@ func (s *Service) GetBySecid(ctx context.Context, secID string) (entity.Bond, er
 	return bond, nil
 }
 
-func (s *Service) createNewBondFromMoex(ctx context.Context, secID string) (entity.Bond, error) {
+func (s *Service) createNewBondFromMoex(ctx context.Context, ticker string) (entity.Bond, error) {
 	// если бумаги нет в БД то делаем запрос
 	// на информацию по бумаге из апишки московской биржи
-	secInfo, err := s.issClient.GetSecurityInfoBySecid(ctx, secID)
+	secInfo, err := s.issClient.GetSecurityInfoByTicker(ctx, ticker)
 	bond := entity.Bond{
 		SecurityCommonInfo: entity.SecurityCommonInfo{
 			Board:     secInfo.Board,
@@ -43,7 +43,7 @@ func (s *Service) createNewBondFromMoex(ctx context.Context, secID string) (enti
 			Market:    secInfo.Market,
 			Name:      secInfo.Name,
 			ShortName: secInfo.ShortName,
-			Secid:     secID,
+			Ticker:    ticker,
 		},
 		CouponPercent:   secInfo.CouponPercent,
 		CouponValue:     secInfo.CouponValue,
@@ -58,12 +58,12 @@ func (s *Service) createNewBondFromMoex(ctx context.Context, secID string) (enti
 
 	if bond.Market != entity.MoexMarketBonds {
 		return entity.Bond{}, service.NewArgumentsError(fmt.Sprintf(
-			"secid %s не принадлежит рынку облигаций, рынок тикера  - %s", secID, bond.Market))
+			"ticker %s не принадлежит рынку облигаций, рынок тикера  - %s", ticker, bond.Market))
 	}
 
 	// Добираем доп инфу более подробный запросом на мск биржу. Пока что это только размер лота
 	fullInfo, err := s.issClient.GetSecurityFullInfo(ctx, secInfo.Engine, secInfo.Market,
-		secInfo.Board, secID)
+		secInfo.Board, ticker)
 	if err != nil {
 		return entity.Bond{}, err
 	}
@@ -81,7 +81,7 @@ func (s *Service) createNewBondFromMoex(ctx context.Context, secID string) (enti
 }
 
 type Repository interface {
-	GetBySecid(ctx context.Context, secid string) (entity.Bond, error)
+	GetByTicker(ctx context.Context, ticker string) (entity.Bond, error)
 	Insert(ctx context.Context, bond entity.Bond) (entity.Bond, error)
 }
 type Service struct {

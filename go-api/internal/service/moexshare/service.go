@@ -11,18 +11,18 @@ import (
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
-func (s *Service) GetBySecid(ctx context.Context, secID string) (entity.Share, error) {
-	const op = "MoexShareService.GetBySecid"
+func (s *Service) GetByTicker(ctx context.Context, ticker string) (entity.Share, error) {
+	const op = "MoexShareService.GetByTicker"
 
 	// Пробуем достать из нашей бд
-	share, err := s.repo.GetBySecid(ctx, secID)
+	share, err := s.repo.GetByTicker(ctx, ticker)
 
 	// Если её там нет то делаем запрос на МОЕХ и записываем в бд
 	if errors.Is(err, database.ErrNotFound) {
 		var err error
-		share, err = s.createNewShareFromMoex(ctx, secID)
+		share, err = s.createNewShareFromMoex(ctx, ticker)
 		if err != nil {
-			return entity.Share{}, fmt.Errorf("%s.createNewShareFromMoex, (secid %s): %w", op, secID, err)
+			return entity.Share{}, fmt.Errorf("%s.createNewShareFromMoex, (ticker %s): %w", op, ticker, err)
 		}
 	} else if err != nil {
 		return entity.Share{}, fmt.Errorf("%s: %w", op, err)
@@ -32,10 +32,10 @@ func (s *Service) GetBySecid(ctx context.Context, secID string) (entity.Share, e
 	return share, nil
 }
 
-func (s *Service) createNewShareFromMoex(ctx context.Context, secID string) (entity.Share, error) {
+func (s *Service) createNewShareFromMoex(ctx context.Context, ticker string) (entity.Share, error) {
 	// если бумаги нет в БД то делаем запрос
 	// на информацию по бумаге из апишки московской биржи
-	secInfo, err := s.issClient.GetSecurityInfoBySecid(ctx, secID)
+	secInfo, err := s.issClient.GetSecurityInfoByTicker(ctx, ticker)
 	if err != nil {
 		return entity.Share{}, err
 	}
@@ -47,18 +47,18 @@ func (s *Service) createNewShareFromMoex(ctx context.Context, secID string) (ent
 			Market:    secInfo.Market,
 			Board:     secInfo.Board,
 			Engine:    secInfo.Engine,
-			Secid:     secID,
+			Ticker:    ticker,
 		},
 	}
 
 	if share.Market != entity.MoexMarketShares {
 		return entity.Share{}, service.NewArgumentsError(fmt.Sprintf(
-			"secid %s не принадлежит рынку акций, рынок тикера  - %s", secID, share.Market))
+			"ticker %s не принадлежит рынку акций, рынок тикера  - %s", ticker, share.Market))
 	}
 
 	// Добираем доп инфу более подробный запросом на мск биржу. Пока что это только размер лота
 	fullInfo, err := s.issClient.GetSecurityFullInfo(ctx, secInfo.Engine, secInfo.Market,
-		secInfo.Board, secID)
+		secInfo.Board, ticker)
 	if err != nil {
 		return entity.Share{}, err
 	}
@@ -77,7 +77,7 @@ func (s *Service) createNewShareFromMoex(ctx context.Context, secID string) (ent
 }
 
 type Repository interface {
-	GetBySecid(ctx context.Context, secID string) (entity.Share, error)
+	GetByTicker(ctx context.Context, ticker string) (entity.Share, error)
 	Insert(ctx context.Context, share entity.Share) (entity.Share, error)
 }
 type Service struct {

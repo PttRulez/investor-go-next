@@ -23,6 +23,7 @@ investorAxiosInstance.interceptors.response.use(
     if (error.response?.status === 401) {
       signOut();
     }
+    throw error;
   },
 );
 

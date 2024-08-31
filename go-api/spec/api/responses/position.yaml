@@ -8,6 +8,10 @@ components:
           averagePrice,
           currentPrice,
           currentCost,
+          id,
+          opinions,
+          opinionIds,
+          portfolioName,
           securityType,
           shortName,
           ticker,
@@ -25,6 +29,18 @@ components:
           format: double
         currentCost:
           type: integer
+        id:
+          type: integer
+        opinions:
+          type: array
+          items:
+            $ref: ./opinion.yaml#/components/schemas/OpinionResponse
+        opinionIds:
+          type: array
+          items:
+            type: integer
+        portfolioName:
+          type: string
         securityType:
           $ref: ../shared/enums.yaml#/components/schemas/SecurityType
         shortName:

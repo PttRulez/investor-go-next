@@ -21,7 +21,7 @@ const Register: FC = () => {
         console.log('onSuccess');
         router.push('/login');
       },
-      onError(error, variables, context) {
+      onError: (error, variables, context) => {
         setError(error + '');
       },
     },

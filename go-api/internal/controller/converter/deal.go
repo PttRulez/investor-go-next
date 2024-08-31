@@ -34,7 +34,7 @@ func FromCreateDealRequestToDeal(ctx context.Context, req api.CreateDealRequest)
 		PortfolioID:  req.PortfolioId,
 		Price:        req.Price,
 		SecurityType: secType,
-		Secid:        req.SecId,
+		Ticker:       req.Ticker,
 		Type:         dealType,
 		UserID:       userID,
 	}, nil
@@ -49,7 +49,7 @@ func FromDealToResponse(deal entity.Deal) api.DealResponse {
 		Id:           &deal.ID,
 		PortfolioId:  deal.PortfolioID,
 		Price:        deal.Price,
-		SecId:        deal.Secid,
+		Ticker:       deal.Ticker,
 		SecurityType: api.SecurityType(deal.SecurityType),
 		Type:         api.DealType(deal.Type),
 	}

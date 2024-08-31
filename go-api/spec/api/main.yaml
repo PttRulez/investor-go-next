@@ -12,9 +12,9 @@ paths:
     $ref: ./paths/expert.yaml
   /login:
     $ref: ./paths/auth.yaml#/~1login
-  /moex-bond/{secid}:
+  /moex-bond/{ticker}:
     $ref: ./paths/moex-bond.yaml
-  /moex-share/{secid}:
+  /moex-share/{ticker}:
     $ref: ./paths/moex-share.yaml
   /opinion:
     $ref: ./paths/opinion.yaml

@@ -30,6 +30,7 @@ import (
 	"github.com/pttrulez/investor-go/internal/service/moexshare"
 	"github.com/pttrulez/investor-go/internal/service/opinion"
 	"github.com/pttrulez/investor-go/internal/service/portfolio"
+	"github.com/pttrulez/investor-go/internal/service/position"
 	"github.com/pttrulez/investor-go/internal/service/transaction"
 	"github.com/pttrulez/investor-go/internal/service/user"
 )
@@ -90,6 +91,7 @@ func Run() {
 	opinionService := opinion.NewOpinionService(opinionRepo)
 	portfolioService := portfolio.NewPortfolioService(dealRepo, issClient, positionRepo,
 		portfolioRepo, transactionRepo)
+	positionService := position.NewPositionService(positionRepo)
 	transactionService := transaction.NewTransactionService(transactionRepo, portfolioRepo)
 	userService := user.NewUserService(userRepo, tokenAuth)
 	dealService := deal.NewDealService(issClient, moexBondService, moexShareService,
@@ -103,6 +105,7 @@ func Run() {
 	moexShareController := httpcontrollers.NewMoexShareController(logger, moexShareService)
 	opinionController := httpcontrollers.NewOpinionController(logger, opinionService, validator)
 	portfolioController := httpcontrollers.NewPortfolioController(logger, portfolioService)
+	positionController := httpcontrollers.NewPositionsController(logger, positionService, validator)
 	transactionController := httpcontrollers.NewCashoutController(logger, transactionService, validator)
 
 	// Public Routes
@@ -135,19 +138,20 @@ func Run() {
 
 		// Moex-Bonds
 		r.Route("/moex-bond", func(r chi.Router) {
-			r.Get("/{secid}", moexBondController.GetInfoBySecid)
+			r.Get("/{ticker}", moexBondController.GetInfoByTicker)
 		})
 
 		// Moex-Shares
 		r.Route("/moex-share", func(r chi.Router) {
-			r.Get("/{secid}", moexShareController.GetInfoBySecid)
+			r.Get("/{ticker}", moexShareController.GetInfoByTicker)
 		})
 
 		// Moex-Shares
 		r.Route("/opinion", func(r chi.Router) {
 			r.Delete("/{id}", opinionController.DeleteOpinion)
+			r.Get("/{opinionID}/attach-position/{positionID}", opinionController.AttachToPosition)
 			r.Post("/", opinionController.CreateOpinion)
-			r.Post("/list", opinionController.GetOpinionsList)
+			r.Get("/list", opinionController.GetOpinionsList)
 		})
 
 		// Portfolios
@@ -157,6 +161,11 @@ func Run() {
 			r.Get("/{id}", portfolioController.GetPortfolioByID)
 			r.Post("/", portfolioController.CreateNewPortfolio)
 			r.Put("/", portfolioController.UpdatePortfolio)
+		})
+
+		// Positions
+		r.Route("/position", func(r chi.Router) {
+			r.Get("/", positionController.AllUserPositions)
 		})
 	})
 

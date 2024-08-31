@@ -7,12 +7,21 @@ import {
 } from 'material-react-table';
 import { SyntheticEvent, useMemo, useState } from 'react';
 import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
+import BackHandIcon from '@mui/icons-material/BackHand';
 import { useQuery } from '@tanstack/react-query';
 import investorService from '@/axios/investor/investor.service';
 import dayjs from '@/dayjs.config';
 import { OpinionType } from '@/types/enums';
 import { OpinionFilters } from '@/validation';
 import { IOpinionResponse } from '@/types/apis/go-api';
+import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import PositionList from './PositionList';
+
+type Props = {
+  opinions: IOpinionResponse[];
+  // filters: OpinionFilters;
+  ticker: string;
+};
 
 const opinionTypeText = (type: OpinionType) => {
   switch (type) {
@@ -27,20 +36,23 @@ const opinionTypeText = (type: OpinionType) => {
   }
 };
 
-const OpinionsTable = ({ filters }: { filters: OpinionFilters }) => {
+const OpinionsTable = ({ opinions, ticker }: Props) => {
   const [opinionText, setOpinionText] = useState<null | string>(null);
+  const [opinionIdToAttach, setOpinionIdToAttach] = useState<null | number>(
+    null,
+  );
 
-  const { data: opinions } = useQuery({
-    queryKey: [
-      'opinions',
-      {
-        exchange: filters.exchange,
-        securityId: filters.securityId,
-        securityType: filters.securityType,
-      },
-    ],
-    queryFn: () => investorService.opinion.getOpinionsList(filters),
-  });
+  // const { data: opinions } = useQuery({
+  //   queryKey: [
+  //     'opinions',
+  //     {
+  //       exchange: filters.exchange,
+  //       securityId: filters.securityId,
+  //       securityType: filters.securityType,
+  //     },
+  //   ],
+  //   queryFn: () => investorService.opinion.getOpinionsList(filters),
+  // });
 
   const columns = useMemo<Array<MRT_ColumnDef<IOpinionResponse>>>(
     () => [
@@ -71,20 +83,37 @@ const OpinionsTable = ({ filters }: { filters: OpinionFilters }) => {
       {
         header: 'Целевая',
         accessorKey: 'targetPrice',
+        accessorFn(opinion) {
+          return opinion.targetPrice ?? '-';
+        },
       },
       {
         header: '',
         accessorKey: 'text',
-        Cell: ({ cell }) => {
+        Cell: ({ cell, row }) => {
           return (
-            <IconButton
-              onClick={(e: SyntheticEvent) => {
-                e.stopPropagation();
-                setOpinionText(cell.getValue<string>());
-              }}
-            >
-              <RemoveRedEyeIcon />
-            </IconButton>
+            <Grid container spacing={3} justifyContent="space-between">
+              <Grid xs={6}>
+                <IconButton
+                  onClick={(e: SyntheticEvent) => {
+                    e.stopPropagation();
+                    setOpinionText(cell.getValue<string>());
+                  }}
+                >
+                  <RemoveRedEyeIcon />
+                </IconButton>
+              </Grid>
+              <Grid xs={6}>
+                <IconButton
+                  onClick={(e: SyntheticEvent) => {
+                    e.stopPropagation();
+                    setOpinionIdToAttach(row.original.id);
+                  }}
+                >
+                  <BackHandIcon />
+                </IconButton>
+              </Grid>
+            </Grid>
           );
         },
       },
@@ -109,6 +138,19 @@ const OpinionsTable = ({ filters }: { filters: OpinionFilters }) => {
       <MaterialReactTable table={table} />
       <Dialog open={!!opinionText} onClose={() => setOpinionText(null)}>
         <Box sx={{ padding: '10px' }}>{opinionText}</Box>
+      </Dialog>
+      <Dialog
+        open={!!opinionIdToAttach}
+        onClose={() => setOpinionIdToAttach(null)}
+        sx={{
+          '& .MuiPaper-root': {
+            padding: '20px',
+          },
+        }}
+      >
+        {opinionIdToAttach && (
+          <PositionList opinionId={opinionIdToAttach} ticker={ticker} />
+        )}
       </Dialog>
     </>
   );

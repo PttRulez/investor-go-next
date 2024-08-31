@@ -16,6 +16,35 @@ import (
 	"github.com/pttrulez/investor-go/pkg/api"
 )
 
+func (c *OpinionController) AttachToPosition(w http.ResponseWriter, r *http.Request) {
+	const op = "OpinionController.AttachToPosition"
+
+	ctx := r.Context()
+
+	positionID, err := strconv.Atoi(chi.URLParam(r, "positionID"))
+	if err != nil {
+		c.logger.Error(fmt.Errorf("%s: %w", op, err))
+		writeString(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	opinionID, err := strconv.Atoi(chi.URLParam(r, "opinionID"))
+	if err != nil {
+		c.logger.Error(fmt.Errorf("%s: %w", op, err))
+		writeString(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = c.opinionService.AttachToPosition(ctx, opinionID, positionID)
+	if err != nil {
+		c.logger.Error(fmt.Errorf("%s: %w", op, err))
+		writeError(w, err)
+		return
+	}
+
+	writeString(w, http.StatusNoContent, "")
+}
+
 func (c *OpinionController) CreateOpinion(w http.ResponseWriter, r *http.Request) {
 	const op = "OpinionController.CreateOpinion"
 
@@ -131,10 +160,15 @@ func (c *OpinionController) GetOpinionsList(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	writeJSON(w, http.StatusOK, opinions)
+	res := make([]api.OpinionResponse, 0, len(opinions))
+	for _, opinion := range opinions {
+		res = append(res, converter.FromOpinionToOpinionResponse(opinion))
+	}
+	writeJSON(w, http.StatusOK, res)
 }
 
 type OpinionService interface {
+	AttachToPosition(ctx context.Context, opinionID, positionID int) error
 	CreateOpinion(ctx context.Context, opinion entity.Opinion) (entity.Opinion, error)
 	GetOpinions(ctx context.Context, f entity.OpinionFilters, userID int) ([]entity.Opinion,
 		error)

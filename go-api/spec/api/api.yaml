@@ -94,16 +94,16 @@ paths:
           description: неверный формат JSON
         '401':
           description: Ановтарайзед
-  /moex-bond/{secid}:
+  /moex-bond/{ticker}:
     get:
       summary: Получение информации по облигации, торгуемой на мск бирже
       parameters:
-        - name: secid
+        - name: ticker
           in: path
           schema:
             type: string
           required: true
-          decription: secid облигации
+          decription: ticker облигации
       responses:
         '200':
           description: удачный запрос
@@ -117,16 +117,16 @@ paths:
           description: Такого портфолио нет, либо не пренадлежит текущему юзеру
         '500':
           description: Другие ошибки, должен быть текст в ответе
-  /moex-share/{secid}:
+  /moex-share/{ticker}:
     get:
       summary: Получение информации по акции, торгуемой на мск бирже
       parameters:
-        - name: secid
+        - name: ticker
           in: path
           schema:
             type: string
           required: true
-          decription: secid акции
+          decription: ticker акции
       responses:
         '200':
           description: удачный запрос
@@ -384,7 +384,7 @@ components:
         - exchange
         - portfolioId
         - price
-        - secId
+        - ticker
         - securityType
         - type
         - ticker
@@ -404,7 +404,7 @@ components:
         price:
           type: number
           format: double
-        secId:
+        ticker:
           type: string
         securityType:
           $ref: '#/components/schemas/SecurityType'
@@ -476,7 +476,7 @@ components:
         - lotSize
         - market
         - name
-        - secid
+        - ticker
         - shortName
       properties:
         board:
@@ -491,7 +491,7 @@ components:
           $ref: '#/components/schemas/ISSMoexMarket'
         name:
           type: string
-        secid:
+        ticker:
           type: string
         shortName:
           type: string
@@ -548,6 +548,7 @@ components:
         - securityId
         - securityType
         - text
+        - ticker
         - type
       properties:
         date:
@@ -573,6 +574,10 @@ components:
           type: number
           format: double
         text:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
           type: string
           x-oapi-codegen-extra-tags:
             validate: required
@@ -585,9 +590,11 @@ components:
         - date
         - expertId
         - exchange
+        - expert
         - securityId
         - securityType
         - text
+        - ticker
         - type
       properties:
         id:
@@ -597,6 +604,8 @@ components:
           format: date
         exchange:
           $ref: '#/components/schemas/Exchange'
+        expert:
+          $ref: '#/components/schemas/ExpertResponse'
         expertId:
           type: integer
         securityId:
@@ -609,6 +618,8 @@ components:
           type: number
           format: double
         text:
+          type: string
+        ticker:
           type: string
         type:
           $ref: '#/components/schemas/OpinionType'
@@ -659,6 +670,10 @@ components:
         - averagePrice
         - currentPrice
         - currentCost
+        - id
+        - opinions
+        - opinionIds
+        - portfolioName
         - securityType
         - shortName
         - ticker
@@ -675,6 +690,18 @@ components:
           format: double
         currentCost:
           type: integer
+        id:
+          type: integer
+        opinions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpinionResponse'
+        opinionIds:
+          type: array
+          items:
+            type: integer
+        portfolioName:
+          type: string
         securityType:
           $ref: '#/components/schemas/SecurityType'
         shortName:

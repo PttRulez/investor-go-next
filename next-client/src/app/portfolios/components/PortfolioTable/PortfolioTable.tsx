@@ -250,7 +250,9 @@ const PortfolioTable = ({
       />
     ),
     renderDetailPanel: ({ row }) =>
-      row.original.comment ? row.original.comment : null,
+      row.original.comment || row.original.opinions.length > 0
+        ? row.original.comment
+        : null,
   });
 
   return (

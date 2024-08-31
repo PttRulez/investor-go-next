@@ -81,12 +81,12 @@ const CreateDealForm: FC<DealFormProps> = ({
     secInfo: MoexSearchAutocompleteOption | null,
   ) => {
     if (!secInfo) {
-      resetField('secid');
+      resetField('ticker');
       resetField('securityType');
       return;
     }
 
-    setValue('secid', secInfo.ticker);
+    setValue('ticker', secInfo.ticker);
     if (shareTypes.includes(secInfo.type)) {
       setValue('securityType', SecurityType.SHARE);
     } else if (bondTypes.includes(secInfo.type)) {
@@ -105,12 +105,12 @@ const CreateDealForm: FC<DealFormProps> = ({
     <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
       <Controller
         control={control}
-        name="secid"
+        name="ticker"
         render={({ field }) => (
           <MoexSearch
             onChange={onSecChange}
-            error={!!formState.errors.secid}
-            helperText={formState.errors.secid?.message}
+            error={!!formState.errors.ticker}
+            helperText={formState.errors.ticker?.message}
           />
         )}
       />

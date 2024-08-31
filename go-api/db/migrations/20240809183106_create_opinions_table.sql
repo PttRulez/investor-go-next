@@ -9,7 +9,8 @@ create table if not exists opinions (
 	security_id integer not null,
 	security_type varchar(50) not null,
 	source_link varchar(120),
-	target_price numeric(10, 6),
+	target_price numeric(15, 6),
+	ticker varchar(50) not null,
 	type varchar(50) not null,
 	user_id integer references users(id) not null
 );

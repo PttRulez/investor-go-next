@@ -1,17 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import investorService from '@/axios/investor/investor.service';
-import DealsTable from '@/app/portfolios/components/DealsTable';
-import PortfolioTable from '../components/PortfolioTable/PortfolioTable';
-import { Dialog, SelectChangeEvent, Tab } from '@mui/material';
-import CreateDealForm from '../components/DealForm/CreateDealForm';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DealType } from '@/types/enums';
 import { TabContext, TabList, TabPanel } from '@mui/lab';
+import { Dialog, SelectChangeEvent, Tab } from '@mui/material';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import CreateDealForm from '../components/DealForm/CreateDealForm';
+import PortfolioTable from '../components/PortfolioTable/PortfolioTable';
 import { PortfolioActionsMap } from '../components/PortfolioTable/PortfolioTableToolbar';
 import TransactionForm from '../components/TransactionForm/TransactionForm';
-import { useRouter } from 'next/navigation';
-import { DealType } from '@/types/enums';
 
 export default function Portfolio({ params }: { params: { id: string } }) {
   const [openModal, setOpenModal] = useState<PortfolioActionsMap | false>(

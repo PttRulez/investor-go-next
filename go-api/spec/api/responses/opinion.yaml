@@ -3,7 +3,18 @@ components:
     OpinionResponse:
       type: object
       required:
-        [id, date, expertId, exchange, securityId, securityType, text, type]
+        [
+          id,
+          date,
+          expertId,
+          exchange,
+          expert,
+          securityId,
+          securityType,
+          text,
+          ticker,
+          type,
+        ]
       properties:
         id:
           type: integer
@@ -12,6 +23,8 @@ components:
           format: date
         exchange:
           $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        expert:
+          $ref: ./expert.yaml#/components/schemas/ExpertResponse
         expertId:
           type: integer
         securityId:
@@ -24,6 +37,8 @@ components:
           type: number
           format: double
         text:
+          type: string
+        ticker:
           type: string
         type:
           $ref: ../shared/enums.yaml#/components/schemas/OpinionType

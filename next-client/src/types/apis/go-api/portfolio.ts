@@ -1,6 +1,7 @@
 import { SecurityType } from '@/types/enums';
 import { IDealResponse } from './deal';
 import { ITransactionResponse } from './transaction';
+import { IOpinionResponse } from './opinion';
 
 export interface IPortfolioResponse {
   bondDeals: IDealResponse[];
@@ -26,6 +27,9 @@ export interface IPositionResponse {
   id: number;
   currentPrice: number;
   currentCost: number;
+  opinions: IOpinionResponse[];
+  opinionIds: number[];
+  portfolioName: string;
   securityType: SecurityType;
   shortName: string;
   targetPrice: number | null;

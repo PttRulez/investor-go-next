@@ -1,4 +1,5 @@
 import { IMoexBondResponse } from '@/types/apis/go-api';
+import { SecurityType } from '@/types/enums';
 import { AxiosInstance } from 'axios';
 
 export class InvestorMoexBond {
@@ -12,6 +13,7 @@ export class InvestorMoexBond {
     return this.api
       .get(`/moex-bond/${ticker}`)
       .then(res => {
+        res.data.securityType = SecurityType.BOND;
         return res.data;
       })
       .catch(err => {

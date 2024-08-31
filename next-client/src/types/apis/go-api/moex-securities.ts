@@ -30,7 +30,7 @@ export interface IMoexSecurtiyResponse extends BaseSecurityResponse {
   name: string;
   shortName: string;
   securityType: SecurityType;
-  secid: string;
+  ticker: string;
 }
 
 export type IMoexShareResponse = IMoexSecurtiyResponse;

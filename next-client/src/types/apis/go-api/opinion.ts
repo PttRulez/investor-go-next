@@ -3,4 +3,5 @@ import { IExpertResponse } from './expert';
 
 export type IOpinionResponse = CreateOpinionData & {
   expert?: IExpertResponse;
+  id: number;
 };

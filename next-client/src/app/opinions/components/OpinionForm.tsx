@@ -22,28 +22,31 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Exchange, OpinionType, SecurityType } from '@/types/enums';
 import { CreateOpinionData } from '@/validation';
 import { SecurityResponse } from '@/types/apis/go-api/security';
+import { IMoexSecurtiyResponse } from '@/types/apis/go-api';
 
 interface ExpertFormProps {
   afterSuccessfulSubmit: () => void;
-  defaultName?: string;
-  securityId?: number;
-  securityType?: SecurityType;
+  defaultData?: IMoexSecurtiyResponse;
 }
 
 const OpinionForm = ({
   afterSuccessfulSubmit,
-  defaultName,
-  securityId,
-  securityType,
+  defaultData,
 }: ExpertFormProps) => {
+  let defaultValues: Partial<CreateOpinionData> = {
+    date: dayjs().format('YYYY-MM-DD'),
+    exchange: Exchange.MOEX,
+  };
+
+  if (defaultData) {
+    defaultValues.securityId = defaultData.id;
+    defaultValues.securityType = defaultData.securityType;
+    defaultValues.ticker = defaultData.ticker;
+  }
+
   const { control, formState, handleSubmit, resetField, setValue, watch } =
     useForm<CreateOpinionData>({
-      defaultValues: {
-        date: dayjs().format('YYYY-MM-DD'),
-        exchange: Exchange.MOEX,
-        securityId,
-        securityType,
-      },
+      defaultValues,
     });
 
   const queryClient = useQueryClient();
@@ -70,7 +73,14 @@ const OpinionForm = ({
     {
       onSuccess: opinion => {
         queryClient.invalidateQueries({
-          queryKey: ['opinions'],
+          queryKey: [
+            'opinions',
+            {
+              exchange: Exchange.MOEX,
+              securityId: watchAll.securityId,
+              securityType: watchAll.securityType,
+            },
+          ],
         });
         afterSuccessfulSubmit();
       },
@@ -81,8 +91,8 @@ const OpinionForm = ({
     createDeal.mutate(data);
   };
 
-  const defaultValue = (
-    defaultName ? { name: defaultName } : {}
+  const defaultAutocompleteValue: MoexSearchAutocompleteOption = (
+    defaultData ? { name: defaultData.shortName } : {}
   ) as MoexSearchAutocompleteOption;
 
   const onMoexChange: MoexSearchHandler = async (e, value, reason) => {
@@ -91,9 +101,10 @@ const OpinionForm = ({
       resetField('securityType');
       return;
     }
-
+    console.log('value', value);
     const secType = getSecurityTypeFromMoexSecType(value.type);
 
+    console.log('secType', secType);
     let security: Omit<SecurityResponse, 'exchange'>;
     if (secType === SecurityType.SHARE) {
       security = await investorService.moexShare.getByTicker(value.ticker);
@@ -103,11 +114,15 @@ const OpinionForm = ({
 
     setValue('securityId', security.id);
     setValue('securityType', security.securityType);
+    setValue('ticker', value.ticker);
   };
 
   return (
     <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
-      <MoexSearch onChange={onMoexChange} defaultValue={defaultValue} />
+      <MoexSearch
+        onChange={onMoexChange}
+        defaultValue={defaultAutocompleteValue}
+      />
       <Grid container spacing={3} justifyContent="space-between">
         <Grid xs={6}>
           <FormDatePicker

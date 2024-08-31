@@ -21,7 +21,7 @@ type ISSSecInfo struct {
 	Market    entity.ISSMoexMarket
 	Name      string
 	ShortName string
-	Secid     string
+	Ticker    string
 
 	// Только облиги:
 	//
@@ -45,10 +45,10 @@ type ISSFullSecurityInfo struct {
 	PriceDecimals int
 }
 
-func (api *IssClient) GetSecurityInfoBySecid(ctx context.Context, secid string) (ISSSecInfo, error) {
-	const op = "issclient.GetSecurityInfoBySecid"
+func (api *IssClient) GetSecurityInfoByTicker(ctx context.Context, ticker string) (ISSSecInfo, error) {
+	const op = "issclient.GetSecurityInfoByTicker"
 
-	uri := fmt.Sprintf("%s/securities/%s.json", api.baseURL, secid)
+	uri := fmt.Sprintf("%s/securities/%s.json", api.baseURL, ticker)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return ISSSecInfo{}, fmt.Errorf("%s: %w", op, err)
@@ -171,11 +171,11 @@ type MoexFullInfo struct {
 }
 
 func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine entity.ISSMoexEngine,
-	market entity.ISSMoexMarket, board entity.ISSMoexBoard, secid string) (ISSFullSecurityInfo, error) {
+	market entity.ISSMoexMarket, board entity.ISSMoexBoard, ticker string) (ISSFullSecurityInfo, error) {
 	const op = "issclient.GetSecurityFullInfo"
 
 	uri := fmt.Sprintf("%s/engines/%s/markets/%s/boards/%s/securities/%s.json", api.baseURL,
-		engine, market, board, secid)
+		engine, market, board, ticker)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
@@ -221,7 +221,7 @@ func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine entity.ISS
 }
 
 func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.ISSMoexMarket,
-	secidInfos map[string]entity.ISSMoexBoard) (map[string]float64, error) {
+	tickerInfos map[string]entity.ISSMoexBoard) (map[string]float64, error) {
 	const op = "issclient.GetStocksCurrentPrices"
 
 	uri := fmt.Sprintf("%s/engines/stock/markets/%s/securities.json", api.baseURL, market)
@@ -230,14 +230,14 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	secids := make([]string, 0, len(secidInfos))
-	for secid := range secidInfos {
-		secids = append(secids, secid)
+	tickers := make([]string, 0, len(tickerInfos))
+	for ticker := range tickerInfos {
+		tickers = append(tickers, ticker)
 	}
 
 	params := url.Values{}
 	params.Add("iss.meta", "off")
-	params.Add("securities", strings.Join(secids, ","))
+	params.Add("securities", strings.Join(tickers, ","))
 	params.Add("securities.columns", "SECID,BOARDID,PREVPRICE")
 	req.URL.RawQuery = params.Encode()
 
@@ -251,8 +251,6 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-	fmt.Println("req.Uri", req.URL.String())
-	fmt.Println("body", string(body))
 
 	var data MoexAPIResponseCurrentPrices
 	err = json.Unmarshal(body, &data)
@@ -264,7 +262,7 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 
 	var m = make(map[string]float64)
 	for _, i := range data.Securities.Data {
-		secid, ok := i[0].(string)
+		ticker, ok := i[0].(string)
 		if !ok {
 			return nil, fmt.Errorf("%s: failed to cast ticker from issreponse", op)
 		}
@@ -278,11 +276,9 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market entity.
 		if !ok {
 			return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
 		}
-		fmt.Println("secid", secid, "board", board, "price", price)
-		fmt.Println("secidInfos", secidInfos)
-		v, ok := secidInfos[secid]
+		v, ok := tickerInfos[ticker]
 		if ok && string(v) == board {
-			m[secid] = price
+			m[ticker] = price
 		}
 	}
 

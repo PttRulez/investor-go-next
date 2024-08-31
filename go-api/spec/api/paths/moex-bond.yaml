@@ -1,12 +1,12 @@
 get:
   summary: Получение информации по облигации, торгуемой на мск бирже
   parameters:
-    - name: secid
+    - name: ticker
       in: path
       schema:
         type: string
       required: true
-      decription: secid облигации
+      decription: ticker облигации
   responses:
     "200":
       description: удачный запрос

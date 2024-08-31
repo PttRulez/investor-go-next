@@ -20,7 +20,7 @@ func FromMoexBondToMoexBondResponse(b entity.Bond) api.MoexBondResponse {
 		Market:          api.ISSMoexMarket(b.Market),
 		MatDate:         openapi_types.Date{Time: b.MatDate},
 		Name:            b.Name,
-		Secid:           b.Secid,
+		Ticker:          b.Ticker,
 		ShortName:       b.ShortName,
 	}
 }
@@ -33,7 +33,7 @@ func FromMoexShareToMoexShareResponse(s entity.Share) api.MoexShareResponse {
 		LotSize:   s.LotSize,
 		Market:    api.ISSMoexMarket(s.Market),
 		Name:      s.Name,
-		Secid:     s.Secid,
+		Ticker:    s.Ticker,
 		ShortName: s.ShortName,
 	}
 }

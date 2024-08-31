@@ -14,7 +14,7 @@ create table if not exists moex_bonds (
 	mat_date date not null,
 	name varchar(100) not null,
 	shortname varchar(50) not null,
-	secid varchar(20) not null unique
+	ticker varchar(20) not null unique
 );
 -- +goose StatementEnd
 

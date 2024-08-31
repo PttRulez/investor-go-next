@@ -5,7 +5,7 @@ export interface IMoexISSSearchResults {
   securities: {
     columns: [
       'id', // 0
-      'secid', // 1
+      'ticker', // 1
       'shortname', // 2
       'regnumber', // 3
       'name', // 4

@@ -10,6 +10,17 @@ import (
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
+func (s *Service) AttachToPosition(ctx context.Context, opinionID, positionID int) error {
+	const op = "OpinionService.AttachToPosition"
+
+	err := s.repo.AttachToPosition(ctx, opinionID, positionID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (s *Service) CreateOpinion(ctx context.Context, o entity.Opinion) (entity.Opinion, error) {
 	const op = "OpinionService.CreateOpinion"
 
@@ -48,6 +59,7 @@ func (s *Service) GetOpinions(ctx context.Context, f entity.OpinionFilters, user
 }
 
 type Repository interface {
+	AttachToPosition(ctx context.Context, opinionID, positionID int) error
 	Delete(ctx context.Context, id int, userID int) error
 	GetOpinionsList(ctx context.Context, f entity.OpinionFilters, userID int) ([]entity.Opinion,
 		error)

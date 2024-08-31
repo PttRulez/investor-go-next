@@ -9,7 +9,7 @@ type SecurityCommonInfo struct {
 	LotSize   int
 	Market    ISSMoexMarket
 	Name      string
-	Secid     string
+	Ticker    string
 	ShortName string
 }
 

@@ -17,6 +17,28 @@ func NewOpinionPostgres(db *sql.DB) *OpinionPostgres {
 	return &OpinionPostgres{db: db}
 }
 
+func (pg *OpinionPostgres) AttachToPosition(ctx context.Context, opinionID int, positionID int) error {
+	const op = "PositionPostgres.AttachOpinion"
+
+	// queryString := `INSERT INTO opinions_on_positions (position_id, opinion_id) VALUES ($1, $2)
+	// 	ON CONFLICT (position_id, opinion_id) DO NOTHING;`
+	queryString := `WITH deleted AS (
+	    DELETE FROM opinions_on_positions
+	    WHERE position_id = $1 AND opinion_id = $2
+	    RETURNING *
+		)
+		INSERT INTO opinions_on_positions (position_id, opinion_id)
+		SELECT $1, $2
+		WHERE NOT EXISTS (SELECT 1 FROM deleted);`
+
+	_, err := pg.db.ExecContext(ctx, queryString, positionID, opinionID)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
 func (pg *OpinionPostgres) Delete(ctx context.Context, id int, userID int) error {
 	const op = "OpinionPostgres.Delete"
 
@@ -41,15 +63,15 @@ func (pg *OpinionPostgres) Insert(ctx context.Context, o entity.Opinion) (entity
 	const op = "OpinionPostgres.Insert"
 
 	queryString := `INSERT INTO opinions (date, exchange, expert_id, text, security_id,  
-    security_type, source_link, target_price, type, user_id) VALUES ($1, $2, $3, $4, $5,
-		$6, $7, $8, $9, $10) RETURNING id, date, exchange, expert_id, text, security_id,
-    security_type, source_link, target_price, type;`
+    security_type, source_link, target_price, ticker, type, user_id) VALUES ($1, $2, $3, $4, $5,
+		$6, $7, $8, $9, $10, $11) RETURNING id, date, exchange, expert_id, text, security_id,
+    security_type, source_link, target_price, ticker, type;`
 
 	var r entity.Opinion
-	err := pg.db.QueryRowContext(ctx, queryString, o.Date, o.Exchange, o.ExpertID, o.Text, o.SecurityID,
-		o.SecurityType, o.SourceLink, o.TargetPrice, o.Type, o.UserID).
-		Scan(&r.ID, &r.Date, &r.Exchange, &r.ExpertID, &r.Text, &r.SecurityID, &r.SecurityType,
-			&r.SourceLink, &r.TargetPrice, &r.Type)
+	err := pg.db.QueryRowContext(ctx, queryString, o.Date.Time, o.Exchange, o.ExpertID, o.Text, o.SecurityID,
+		o.SecurityType, o.SourceLink, o.TargetPrice, o.Ticker, o.Type, o.UserID).
+		Scan(&r.ID, &r.Date.Time, &r.Exchange, &r.ExpertID, &r.Text, &r.SecurityID, &r.SecurityType,
+			&r.SourceLink, &r.TargetPrice, &r.Ticker, &r.Type)
 	if err != nil {
 		return entity.Opinion{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -74,10 +96,13 @@ func (pg *OpinionPostgres) Update(ctx context.Context, o entity.Opinion) error {
 
 func (pg *OpinionPostgres) GetOpinionsList(ctx context.Context, f entity.OpinionFilters,
 	userID int) ([]entity.Opinion, error) {
-	const op = "OpinionPostgres.GetListByUserId"
+	const op = "OpinionPostgres.GetOpinionsList"
 
-	queryString := `SELECT id, date, exchange, expert_id, text, security_id, security_type,
-	 source_link, target_price, type FROM opinions WHERE user_id = $1`
+	queryString := `SELECT o.id, date, exchange, expert_id, text, security_id, security_type,
+		source_link, target_price, type, name AS expertname
+	FROM opinions o
+	LEFT JOIN experts e ON e.id = o.expert_id
+	WHERE o.user_id = $1`
 	args := []interface{}{userID}
 	count := 2
 
@@ -113,7 +138,7 @@ func (pg *OpinionPostgres) GetOpinionsList(ctx context.Context, f entity.Opinion
 	for rows.Next() {
 		var o entity.Opinion
 		err = rows.Scan(&o.ID, &o.Date.Time, &o.Exchange, &o.ExpertID, &o.Text, &o.SecurityID,
-			&o.SecurityType, &o.SourceLink, &o.TargetPrice, &o.Type)
+			&o.SecurityType, &o.SourceLink, &o.TargetPrice, &o.Type, &o.Expert.Name)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}

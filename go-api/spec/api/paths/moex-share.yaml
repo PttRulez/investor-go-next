@@ -1,12 +1,12 @@
 get:
   summary: Получение информации по акции, торгуемой на мск бирже
   parameters:
-    - name: secid
+    - name: ticker
       in: path
       schema:
         type: string
       required: true
-      decription: secid акции
+      decription: ticker акции
   responses:
     "200":
       description: удачный запрос

@@ -1,4 +1,5 @@
 import { IMoexShareResponse } from '@/types/apis/go-api';
+import { SecurityType } from '@/types/enums';
 import { AxiosInstance } from 'axios';
 
 export class InvestorMoexShare {
@@ -12,6 +13,7 @@ export class InvestorMoexShare {
     return this.api
       .get(`/moex-share/${ticker}`)
       .then(res => {
+        res.data.securityType = SecurityType.SHARE;
         return res.data;
       })
       .catch(err => {

@@ -11,12 +11,12 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Request) {
-	const op = "MoexBondController.GetInfoBySecid"
+func (c *MoexBondController) GetInfoByTicker(w http.ResponseWriter, r *http.Request) {
+	const op = "MoexBondController.GetInfoByTicker"
 
 	ctx := r.Context()
 
-	moexBond, err := c.moexBondService.GetBySecid(ctx, chi.URLParam(r, "secid"))
+	moexBond, err := c.moexBondService.GetByTicker(ctx, chi.URLParam(r, "ticker"))
 	if err != nil {
 		err = fmt.Errorf("%s: %w", op, err)
 		c.logger.Error(err)
@@ -28,7 +28,7 @@ func (c *MoexBondController) GetInfoBySecid(w http.ResponseWriter, r *http.Reque
 }
 
 type MoexBondService interface {
-	GetBySecid(ctx context.Context, isin string) (entity.Bond, error)
+	GetByTicker(ctx context.Context, isin string) (entity.Bond, error)
 }
 type MoexBondController struct {
 	logger          Logger

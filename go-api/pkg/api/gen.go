@@ -80,8 +80,8 @@ type CreateDealRequest struct {
 	Exchange     Exchange     `json:"exchange" validate:"required,is-exchange"`
 	PortfolioId  int          `json:"portfolioId"`
 	Price        float64      `json:"price"`
-	SecId        string       `json:"secId"`
 	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
+	Ticker       string       `json:"ticker"`
 	Type         DealType     `json:"type"`
 }
 
@@ -101,6 +101,7 @@ type CreateOpinionRequest struct {
 	SourceLink   *string            `json:"sourceLink,omitempty"`
 	TargetPrice  *float64           `json:"targetPrice,omitempty"`
 	Text         string             `json:"text" validate:"required"`
+	Ticker       string             `json:"ticker" validate:"required"`
 	Type         OpinionType        `json:"type" validate:"required,opinionType"`
 }
 
@@ -127,8 +128,8 @@ type DealResponse struct {
 	Id           *int         `json:"id,omitempty"`
 	PortfolioId  int          `json:"portfolioId"`
 	Price        float64      `json:"price"`
-	SecId        string       `json:"secId"`
 	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
+	Ticker       string       `json:"ticker"`
 	Type         DealType     `json:"type"`
 }
 
@@ -207,8 +208,8 @@ type MoexBondResponse struct {
 	Market    ISSMoexMarket      `json:"market"`
 	MatDate   openapi_types.Date `json:"matDate"`
 	Name      string             `json:"name"`
-	Secid     string             `json:"secid"`
 	ShortName string             `json:"shortName"`
+	Ticker    string             `json:"ticker"`
 }
 
 // MoexSecurityResponse defines model for MoexSecurityResponse.
@@ -219,8 +220,8 @@ type MoexSecurityResponse struct {
 	LotSize   int           `json:"lotSize"`
 	Market    ISSMoexMarket `json:"market"`
 	Name      string        `json:"name"`
-	Secid     string        `json:"secid"`
 	ShortName string        `json:"shortName"`
+	Ticker    string        `json:"ticker"`
 }
 
 // MoexShareResponse defines model for MoexShareResponse.
@@ -230,6 +231,7 @@ type MoexShareResponse = MoexSecurityResponse
 type OpinionResponse struct {
 	Date         openapi_types.Date `json:"date"`
 	Exchange     Exchange           `json:"exchange" validate:"required,is-exchange"`
+	Expert       ExpertResponse     `json:"expert"`
 	ExpertId     int                `json:"expertId"`
 	Id           int                `json:"id"`
 	SecurityId   int                `json:"securityId"`
@@ -237,6 +239,7 @@ type OpinionResponse struct {
 	SourceLink   *string            `json:"sourceLink,omitempty"`
 	TargetPrice  *float64           `json:"targetPrice,omitempty"`
 	Text         string             `json:"text"`
+	Ticker       string             `json:"ticker"`
 	Type         OpinionType        `json:"type" validate:"required,opinionType"`
 }
 
@@ -256,15 +259,19 @@ type PortfolioResponse struct {
 
 // PositionResponse defines model for PositionResponse.
 type PositionResponse struct {
-	Amount       int          `json:"amount"`
-	AveragePrice float64      `json:"averagePrice"`
-	Comment      *string      `json:"comment,omitempty"`
-	CurrentCost  int          `json:"currentCost"`
-	CurrentPrice float64      `json:"currentPrice"`
-	SecurityType SecurityType `json:"securityType" validate:"required,securityType"`
-	ShortName    string       `json:"shortName"`
-	TargetPrice  *float64     `json:"targetPrice,omitempty"`
-	Ticker       string       `json:"ticker"`
+	Amount        int               `json:"amount"`
+	AveragePrice  float64           `json:"averagePrice"`
+	Comment       *string           `json:"comment,omitempty"`
+	CurrentCost   int               `json:"currentCost"`
+	CurrentPrice  float64           `json:"currentPrice"`
+	Id            int               `json:"id"`
+	OpinionIds    []int             `json:"opinionIds"`
+	Opinions      []OpinionResponse `json:"opinions"`
+	PortfolioName string            `json:"portfolioName"`
+	SecurityType  SecurityType      `json:"securityType" validate:"required,securityType"`
+	ShortName     string            `json:"shortName"`
+	TargetPrice   *float64          `json:"targetPrice,omitempty"`
+	Ticker        string            `json:"ticker"`
 }
 
 // RegisterUserRequest defines model for RegisterUserRequest.
