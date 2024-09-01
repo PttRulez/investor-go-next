@@ -166,6 +166,7 @@ func Run() {
 		// Positions
 		r.Route("/position", func(r chi.Router) {
 			r.Get("/", positionController.AllUserPositions)
+			r.Patch("/{id}", positionController.UpdatePosition)
 		})
 	})
 

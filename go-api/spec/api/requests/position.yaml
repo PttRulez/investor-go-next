@@ -1,0 +1,11 @@
+components:
+  schemas:
+    UpdatePositionRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+          nullable: true
+        targetPrice:
+          type: number
+          format: double

@@ -1,25 +1,21 @@
 'use client';
+import dayjs from '@/dayjs.config';
+import { IOpinionResponse } from '@/types/apis/go-api';
+import { OpinionType } from '@/types/enums';
+import BackHandIcon from '@mui/icons-material/BackHand';
+import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
 import { Box, Dialog, IconButton, Typography } from '@mui/material';
+import Grid from '@mui/material/Unstable_Grid2/Grid2';
 import {
   MRT_ColumnDef,
   MaterialReactTable,
   useMaterialReactTable,
 } from 'material-react-table';
-import { SyntheticEvent, useMemo, useState } from 'react';
-import RemoveRedEyeIcon from '@mui/icons-material/RemoveRedEye';
-import BackHandIcon from '@mui/icons-material/BackHand';
-import { useQuery } from '@tanstack/react-query';
-import investorService from '@/axios/investor/investor.service';
-import dayjs from '@/dayjs.config';
-import { OpinionType } from '@/types/enums';
-import { OpinionFilters } from '@/validation';
-import { IOpinionResponse } from '@/types/apis/go-api';
-import Grid from '@mui/material/Unstable_Grid2/Grid2';
+import { SyntheticEvent, useEffect, useMemo, useState } from 'react';
 import PositionList from './PositionList';
 
 type Props = {
   opinions: IOpinionResponse[];
-  // filters: OpinionFilters;
   ticker: string;
 };
 
@@ -42,17 +38,9 @@ const OpinionsTable = ({ opinions, ticker }: Props) => {
     null,
   );
 
-  // const { data: opinions } = useQuery({
-  //   queryKey: [
-  //     'opinions',
-  //     {
-  //       exchange: filters.exchange,
-  //       securityId: filters.securityId,
-  //       securityType: filters.securityType,
-  //     },
-  //   ],
-  //   queryFn: () => investorService.opinion.getOpinionsList(filters),
-  // });
+  useEffect(() => {
+    console.log('opinionIdToAttach', opinionIdToAttach);
+  }, [opinionIdToAttach]);
 
   const columns = useMemo<Array<MRT_ColumnDef<IOpinionResponse>>>(
     () => [
@@ -91,6 +79,7 @@ const OpinionsTable = ({ opinions, ticker }: Props) => {
         header: '',
         accessorKey: 'text',
         Cell: ({ cell, row }) => {
+          console.log('row', row);
           return (
             <Grid container spacing={3} justifyContent="space-between">
               <Grid xs={6}>

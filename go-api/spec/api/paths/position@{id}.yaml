@@ -1,0 +1,24 @@
+patch:
+  summary: Редактирование позиции
+  parameters:
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник позиции
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/position.yaml#/components/schemas/UpdatePositionRequest
+  responses:
+    "200":
+      description: позиция отредактирована
+    "400":
+      description: неверный формат JSON
+    "404":
+      description: такой позиции нет или она не пренадлежит юзеру
+    "500":
+      description: другие ошибки, должен быть текст в ответе

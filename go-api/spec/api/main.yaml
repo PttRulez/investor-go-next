@@ -24,6 +24,8 @@ paths:
     $ref: ./paths/portfolio.yaml
   /portfolio/{id}:
     $ref: ./paths/portfolio@{id}.yaml
+  /position/{id}:
+    $ref: ./paths/position@{id}.yaml
   /register:
     $ref: ./paths/auth.yaml#/~1register
   /transaction:

@@ -307,6 +307,12 @@ type UpdatePortfolioRequest struct {
 	Name     *string `json:"name,omitempty"`
 }
 
+// UpdatePositionRequest defines model for UpdatePositionRequest.
+type UpdatePositionRequest struct {
+	Comment     *string  `json:"comment"`
+	TargetPrice *float64 `json:"targetPrice,omitempty"`
+}
+
 // GetOpinionListParams defines parameters for GetOpinionList.
 type GetOpinionListParams struct {
 	// ExpertId id эксперта
@@ -339,6 +345,9 @@ type PostPortfolioJSONRequestBody = CreatePortfolioRequest
 
 // PutPortfolioJSONRequestBody defines body for PutPortfolio for application/json ContentType.
 type PutPortfolioJSONRequestBody = UpdatePortfolioRequest
+
+// PatchPositionIdJSONRequestBody defines body for PatchPositionId for application/json ContentType.
+type PatchPositionIdJSONRequestBody = UpdatePositionRequest
 
 // PostRegisterJSONRequestBody defines body for PostRegister for application/json ContentType.
 type PostRegisterJSONRequestBody = RegisterUserRequest

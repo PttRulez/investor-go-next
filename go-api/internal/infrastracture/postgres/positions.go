@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/lib/pq"
 	"github.com/pttrulez/investor-go/internal/entity"
@@ -18,6 +19,45 @@ type PositionPostgres struct {
 
 func NewPositionPostgres(db *sql.DB) *PositionPostgres {
 	return &PositionPostgres{db: db}
+}
+
+func (pg *PositionPostgres) AddInfo(ctx context.Context, i entity.PositionUpdateInfo) error {
+	const op = "PositionPostgres.Update"
+	var (
+		queryString = "UPDATE positions SET "
+		count       = 1
+		s           = make([]string, 0)
+		args        = make([]interface{}, 0)
+	)
+
+	if i.Comment != nil {
+		s = append(s, fmt.Sprintf("comment = $%d", count))
+		args = append(args, *i.Comment)
+		count++
+	}
+	if i.TargetPrice != nil {
+		s = append(s, fmt.Sprintf("target_price = $%d", count))
+		args = append(args, *i.TargetPrice)
+		count++
+	}
+	queryString += strings.Join(s, ", ")
+	queryString += fmt.Sprintf(" WHERE id = $%d;", count)
+	args = append(args, i.UserID)
+
+	result, err := pg.db.ExecContext(ctx, queryString, args...)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if rowsAffected == 0 {
+		return database.ErrNotFound
+	}
+
+	return nil
 }
 
 func (pg *PositionPostgres) GetPositionForSecurity(ctx context.Context,
@@ -92,7 +132,7 @@ func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, us
 			COALESCE(
 		    json_agg(
 		        JSON_BUILD_OBJECT(
-	            'opinion_id', o.id,
+	            'id', o.id,
 	            'date', o.date,
 	            'sourceLink', o.source_link,
 	            'targetPrice', o.target_price,
@@ -163,7 +203,6 @@ func (pg *PositionPostgres) GetListByPortfolioID(ctx context.Context, id int, us
 		return nil, fmt.Errorf("%s: %w", op, rows.Err())
 	}
 
-	fmt.Printf("positions: %#v", positions)
 	return positions, nil
 }
 
@@ -201,7 +240,7 @@ func (pg *PositionPostgres) GetListByUserID(ctx context.Context, userID int) (
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		fmt.Println("opinionIDs", opinionIDs)
+
 		p.OpinionIDs = convertPqInt64ArrayToIntSlice(opinionIDs)
 		positions = append(positions, p)
 	}

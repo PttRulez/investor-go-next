@@ -113,8 +113,6 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 					float64(bondPositions[i].Amount))
 		}
 
-		fmt.Printf("sharePrices %#v", sharePrices)
-
 		for i := range len(sharePositions) {
 			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Ticker]
 			sharePositions[i].CurrentCost = int(

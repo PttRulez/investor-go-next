@@ -290,6 +290,31 @@ paths:
           description: Такого портфолио нет, либо не пренадлежит текущему юзеру
         '500':
           description: Другие ошибки, должен быть текст в ответе
+  /position/{id}:
+    patch:
+      summary: Редактирование позиции
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник позиции
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePositionRequest'
+      responses:
+        '200':
+          description: позиция отредактирована
+        '400':
+          description: неверный формат JSON
+        '404':
+          description: такой позиции нет или она не пренадлежит юзеру
+        '500':
+          description: другие ошибки, должен быть текст в ответе
   /register:
     post:
       summary: Регистрация нового юзера
@@ -797,6 +822,15 @@ components:
         - sharePositions
         - totalCost
         - transactions
+    UpdatePositionRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+          nullable: true
+        targetPrice:
+          type: number
+          format: double
     Role:
       type: string
       enum:

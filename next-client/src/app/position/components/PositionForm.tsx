@@ -65,6 +65,11 @@ const PositionForm = ({
         helperText={formState.errors.targetPrice?.message}
         label={'Целевая цена'}
         name={'targetPrice'}
+        onChange={(e: any) => {
+          if (e.target.value != '') {
+            setValue('targetPrice', parseFloat(e.target.value));
+          }
+        }}
         type="number"
         value={watchAll.targetPrice}
       />

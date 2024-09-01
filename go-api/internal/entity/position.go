@@ -19,3 +19,10 @@ type Position struct {
 	Ticker        string
 	UserID        int
 }
+
+type PositionUpdateInfo struct {
+	ID          int
+	Comment     *string
+	TargetPrice *float64
+	UserID      int
+}

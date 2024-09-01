@@ -22,6 +22,9 @@ import { SyntheticEvent, useMemo, useState } from 'react';
 import PortfolioTableFooter from './PortfolioTableFooter';
 import PortfolioTableToolbar from './PortfolioTableToolbar';
 import { SecurityType } from '@/types/enums';
+import NextLink from 'next/link';
+import Link from '@mui/material/Link';
+import PositionDetails from './PositionDetails';
 
 const defaultMRTOptions = getDefaultMRTOptions<IPositionResponse>();
 
@@ -34,7 +37,6 @@ const PortfolioTable = ({
 }) => {
   const [positionToEdit, setPositionToEdit] =
     useState<IPositionResponse | null>(null);
-  const router = useRouter();
 
   const columns = useMemo<Array<MRT_ColumnDef<IPositionResponse>>>(
     () => [
@@ -43,13 +45,45 @@ const PortfolioTable = ({
         accessorKey: 'shortName',
         Cell: ({ row }) => {
           const p = row.original;
+          let href = '';
+          if (p.securityType) {
+            let secType;
+            switch (p.securityType) {
+              case SecurityType.BOND:
+                secType = 'bonds';
+                break;
+              case SecurityType.SHARE:
+                secType = 'shares';
+                break;
+              default:
+                secType = 'shares';
+            }
+            href = `/${secType}/moex/${p.ticker}`;
+          }
+          console.log('p', p);
           return (
             <Typography variant="body1">
-              {p.shortName}
+              {p.shortName && (
+                <>
+                  <Link
+                    component={NextLink}
+                    sx={{
+                      color: 'info.main',
+                      textDecoration: 'none',
+                    }}
+                    href={href}
+                  >
+                    {p.shortName && `${p.shortName}`}
+                  </Link>
+                  {' - '}
+                </>
+              )}
               <Box
+                component="span"
                 sx={{
                   fontSize: '0.8rem',
                   color: 'gray',
+                  paddingLeft: '5px',
                 }}
               >
                 {p.ticker}
@@ -73,6 +107,13 @@ const PortfolioTable = ({
         header: 'Текущая цена',
         accessorKey: 'currentPrice',
         size: 5,
+        accessorFn: position => {
+          if (!position.currentPrice) return '';
+          if (position.targetPrice) {
+            return `${position.currentPrice} (${position.targetPrice})`;
+          }
+          return position.currentPrice;
+        },
       },
       {
         header: 'Стоимость',
@@ -157,41 +198,23 @@ const PortfolioTable = ({
     ] as IPositionResponse[];
   }, [portfolio]);
 
+  // Свойства одной строчки таблицы
   const muiTableBodyRowProps = ({
     row,
   }: {
     row: MRT_Row<IPositionResponse>;
   }) => {
-    let sx: SxProps = {
+    const sx: SxProps = {
       backgroundColor: 'inherit',
     };
 
     if (row.original.shortName == undefined) {
       sx.backgroundColor = 'rgba(0, 0, 0, 0.05)';
-    } else {
-      sx.cursor = 'pointer';
     }
 
     return {
       sx,
       hover: false,
-      onClick: () => {
-        if (row.original.securityType) {
-          let secType;
-          switch (row.original.securityType) {
-            case SecurityType.BOND:
-              secType = 'bonds';
-              break;
-            case SecurityType.SHARE:
-              secType = 'shares';
-              break;
-            default:
-              secType = 'shares';
-          }
-
-          router.push(`/${secType}/moex/${row.original.ticker}`);
-        }
-      },
     };
   };
 
@@ -249,10 +272,15 @@ const PortfolioTable = ({
         profitability={portfolio.profitability}
       />
     ),
-    renderDetailPanel: ({ row }) =>
-      row.original.comment || row.original.opinions.length > 0
-        ? row.original.comment
-        : null,
+    renderDetailPanel: ({ row }) => {
+      console.log(
+        row.original.comment,
+        row.original.comment || row.original.opinions?.length > 0,
+      );
+      return row.original.comment || row.original.opinions?.length > 0 ? (
+        <PositionDetails position={row.original} />
+      ) : null;
+    },
   });
 
   return (
