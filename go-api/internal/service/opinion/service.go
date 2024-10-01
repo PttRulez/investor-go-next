@@ -2,76 +2,34 @@ package opinion
 
 import (
 	"context"
-	"errors"
-	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/infrastracture/database"
-	"github.com/pttrulez/investor-go/internal/service"
+	"github.com/pttrulez/investor-go/internal/domain"
 )
 
-func (s *Service) AttachToPosition(ctx context.Context, opinionID, positionID int) error {
-	const op = "OpinionService.AttachToPosition"
-
-	err := s.repo.AttachToPosition(ctx, opinionID, positionID)
-	if err != nil {
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	return nil
+type ExpertRepository interface {
+	Insert(ctx context.Context, expert domain.Expert) (domain.Expert, error)
+	Delete(ctx context.Context, id int, userID int) error
+	Update(ctx context.Context, expert domain.Expert, userID int) (domain.Expert, error)
+	GetOneByID(ctx context.Context, id int, userID int) (domain.Expert, error)
+	GetListByUserID(ctx context.Context, userID int) ([]domain.Expert, error)
 }
 
-func (s *Service) CreateOpinion(ctx context.Context, o entity.Opinion) (entity.Opinion, error) {
-	const op = "OpinionService.CreateOpinion"
-
-	e, err := s.repo.Insert(ctx, o)
-	if err != nil {
-		return e, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return e, nil
-}
-
-func (s *Service) DeleteOpinionByID(ctx context.Context, id int, userID int) error {
-	const op = "OpinionService.DeleteOpinion"
-
-	err := s.repo.Delete(ctx, id, userID)
-	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
-			return service.ErrEntityNotFound
-		}
-		return fmt.Errorf("%s: %w", op, err)
-	}
-
-	return nil
-}
-
-func (s *Service) GetOpinions(ctx context.Context, f entity.OpinionFilters, userID int) (
-	[]entity.Opinion, error) {
-	const op = "OpinionService.GetOpinions"
-
-	o, err := s.repo.GetOpinionsList(ctx, f, userID)
-	if err != nil {
-		return o, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return o, nil
-}
-
-type Repository interface {
+type OpinionRepository interface {
 	AttachToPosition(ctx context.Context, opinionID, positionID int) error
 	Delete(ctx context.Context, id int, userID int) error
-	GetOpinionsList(ctx context.Context, f entity.OpinionFilters, userID int) ([]entity.Opinion,
+	GetOpinionsList(ctx context.Context, f domain.OpinionFilters, userID int) ([]domain.Opinion,
 		error)
-	Insert(ctx context.Context, o entity.Opinion) (entity.Opinion, error)
+	Insert(ctx context.Context, o domain.Opinion) (domain.Opinion, error)
 }
 
 type Service struct {
-	repo Repository
+	expertRepo  ExpertRepository
+	opinionRepo OpinionRepository
 }
 
-func NewOpinionService(repo Repository) *Service {
+func NewOpinionService(expertRepo ExpertRepository, opinionRepo OpinionRepository) *Service {
 	return &Service{
-		repo: repo,
+		expertRepo:  expertRepo,
+		opinionRepo: opinionRepo,
 	}
 }

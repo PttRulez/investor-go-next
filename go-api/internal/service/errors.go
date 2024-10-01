@@ -4,7 +4,7 @@ import (
 	"errors"
 )
 
-var ErrEntityNotFound = errors.New("not found")
+var ErrdomainNotFound = errors.New("not found")
 
 func NewArgumentsError(msg string) ArgumentsError {
 	if msg == "" {

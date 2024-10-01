@@ -1,0 +1,4 @@
+package: contracts
+generate:
+  models: true
+output: internal/api/contracts/contracts.go

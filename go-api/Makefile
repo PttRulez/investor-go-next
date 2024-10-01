@@ -7,11 +7,11 @@ build:
 	@go build -o bin/app ./cmd/app
 
 genapi:
-	npx @redocly/openapi-cli@latest bundle spec/api/main.yaml > spec/api/api.yaml
-	oapi-codegen --config=spec/api/oapi-config.yaml spec/api/api.yaml
+	npx @redocly/openapi-cli@latest bundle internal/api/spec/main.yaml > internal/api/spec/api.yaml
+	oapi-codegen --config=internal/api/spec/oapi-config.yaml internal/api/spec/api.yaml
 
 geniss:
-	oapi-codegen --config=spec/iss/oapi-config.yaml spec/iss/main.yaml
+	oapi-codegen --config=internal/infrastructure/issclient/spec/oapi-config.yaml internal/infrastructure/issclient/spec/main.yaml
 
 lint:
 	golangci-lint run

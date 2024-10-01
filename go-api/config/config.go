@@ -6,7 +6,15 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/pttrulez/investor-go/internal/api"
 )
+
+type APIConfig struct {
+	APIHost         string
+	APIPort         int
+	AllowedCors     []string
+	TokenAuthSecret string
+}
 
 type PostgresConfig struct {
 	DBName   string
@@ -18,12 +26,8 @@ type PostgresConfig struct {
 }
 
 type Config struct {
-	APIHost         string
-	APIPort         int
-	AllowedCors     []string
-	JwtSecret       string
-	Pg              PostgresConfig
-	TokenAuthSecret string
+	API api.Config
+	Pg  PostgresConfig
 }
 
 func MustLoad() *Config {
@@ -44,15 +48,18 @@ func MustLoad() *Config {
 	apiPort, _ := strconv.Atoi(os.Getenv("GO_API_PORT"))
 	apiHost := os.Getenv("GO_API_HOST")
 	corsString := os.Getenv("CORS_ALLOWED_ORIGINS")
-	jwtSecret := os.Getenv("JWT_SECRET")
+	allowedCors := strings.Split(corsString, ",")
 	tokenAuthSecret := os.Getenv("TOKEN_AUTH_SECRET")
 
-	return &Config{
-		AllowedCors:     strings.Split(corsString, ","),
+	apiConfig := api.Config{
+		AllowedCors:     allowedCors,
 		APIPort:         apiPort,
 		APIHost:         apiHost,
-		JwtSecret:       jwtSecret,
-		Pg:              pgConfig,
 		TokenAuthSecret: tokenAuthSecret,
+	}
+
+	return &Config{
+		API: apiConfig,
+		Pg:  pgConfig,
 	}
 }

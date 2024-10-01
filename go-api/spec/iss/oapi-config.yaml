@@ -1,4 +1,0 @@
-package: iss
-generate:
-  models: true
-output: pkg/iss/gen.go

@@ -1,0 +1,4 @@
+package: issclient
+generate:
+  models: true
+output: internal/infrastructure/issclient/contracts.go

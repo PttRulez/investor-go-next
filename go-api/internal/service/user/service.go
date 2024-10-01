@@ -4,13 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
-	"github.com/pttrulez/investor-go/internal/entity"
-	"github.com/pttrulez/investor-go/internal/infrastracture/database"
-
-	"github.com/go-chi/jwtauth/v5"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/pttrulez/investor-go/internal/domain"
+	"github.com/pttrulez/investor-go/internal/infrastructure/database"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,42 +15,28 @@ var (
 	ErrWrongPassword = errors.New("неправильный пароль")
 )
 
-const tokentExpHours = 6
 
-func (s *Service) LoginUser(ctx context.Context, model entity.User) (string, error) {
+
+func (s *Service) LoginUser(ctx context.Context, model domain.User) (domain.User, error) {
 	const op = "UserService.LoginUser"
 
 	user, err := s.userRepo.GetByEmail(ctx, model.Email)
 	if errors.Is(err, database.ErrNotFound) {
-		return "", ErrWrongUsername
+		return domain.User{}, ErrWrongUsername
 	}
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return domain.User{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(model.Password))
 	if err != nil {
-		return "", ErrWrongPassword
+		return domain.User{}, ErrWrongPassword
 	}
 
-	claims := jwt.MapClaims{
-		"id":    user.ID,
-		"email": user.Email,
-		"name":  user.Name,
-		"role":  user.Role,
-	}
-
-	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*tokentExpHours))
-
-	_, tokenString, err := s.tokenAuth.Encode(claims)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
+	return user, nil
 }
 
-func (s *Service) RegisterUser(ctx context.Context, user entity.User) error {
+func (s *Service) RegisterUser(ctx context.Context, user domain.User) error {
 	const op = "UserService.RegisterUser"
 
 	// Check if user with this email already exists
@@ -81,18 +63,16 @@ func (s *Service) RegisterUser(ctx context.Context, user entity.User) error {
 }
 
 type Repository interface {
-	Insert(ctx context.Context, u entity.User) error
-	GetByEmail(ctx context.Context, email string) (entity.User, error)
+	Insert(ctx context.Context, u domain.User) error
+	GetByEmail(ctx context.Context, email string) (domain.User, error)
 }
 
 type Service struct {
-	userRepo  Repository
-	tokenAuth *jwtauth.JWTAuth
+	userRepo Repository
 }
 
-func NewUserService(repo Repository, tokenAuth *jwtauth.JWTAuth) *Service {
+func NewUserService(repo Repository) *Service {
 	return &Service{
-		tokenAuth: tokenAuth,
-		userRepo:  repo,
+		userRepo: repo,
 	}
 }
