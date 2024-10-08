@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	"github.com/pttrulez/investor-go/internal/api"
+	api "github.com/pttrulez/investor-go/internal/infrastructure/http-server"
 )
 
 type APIConfig struct {

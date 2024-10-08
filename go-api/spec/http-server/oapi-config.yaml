@@ -1,0 +1,4 @@
+package: contracts
+generate:
+  models: true
+output: internal/infrastructure/http-server/contracts/contracts.go

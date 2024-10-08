@@ -26,17 +26,12 @@ const options: NextAuthOptions = {
         },
       },
       async authorize(credentials) {
-        console.log('credentials', credentials);
         if (!credentials) return null;
 
         try {
           const response = await axios.post(
             `${process.env.NEXT_PUBLIC_INVESTOR_API_INTERNAL_URL!}/login`,
             credentials,
-          );
-          console.log(
-            `${process.env.NEXT_PUBLIC_INVESTOR_API_INTERNAL_URL!}/login`,
-            response,
           );
           if (!response) {
             return null;

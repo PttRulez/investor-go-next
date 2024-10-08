@@ -1,0 +1,21 @@
+components:
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      required: [amount, date, portfolioId, type]
+      properties:
+        amount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        type:
+          $ref: ../shared/enums.yaml#/components/schemas/TransactionType

@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/database"
+	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
@@ -14,10 +14,10 @@ func (s *Service) GetBondByTicker(ctx context.Context, ticker string) (domain.Bo
 	const op = "MoexBondService.GetByTicker"
 
 	// Пробуем достать из нашей бд
-	bond, err := s.bondRepo.GetByTicker(ctx, ticker)
+	bond, err := s.repo.GetMoexBond(ctx, ticker)
 
 	// Если её там нет то делаем запрос на МОЕХ и записываем в бд
-	if errors.Is(err, database.ErrNotFound) {
+	if errors.Is(err, storage.ErrNotFound) {
 		var err error
 		bond, err = s.createNewBondFromMoexISS(ctx, ticker)
 		if err != nil {
@@ -69,7 +69,7 @@ func (s *Service) createNewBondFromMoexISS(ctx context.Context, ticker string) (
 	bond.LotSize = fullInfo.LotSize
 
 	// сохраняем в бд
-	b, err := s.bondRepo.Insert(ctx, bond)
+	b, err := s.repo.InsertMoexBond(ctx, bond)
 	if err != nil {
 		return domain.Bond{}, err
 	}

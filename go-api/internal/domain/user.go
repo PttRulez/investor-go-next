@@ -12,7 +12,7 @@ type User struct {
 	HashedPassword string
 	ID             int
 	Name           string
+	Password       string
 	Role           Role
-
-	Password string
+	TgChatID       *int
 }

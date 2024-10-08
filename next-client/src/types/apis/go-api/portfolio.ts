@@ -1,21 +1,55 @@
 import { SecurityType } from '@/types/enums';
-import { IDealResponse } from './deal';
-import { ITransactionResponse } from './transaction';
 import { IOpinionResponse } from './opinion';
+import { DealType, Exchange } from '@/types/enums';
+import { TransactionType } from '@/types/enums';
+
+export interface ICouponResponse {
+  bondsCount: number;
+  couponAmount: number;
+  date: Date;
+  exchange: Exchange;
+  id: number;
+  paymentPeriod: string;
+  portfolioId: number;
+  ticker: string;
+}
+
+export interface IDealResponse {
+  amount: number;
+  date: Date;
+  exchange: Exchange;
+  id: number;
+  portfolioId: number;
+  price: number;
+  securityId: number;
+  securityType: SecurityType;
+  ticker: string;
+  type: DealType;
+}
+
+export interface IDividendResponse {
+  date: Date;
+  exchange: Exchange;
+  id: number;
+  paymentPeriod: string;
+  paymentPerShare: number;
+  portfolioId: number;
+  ticker: string;
+  sharesCount: number;
+}
 
 export interface IPortfolioResponse {
-  bondDeals: IDealResponse[];
   bondPositions: IPositionResponse[];
   cash: number;
   cashouts: ITransactionResponse[];
   cashoutsSum: number;
   compound: boolean;
+  deals: IDealResponse[];
   deposits: ITransactionResponse[];
   depositsSum: number;
   id: number;
   name: string;
   profitability: number;
-  shareDeals: IDealResponse[];
   sharePositions: IPositionResponse[];
   totalCost: number;
 }
@@ -48,4 +82,11 @@ export interface IPortfolioPositionsResponse {
   // tradeSaldo?: number;
   sharePositions: Array<IPositionResponse>;
   sharesTotal: number;
+}
+
+export interface ITransactionResponse {
+  id: number;
+  amount: number;
+  type: TransactionType;
+  date: Date;
 }

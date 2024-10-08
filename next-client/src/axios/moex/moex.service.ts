@@ -13,8 +13,7 @@ export const moexService = {
       .get<IMoexISSSearchResults>(`/securities.json?q=${searchParam}`)
       .then(res => {
         return res;
-      })
-      .catch(err => console.log('fmpService.search', err));
+      });
 
     if (res) {
       return res.data;

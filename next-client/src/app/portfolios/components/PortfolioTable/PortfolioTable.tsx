@@ -60,7 +60,7 @@ const PortfolioTable = ({
             }
             href = `/${secType}/moex/${p.ticker}`;
           }
-          console.log('p', p);
+
           return (
             <Typography variant="body1">
               {p.shortName && (
@@ -123,28 +123,6 @@ const PortfolioTable = ({
           return position.currentCost?.toLocaleString('ru-RU');
         },
       },
-      // {
-      //   header: 'Коммент',
-      //   accessorKey: 'comment',
-      //   Cell: ({ row }) => {
-      //     return (
-      //       <LightTooltip title={row.original.comment}>
-      //         <Typography
-      //           sx={{
-      //             overflow: 'hidden',
-      //             textOverflow: 'ellipsis',
-      //             display: '-webkit-box',
-      //             WebkitLineClamp: '2',
-      //             WebkitBoxOrient: 'vertical',
-      //           }}
-      //         >
-      //           {row.original.comment}
-      //         </Typography>
-      //       </LightTooltip>
-      //     );
-      //   },
-      //   size: 5,
-      // },
       {
         header: '',
         Header: () => (
@@ -273,10 +251,6 @@ const PortfolioTable = ({
       />
     ),
     renderDetailPanel: ({ row }) => {
-      console.log(
-        row.original.comment,
-        row.original.comment || row.original.opinions?.length > 0,
-      );
       return row.original.comment || row.original.opinions?.length > 0 ? (
         <PositionDetails position={row.original} />
       ) : null;

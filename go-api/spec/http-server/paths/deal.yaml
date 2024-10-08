@@ -1,0 +1,24 @@
+post:
+  summary: Создание новой сделки
+  parameters:
+    - name: portfolioId
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник портфолио
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/deal.yaml#/components/schemas/CreateDealRequest
+  responses:
+    "201":
+      description: сделка добавлена
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе

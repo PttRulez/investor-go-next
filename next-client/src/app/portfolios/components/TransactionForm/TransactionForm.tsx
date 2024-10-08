@@ -23,7 +23,7 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
     useForm<CreateTransactionData>({
       defaultValues: {
         amount: undefined,
-        date: dayjs().toDate(),
+        date: dayjs().format('YYYY-MM-DD'),
         portfolioId,
         type: undefined,
       },
@@ -47,9 +47,6 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
     createTransaction.mutate(data);
   };
 
-  useEffect(() => {
-    console.log('watchAll', watchAll);
-  }, [watchAll]);
   return (
     <Box
       onSubmit={handleSubmit(onSubmit)}
@@ -86,7 +83,7 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
           handleClear={() => resetField('date')}
           onChange={newValue => {
             if (newValue) {
-              setValue('date', newValue?.toDate());
+              setValue('date', newValue?.format('YYYY-MM-DD'));
             } else {
               resetField('date');
             }

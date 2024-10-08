@@ -1,5 +1,5 @@
 import { IDealResponse } from '@/types/apis/go-api';
-import { CreateDealData, UpdateDealData } from '@/validation';
+import { CreateDealData } from '@/validation';
 import { AxiosInstance } from 'axios';
 
 export class InvestorDeal {
@@ -19,5 +19,3 @@ export class InvestorDeal {
     return res.data;
   }
 }
-
-// 2024-08-25T09:00:26.130Z

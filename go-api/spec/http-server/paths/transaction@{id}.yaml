@@ -1,0 +1,24 @@
+delete:
+  summary: Удаление транзакции по id
+  parameters:
+    - name: portfolioId
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник портфолио
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник транзакции
+  responses:
+    "200":
+      description: Транзакция удалена
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такой сделки нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе

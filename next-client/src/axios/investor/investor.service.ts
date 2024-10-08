@@ -11,13 +11,17 @@ import {
   InvestorTransaction,
 } from './domains/index';
 import { InvestorPosition } from './domains/position';
+import { InvestorDividend } from './domains/dividend';
+import { InvestorCoupon } from './domains/coupon';
 
 class InvestorService {
   private static instance: InvestorService;
   private readonly investorApi = investorAxiosInstance;
 
   public auth: InvestorAuth;
+  public coupon: InvestorCoupon;
   public deal: InvestorDeal;
+  public dividend: InvestorDividend;
   public expert: InvestorExpert;
   public opinion: InvestorOpinion;
   public portfolio: InvestorPortfolio;
@@ -28,7 +32,9 @@ class InvestorService {
 
   constructor() {
     this.auth = new InvestorAuth(this.investorApi);
+    this.coupon = new InvestorCoupon(this.investorApi);
     this.deal = new InvestorDeal(this.investorApi);
+    this.dividend = new InvestorDividend(this.investorApi);
     this.expert = new InvestorExpert(this.investorApi);
     this.moexBond = new InvestorMoexBond(this.investorApi);
     this.moexShare = new InvestorMoexShare(this.investorApi);

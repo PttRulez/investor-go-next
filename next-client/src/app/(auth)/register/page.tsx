@@ -18,7 +18,6 @@ const Register: FC = () => {
     (formData: RegisterData) => investorService.auth.register(formData),
     {
       onSuccess: () => {
-        console.log('onSuccess');
         router.push('/login');
       },
       onError: (error, variables, context) => {

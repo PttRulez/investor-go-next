@@ -2,75 +2,78 @@ package portfolio
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/issclient"
+	"github.com/pttrulez/investor-go/internal/infrastructure/iss-client"
 	"github.com/pttrulez/investor-go/internal/service/moex"
 )
 
-type DealRepository interface {
-	Insert(ctx context.Context, d domain.Deal) (domain.Deal, error)
+type Repository interface {
+	ExecAsTransaction(ctx context.Context, fn func(ctx context.Context, tx *sql.Tx) error) error
+
+	// coupons
+	DeleteCoupon(ctx context.Context, id int, userID int) error
+	GetCouponList(ctx context.Context, portfolioID int) ([]domain.Coupon, error)
+	InsertCoupon(ctx context.Context, d domain.Coupon, userID int) error
+
+	// deals
+	InsertDeal(ctx context.Context, tx *sql.Tx, d domain.Deal) (domain.Deal, error)
+	DeleteDeal(ctx context.Context, id int, userID int) (domain.Deal, error)
+	GetDealList(ctx context.Context, portfolioID int, userID int) ([]domain.Deal, error)
 	GetDealListForSecurity(ctx context.Context, exchange domain.Exchange, portfolioID int,
 		securityType domain.SecurityType, ticker string) ([]domain.Deal, error)
-	GetDealListByPortoflioID(ctx context.Context, portfolioID int, userID int) ([]domain.Deal, error)
-	Delete(ctx context.Context, id int, userID int) (domain.Deal, error)
-}
 
-type MoexShareRepo interface {
-	GetByTicker(ctx context.Context, ticker string) (domain.Share, error)
-}
+	// dividends
+	DeleteDividend(ctx context.Context, id int, userID int) error
+	GetDividendList(ctx context.Context, portfolioID int) ([]domain.Dividend, error)
+	InsertDividend(ctx context.Context, d domain.Dividend, userID int) error
 
-type PositionRepository interface {
-	AddInfo(ctx context.Context, i domain.PositionUpdateInfo) error
-	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]domain.Position, error)
-	GetListByUserID(ctx context.Context, userID int) ([]domain.Position, error)
-	GetPositionForSecurity(ctx context.Context, exchange domain.Exchange, portfolioID int,
+	// expenses
+	DeleteExpense(ctx context.Context, id int, userID int) error
+	GetExpenseList(ctx context.Context, portfolioID int) ([]domain.Expense, error)
+	InsertExpense(ctx context.Context, d domain.Expense, userID int) error
+
+	// positions
+	AddPositionInfo(ctx context.Context, i domain.PositionUpdateInfo) error
+	GetPosition(ctx context.Context, exchange domain.Exchange, portfolioID int,
 		securityType domain.SecurityType, ticker string) (domain.Position, error)
-	Insert(ctx context.Context, p domain.Position) error
-	Update(ctx context.Context, p domain.Position) error
-}
+	GetPortfolioPositionList(ctx context.Context, portfolioID int, userID int) ([]domain.Position, error)
+	GetUserPositionList(ctx context.Context, userID int) ([]domain.Position, error)
+	InsertPosition(ctx context.Context, p domain.Position) error
+	UpdatePosition(ctx context.Context, tx *sql.Tx, p domain.Position) error
 
-type PortfolioRepository interface {
-	Delete(ctx context.Context, id int, userID int) error
-	GetByID(ctx context.Context, id int, userID int) (domain.Portfolio, error)
-	GetListByUserID(ctx context.Context, id int) ([]domain.Portfolio, error)
-	Insert(ctx context.Context, p domain.Portfolio) (domain.Portfolio, error)
-	Update(ctx context.Context, p domain.Portfolio, userID int) (domain.Portfolio, error)
-}
+	// moex-share
+	GetMoexShare(ctx context.Context, ticker string) (domain.Share, error)
 
-type TransactionRepository interface {
-	Delete(ctx context.Context, id int, userID int) error
-	GetByID(ctx context.Context, id int, userID int) (domain.Transaction, error)
-	GetListByPortfolioID(ctx context.Context, portfolioID int, userID int) ([]domain.Transaction, error)
-	Insert(ctx context.Context, t domain.Transaction) (domain.Transaction, error)
+	// portfolio
+	DeletePortfolio(ctx context.Context, id int, userID int) error
+	GetPortfolio(ctx context.Context, id int, userID int) (domain.Portfolio, error)
+	GetPortfolioList(ctx context.Context, userID int) ([]domain.Portfolio, error)
+	InsertPortfolio(ctx context.Context, p domain.Portfolio) (domain.Portfolio, error)
+	UpdatePortfolio(ctx context.Context, p domain.Portfolio, userID int) (domain.Portfolio, error)
+
+	// transaction
+	DeleteTransaction(ctx context.Context, id int, userID int) error
+	GetTransaction(ctx context.Context, id int, userID int) (domain.Transaction, error)
+	GetTransactionList(ctx context.Context, portfolioID int, userID int) ([]domain.Transaction, error)
+	InsertTransaction(ctx context.Context, t domain.Transaction) (domain.Transaction, error)
 }
 
 type Service struct {
-	dealRepo        DealRepository
-	issClient       *issclient.IssClient
-	moexShareRepo   MoexShareRepo
-	moexService     *moex.Service
-	portfolioRepo   PortfolioRepository
-	positionRepo    PositionRepository
-	transactionRepo TransactionRepository
+	repo        Repository
+	issClient   *issclient.IssClient
+	moexService *moex.Service
 }
 
 func NewPortfolioService(
-	dealRepo DealRepository,
 	issClient *issclient.IssClient,
-	moexShareRepo MoexShareRepo,
 	moexService *moex.Service,
-	portfolioRepo PortfolioRepository,
-	positionRepo PositionRepository,
-	transactionRepo TransactionRepository,
+	repo Repository,
 ) *Service {
 	return &Service{
-		dealRepo:        dealRepo,
-		issClient:       issClient,
-		moexShareRepo:   moexShareRepo,
-		moexService:     moexService,
-		portfolioRepo:   portfolioRepo,
-		positionRepo:    positionRepo,
-		transactionRepo: transactionRepo,
+		repo:        repo,
+		issClient:   issClient,
+		moexService: moexService,
 	}
 }

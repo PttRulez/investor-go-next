@@ -1,0 +1,17 @@
+put:
+  summary: Изменение юзера
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: ../requests/user.yaml#/components/schemas/UpdateUserRequest
+    responses:
+    "201":
+      description: юзер удачно заапдейчен
+    "400":
+      description: неверный формат JSON
+    "422":
+      description: неправильно заполнены поля
+    "500":
+      description: другие ошибки, должен быть текст в ответе

@@ -15,6 +15,7 @@ type Deal struct {
 	Ticker       string
 	SecurityID   int
 	SecurityType SecurityType
+	ShortName    string
 	Type         DealType
 	UserID       int
 }

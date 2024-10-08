@@ -24,14 +24,7 @@ export default function PositionList({ opinionId, ticker }: Props) {
     (i: AttachInfo) => investorService.opinion.attachToPosition(i),
     {
       onSuccess(data: any, variables: any, context: any) {
-        console.log('onSuccess', data, variables, context);
         queryClient.invalidateQueries({ queryKey: ['positions'] });
-      },
-      onError(error: AxiosError) {
-        console.log('onError', error, error instanceof AxiosError);
-      },
-      onSettled(data, error, variables, context) {
-        console.log('onSettled', data, error, variables, context);
       },
     },
   );

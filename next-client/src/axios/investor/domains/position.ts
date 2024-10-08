@@ -10,24 +10,14 @@ export class InvestorPosition {
   }
 
   getAllUserPosition(): Promise<IPositionResponse[]> {
-    return this.api
-      .get('/position')
-      .then(res => {
-        return res.data;
-      })
-      .catch(err => {
-        console.log('[investorApi.position.getAllUserPosition ERR]:', err);
-      });
+    return this.api.get('/position').then(res => {
+      return res.data;
+    });
   }
 
   update(id: number, data: UpdatePositionData) {
-    return this.api
-      .patch(`/position/${id}`, data)
-      .then(res => {
-        return res.data;
-      })
-      .catch(err => {
-        console.log('[investorApi.position.update ERR]:', err);
-      });
+    return this.api.patch(`/position/${id}`, data).then(res => {
+      return res.data;
+    });
   }
 }

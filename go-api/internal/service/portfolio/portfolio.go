@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/database"
+	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
 	"github.com/pttrulez/investor-go/internal/service"
 	"github.com/pttrulez/investor-go/internal/utils"
 	"golang.org/x/sync/errgroup"
@@ -19,6 +19,9 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	var (
 		result         domain.Portfolio
 		deals          []domain.Deal
+		coupons        []domain.Coupon
+		dividends      []domain.Dividend
+		expenses       []domain.Expense
 		bondPositions  = make([]domain.Position, 0)
 		sharePositions = make([]domain.Position, 0)
 		transactions   = make([]domain.Transaction, 0)
@@ -45,7 +48,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	// сделки
 	eg.Go(func() error {
 		var err error
-		deals, err = s.dealRepo.GetDealListByPortoflioID(ctx, portfolioID, userID)
+		deals, err = s.repo.GetDealList(ctx, portfolioID, userID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -56,7 +59,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	// позиции
 	eg.Go(func() error {
 		// получили массив позиций по айди портфолио
-		positions, err := s.positionRepo.GetListByPortfolioID(ctx, portfolioID, userID)
+		positions, err := s.repo.GetPortfolioPositionList(ctx, portfolioID, userID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -121,10 +124,43 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		return nil
 	})
 
-	// транзакции
+	// депозиты и кэшауты
 	eg.Go(func() error {
 		var err error
-		transactions, err = s.transactionRepo.GetListByPortfolioID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+		transactions, err = s.repo.GetTransactionList(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		return nil
+	})
+
+	// дивиденды
+	eg.Go(func() error {
+		var err error
+		dividends, err = s.repo.GetDividendList(ctx, portfolioID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		return nil
+	})
+
+	// купоны
+	eg.Go(func() error {
+		var err error
+		coupons, err = s.repo.GetCouponList(ctx, portfolioID)
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		return nil
+	})
+
+	// другие затраты, возвраты
+	eg.Go(func() error {
+		var err error
+		expenses, err = s.repo.GetExpenseList(ctx, portfolioID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -146,38 +182,69 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		result.Transactions = append(result.Transactions, t)
 	}
 
-	var spentToBuys int
-	var receivedFromSells int
-	var spentToComissions int
+	var spentToComissions float64
+	var spentToBuys float64
+	var spentToOtherExpenses float64
+	var receivedFromCoupons float64
+	var receivedFromDividends float64
+	var receivedFromSells float64
 
 	// сделки
 	for _, d := range deals {
 		if d.Type == domain.DTBuy {
-			spentToBuys += d.Amount * int(d.Price)
+			spentToBuys += float64(d.Amount) * d.Price
 		} else {
-			receivedFromSells += d.Amount * int(d.Price)
+			receivedFromSells += float64(d.Amount) * d.Price
 		}
-		spentToComissions += int(d.Commission)
+		spentToComissions += d.Commission
+	}
+	result.Deals = deals
+
+	// купоны
+	for _, c := range coupons {
+		receivedFromCoupons += c.CouponAmount * float64(c.BondsCount)
+	}
+
+	// дивиденды
+	for _, d := range dividends {
+		receivedFromDividends += d.PaymentPerShare * float64(d.SharesCount)
+	}
+
+	// прочие траты/возвраты
+	for _, e := range expenses {
+		spentToOtherExpenses += e.Amount
 	}
 
 	// позиции
 	result.BondPositions = make([]domain.Position, len(bondPositions))
 	result.SharePositions = make([]domain.Position, len(sharePositions))
 
+	// сумма стоимости облигаций
 	for i := range len(bondPositions) {
-		result.TotalCost += bondPositions[i].CurrentCost
+		result.BondsCost += bondPositions[i].CurrentCost
 		result.BondPositions[i] = bondPositions[i]
 	}
 
+	// сумма стоимости акций
 	for i := range len(sharePositions) {
-		result.TotalCost += sharePositions[i].CurrentCost
+		result.SharesCost += sharePositions[i].CurrentCost
 		result.SharePositions[i] = sharePositions[i]
 	}
 
+	result.CouponsSum = int(receivedFromCoupons)
+	result.DividendsSum = int(receivedFromDividends)
+	result.ExpensesSum = int(spentToOtherExpenses)
+
 	const percentageMultiplier = 100
-	result.Cash = result.DepositsSum - result.CashoutsSum - spentToBuys + receivedFromSells
+	result.Cash = result.DepositsSum - result.CashoutsSum - int(spentToBuys) + int(receivedFromSells)
+
+	result.TotalCost += result.BondsCost
+	result.TotalCost += result.SharesCost
 	result.TotalCost += result.Cash
-	result.TotalCost -= spentToComissions
+	result.TotalCost -= int(spentToComissions)
+	result.TotalCost += result.CouponsSum
+	result.TotalCost += result.DividendsSum
+	result.TotalCost -= result.ExpensesSum
 	result.Profitability = int((float64(result.TotalCost+result.CashoutsSum)/
 		float64(result.DepositsSum) - 1) * percentageMultiplier)
 
@@ -187,7 +254,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 func (s *Service) CreatePortfolio(ctx context.Context, p domain.Portfolio) (domain.Portfolio, error) {
 	const op = "PortfolioPostgres.Insert"
 
-	portfolio, err := s.portfolioRepo.Insert(ctx, p)
+	portfolio, err := s.repo.InsertPortfolio(ctx, p)
 	if err != nil {
 		return domain.Portfolio{}, fmt.Errorf("%s:, %w", op, err)
 	}
@@ -195,19 +262,19 @@ func (s *Service) CreatePortfolio(ctx context.Context, p domain.Portfolio) (doma
 	return portfolio, nil
 }
 
-func (s *Service) GetListByUserID(ctx context.Context, userID int) ([]domain.Portfolio,
+func (s *Service) GetPortfolioList(ctx context.Context, userID int) ([]domain.Portfolio,
 	error) {
-	return s.portfolioRepo.GetListByUserID(ctx, userID)
+	return s.repo.GetPortfolioList(ctx, userID)
 }
 
 func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
 	userID int) (domain.Portfolio, error) {
 	const op = "PortfolioService.GetPortfolioByID"
 
-	portfolio, err := s.portfolioRepo.GetByID(ctx, portfolioID, userID)
+	portfolio, err := s.repo.GetPortfolio(ctx, portfolioID, userID)
 
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, storage.ErrNotFound) {
 			return domain.Portfolio{}, service.ErrdomainNotFound
 		}
 		return domain.Portfolio{}, fmt.Errorf("%s: %w", op, err)
@@ -219,10 +286,10 @@ func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
 func (s *Service) DeletePortfolio(ctx context.Context, portfolioID int, userID int) error {
 	const op = "PortfolioService.DeletePortfolio"
 
-	err := s.portfolioRepo.Delete(ctx, portfolioID, userID)
+	err := s.repo.DeletePortfolio(ctx, portfolioID, userID)
 
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, storage.ErrNotFound) {
 			return service.ErrdomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
@@ -235,14 +302,31 @@ func (s *Service) UpdatePortfolio(ctx context.Context, portfolio domain.Portfoli
 	userID int) (domain.Portfolio, error) {
 	const op = "PortfolioService.UpdatePortfolio"
 
-	updatedPortoflio, err := s.portfolioRepo.Update(ctx, portfolio, userID)
-
+	updatedPortoflio, err := s.repo.UpdatePortfolio(ctx, portfolio, userID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, storage.ErrNotFound) {
 			return domain.Portfolio{}, service.ErrdomainNotFound
 		}
 		return domain.Portfolio{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return updatedPortoflio, err
+}
+
+func (s *Service) TgFullPortfolioMessage(ctx context.Context, portfolioID int,
+	tgChatID int) (string, error) {
+	const op = "PortfolioService.TgFullPortfolioMessage"
+
+	p, err := s.GetFullPortfolioByID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	message := fmt.Sprintf(`Портфель: %s - %d
+		Акции: %d руб.
+		Облигации: %d руб.
+		Рубли: %d руб.
+	`, p.Name, p.TotalCost, p.BondsCost, p.SharesCost, p.Cash)
+
+	return message, nil
 }

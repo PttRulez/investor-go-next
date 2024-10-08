@@ -1,0 +1,12 @@
+components:
+  schemas:
+    DealResponse:
+      allOf:
+        - $ref: ../requests/deal.yaml#/components/schemas/CreateDealRequest
+        - type: object
+          required: [id, shortName]
+          properties:
+            id:
+              type: integer
+            shortName:
+              type: string

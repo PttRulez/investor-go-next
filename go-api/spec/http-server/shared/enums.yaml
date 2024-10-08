@@ -1,0 +1,45 @@
+components:
+  schemas:
+    DealType:
+      type: string
+      enum:
+        - BUY
+        - SELL
+    Exchange:
+      type: string
+      enum:
+        - MOEX
+      x-oapi-codegen-extra-tags:
+        validate: required,is-exchange
+    OpinionType:
+      type: string
+      enum:
+        - FLAT
+        - GENERAL
+        - GROWTH
+        - REDUCTION
+      x-oapi-codegen-extra-tags:
+        validate: required,opinionType
+    Role:
+      type: string
+      enum:
+        - ADMIN
+        - INVESTOR
+    SecurityType:
+      type: string
+      enum:
+        - BOND
+        - CURRENCY
+        - FUTURES
+        - INDEX
+        - PIF
+        - SHARE
+      x-oapi-codegen-extra-tags:
+        validate: required,securityType
+    TransactionType:
+      type: string
+      enum:
+        - DEPOSIT
+        - CASHOUT
+      x-oapi-codegen-extra-tags:
+        validate: required

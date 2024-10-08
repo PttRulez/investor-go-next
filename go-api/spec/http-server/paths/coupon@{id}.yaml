@@ -1,0 +1,24 @@
+delete:
+  summary: Удаление выплаты купона по id
+  parameters:
+    - name: portfolioId
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник портфолио
+    - name: id
+      in: path
+      schema:
+        type: integer
+      required: true
+      decription: Айдишник купона
+  responses:
+    "200":
+      description: Выплата купона удалена
+    "400":
+      description: Неправильный формат айди в параметрах
+    "401":
+      description: Такого дивиденда нет, либо не пренадлежит текущему юзеру
+    "500":
+      description: Другие ошибки, должен быть текст в ответе

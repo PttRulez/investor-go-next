@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/database"
+	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -15,13 +15,11 @@ var (
 	ErrWrongPassword = errors.New("неправильный пароль")
 )
 
-
-
 func (s *Service) LoginUser(ctx context.Context, model domain.User) (domain.User, error) {
 	const op = "UserService.LoginUser"
 
-	user, err := s.userRepo.GetByEmail(ctx, model.Email)
-	if errors.Is(err, database.ErrNotFound) {
+	user, err := s.repo.GetUserByEmail(ctx, model.Email)
+	if errors.Is(err, storage.ErrNotFound) {
 		return domain.User{}, ErrWrongUsername
 	}
 	if err != nil {
@@ -40,11 +38,11 @@ func (s *Service) RegisterUser(ctx context.Context, user domain.User) error {
 	const op = "UserService.RegisterUser"
 
 	// Check if user with this email already exists
-	existingUser, err := s.userRepo.GetByEmail(ctx, user.Email)
+	existingUser, err := s.repo.GetUserByEmail(ctx, user.Email)
 	if existingUser.ID != 0 {
 		return errors.New("такой юзер уже существует")
 	}
-	if err != nil && !errors.Is(err, database.ErrNotFound) {
+	if err != nil && !errors.Is(err, storage.ErrNotFound) {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -54,7 +52,18 @@ func (s *Service) RegisterUser(ctx context.Context, user domain.User) error {
 	}
 	user.HashedPassword = string(encpw)
 	// Creating new user
-	err = s.userRepo.Insert(ctx, user)
+	err = s.repo.InsertUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Service) UpdateUser(ctx context.Context, user domain.User) error {
+	const op = "UserService.UpdateUser"
+
+	err := s.repo.UpdateUser(ctx, user)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -63,16 +72,17 @@ func (s *Service) RegisterUser(ctx context.Context, user domain.User) error {
 }
 
 type Repository interface {
-	Insert(ctx context.Context, u domain.User) error
-	GetByEmail(ctx context.Context, email string) (domain.User, error)
+	GetUserByEmail(ctx context.Context, email string) (domain.User, error)
+	InsertUser(ctx context.Context, u domain.User) error
+	UpdateUser(ctx context.Context, u domain.User) error
 }
 
 type Service struct {
-	userRepo Repository
+	repo Repository
 }
 
 func NewUserService(repo Repository) *Service {
 	return &Service{
-		userRepo: repo,
+		repo: repo,
 	}
 }

@@ -1,0 +1,9 @@
+components:
+  schemas:
+    UpdateUserRequest:
+      type: object
+      properties:
+        investBotTgChatId:
+          type: integer
+        name:
+          type: string

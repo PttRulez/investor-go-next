@@ -5,7 +5,8 @@ create table if not exists users (
 		email varchar(50) unique not null,
 		hashed_password varchar(100) not null,
 		name varchar(50) not null,
-		role varchar(10) not null
+		role varchar(10) not null,
+		invest_bot_tg_chat_id integer default 0 not null
 );
 -- +goose StatementEnd
 

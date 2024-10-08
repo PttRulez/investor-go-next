@@ -10,7 +10,7 @@ export const CreateTransactionSchema = z.object({
     })
     .int()
     .positive(),
-  date: z.date(),
+  date: z.string(),
   portfolioId: z.number(),
   type: z.nativeEnum(TransactionType),
 });

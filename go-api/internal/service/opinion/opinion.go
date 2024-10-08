@@ -6,14 +6,14 @@ import (
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/database"
+	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
 func (s *Service) AttachToPosition(ctx context.Context, opinionID, positionID int) error {
 	const op = "OpinionService.AttachToPosition"
 
-	err := s.opinionRepo.AttachToPosition(ctx, opinionID, positionID)
+	err := s.repo.AttachOpinionToPosition(ctx, opinionID, positionID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -24,7 +24,7 @@ func (s *Service) AttachToPosition(ctx context.Context, opinionID, positionID in
 func (s *Service) CreateOpinion(ctx context.Context, o domain.Opinion) (domain.Opinion, error) {
 	const op = "OpinionService.CreateOpinion"
 
-	e, err := s.opinionRepo.Insert(ctx, o)
+	e, err := s.repo.InsertOpinion(ctx, o)
 	if err != nil {
 		return e, fmt.Errorf("%s: %w", op, err)
 	}
@@ -35,9 +35,9 @@ func (s *Service) CreateOpinion(ctx context.Context, o domain.Opinion) (domain.O
 func (s *Service) DeleteOpinionByID(ctx context.Context, id int, userID int) error {
 	const op = "OpinionService.DeleteOpinion"
 
-	err := s.opinionRepo.Delete(ctx, id, userID)
+	err := s.repo.DeleteOpinion(ctx, id, userID)
 	if err != nil {
-		if errors.Is(err, database.ErrNotFound) {
+		if errors.Is(err, storage.ErrNotFound) {
 			return service.ErrdomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
@@ -50,7 +50,7 @@ func (s *Service) GetOpinionsList(ctx context.Context, f domain.OpinionFilters, 
 	[]domain.Opinion, error) {
 	const op = "OpinionService.GetOpinions"
 
-	o, err := s.opinionRepo.GetOpinionsList(ctx, f, userID)
+	o, err := s.repo.GetOpinionsList(ctx, f, userID)
 	if err != nil {
 		return o, fmt.Errorf("%s: %w", op, err)
 	}

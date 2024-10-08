@@ -4,33 +4,27 @@ import (
 	"context"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/issclient"
+	"github.com/pttrulez/investor-go/internal/infrastructure/iss-client"
 )
 
 func NewMoexService(
-	bondRepo MoexBondRepository,
-	shareRepo MoexShareRepository,
 	issClient *issclient.IssClient,
+	repo Repository,
 ) *Service {
 	return &Service{
 		issClient: issClient,
-		bondRepo:  bondRepo,
-		shareRepo: shareRepo,
+		repo:      repo,
 	}
 }
 
 type Service struct {
 	issClient *issclient.IssClient
-	bondRepo  MoexBondRepository
-	shareRepo MoexShareRepository
+	repo      Repository
 }
 
-type MoexBondRepository interface {
-	GetByTicker(ctx context.Context, ticker string) (domain.Bond, error)
-	Insert(ctx context.Context, bond domain.Bond) (domain.Bond, error)
-}
-
-type MoexShareRepository interface {
-	GetByTicker(ctx context.Context, ticker string) (domain.Share, error)
-	Insert(ctx context.Context, share domain.Share) (domain.Share, error)
+type Repository interface {
+	GetMoexBond(ctx context.Context, ticker string) (domain.Bond, error)
+	GetMoexShare(ctx context.Context, ticker string) (domain.Share, error)
+	InsertMoexBond(ctx context.Context, bond domain.Bond) (domain.Bond, error)
+	InsertMoexShare(ctx context.Context, share domain.Share) (domain.Share, error)
 }

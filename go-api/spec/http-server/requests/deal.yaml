@@ -1,0 +1,45 @@
+components:
+  schemas:
+    CreateDealRequest:
+      type: object
+      required:
+        [
+          amount,
+          comission,
+          date,
+          exchange,
+          portfolioId,
+          price,
+          ticker,
+          securityType,
+          type,
+          ticker,
+        ]
+      properties:
+        amount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        comission:
+          type: number
+          format: double
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        price:
+          type: number
+          format: double
+        ticker:
+          type: string
+        securityType:
+          $ref: ../shared/enums.yaml#/components/schemas/SecurityType
+        type:
+          $ref: ../shared/enums.yaml#/components/schemas/DealType

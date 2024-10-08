@@ -1,0 +1,1210 @@
+openapi: 3.0.3
+info:
+  title: Investor API
+  description: REST API для приложения "Инвестор"
+  version: 1.0.0
+paths:
+  /login:
+    post:
+      summary: Регистрация нового юзера
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: успешно залогинен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: неверный формат JSON
+        '401':
+          description: Ановтарайзед
+  /register:
+    post:
+      summary: Регистрация нового юзера
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+      responses:
+        '201':
+          description: юзер удачно создан
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio:
+    get:
+      summary: Список портфолио юзера
+      responses:
+        '200':
+          description: удачный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortfolioListResponse'
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+    post:
+      summary: Создание нового портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePortfolioRequest'
+      responses:
+        '201':
+          description: портфолио создан
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+    put:
+      summary: Редактирование портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePortfolioRequest'
+      responses:
+        '200':
+          description: портфолио отредактирован
+        '400':
+          description: неверный формат JSON
+        '404':
+          description: такого портфолио нет или он не пренадлежит юзеру
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{id}:
+    get:
+      summary: Получение портфолио по id
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      responses:
+        '200':
+          description: удачный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FullPortfolioResponse'
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+    delete:
+      summary: Удаление портфолио по id
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      responses:
+        '200':
+          description: Портфолио удален
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/coupon:
+    post:
+      summary: Добавление уплаченного купона в портфолио
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCouponRequest'
+      responses:
+        '201':
+          description: выплата купона добавлена
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/coupon/{id}:
+    delete:
+      summary: Удаление выплаты купона по id
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник купона
+      responses:
+        '200':
+          description: Выплата купона удалена
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого дивиденда нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/deal:
+    post:
+      summary: Создание новой сделки
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDealRequest'
+      responses:
+        '201':
+          description: сделка добавлена
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/deal/{id}:
+    delete:
+      summary: Удаление сделки по id
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник сделки
+      responses:
+        '200':
+          description: Сделка удалена
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такой сделки нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/dividend:
+    post:
+      summary: Добавление дивидендов в портфолио
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDividendRequest'
+      responses:
+        '201':
+          description: выплата дивиденда добавлена
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/dividend/{id}:
+    delete:
+      summary: Удаление выплаты дивиденда по id
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник выплаты
+      responses:
+        '200':
+          description: Дивиденд удален
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого дивиденда нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/expense:
+    post:
+      summary: Добавление прочих расходов в портфолио
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpenseRequest'
+      responses:
+        '201':
+          description: выплата дивиденда добавлена
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/expense/{id}:
+    delete:
+      summary: Удаление расходов портфолио по id
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник выплаты
+      responses:
+        '200':
+          description: Расход удален
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого расхода нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/position/{id}:
+    patch:
+      summary: Редактирование позиции
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник позиции
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePositionRequest'
+      responses:
+        '200':
+          description: позиция отредактирована
+        '400':
+          description: неверный формат JSON
+        '404':
+          description: такой позиции нет или она не пренадлежит юзеру
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/transaction:
+    post:
+      summary: Транзакция успешно создана
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: транзакция создана
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /portfolio/{portfolioId}/transaction/{id}:
+    delete:
+      summary: Удаление транзакции по id
+      parameters:
+        - name: portfolioId
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник портфолио
+        - name: id
+          in: path
+          schema:
+            type: integer
+          required: true
+          decription: Айдишник транзакции
+      responses:
+        '200':
+          description: Транзакция удалена
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такой сделки нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /moex/bond/{ticker}:
+    get:
+      summary: Получение информации по облигации, торгуемой на мск бирже
+      parameters:
+        - name: ticker
+          in: path
+          schema:
+            type: string
+          required: true
+          decription: ticker облигации
+      responses:
+        '200':
+          description: удачный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoexBondResponse'
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /moex/share/{ticker}:
+    get:
+      summary: Получение информации по акции, торгуемой на мск бирже
+      parameters:
+        - name: ticker
+          in: path
+          schema:
+            type: string
+          required: true
+          decription: ticker акции
+      responses:
+        '200':
+          description: удачный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoexShareResponse'
+        '400':
+          description: Неправильный формат айди в параметрах
+        '401':
+          description: Такого портфолио нет, либо не пренадлежит текущему юзеру
+        '500':
+          description: Другие ошибки, должен быть текст в ответе
+  /expert:
+    get:
+      summary: Список экспертов, созданных текущим юзером
+      responses:
+        '200':
+          description: удачный запрос
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpertListResponse'
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+    post:
+      summary: Создание нового эксперта
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExpertRequest'
+      responses:
+        '201':
+          description: эксперт создан
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /opinion:
+    post:
+      summary: Создание нового мнения
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOpinionRequest'
+      responses:
+        '201':
+          description: мнение успещно создано
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /opinion/list:
+    get:
+      summary: Получение списка мнений
+      parameters:
+        - name: expertId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: id эксперта
+        - name: securityId
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: id бумаги
+        - name: exchange
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Биржа
+        - name: securityType
+          in: query
+          required: false
+          schema:
+            type: string
+          description: тип бумаги SHARE BOND ...
+      responses:
+        '200':
+          description: список отправлен
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OpinionResponse'
+        '400':
+          description: неверный запрос
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+  /user:
+    put:
+      summary: Изменение юзера
+      requestBody:
+        '201':
+          description: юзер удачно заапдейчен
+        '400':
+          description: неверный формат JSON
+        '422':
+          description: неправильно заполнены поля
+        '500':
+          description: другие ошибки, должен быть текст в ответе
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+        responses: null
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - BearerAuth: []
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+    Role:
+      type: string
+      enum:
+        - ADMIN
+        - INVESTOR
+    RegisterUserRequest:
+      type: object
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        name:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        role:
+          $ref: '#/components/schemas/Role'
+    PortfolioResponse:
+      type: object
+      required:
+        - id
+        - compound
+        - name
+      properties:
+        id:
+          type: integer
+        compound:
+          type: boolean
+        name:
+          type: string
+        userId:
+          type: integer
+    PortfolioListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/PortfolioResponse'
+    UpdatePortfolioRequest:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        compound:
+          type: boolean
+    CreatePortfolioRequest:
+      type: object
+      required:
+        - name
+        - compound
+      properties:
+        name:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        compound:
+          type: boolean
+    Exchange:
+      type: string
+      enum:
+        - MOEX
+      x-oapi-codegen-extra-tags:
+        validate: required,is-exchange
+    ExpertResponse:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        avatarUrl:
+          type: string
+        id:
+          type: integer
+        name:
+          type: string
+        userId:
+          type: integer
+    SecurityType:
+      type: string
+      enum:
+        - BOND
+        - CURRENCY
+        - FUTURES
+        - INDEX
+        - PIF
+        - SHARE
+      x-oapi-codegen-extra-tags:
+        validate: required,securityType
+    OpinionType:
+      type: string
+      enum:
+        - FLAT
+        - GENERAL
+        - GROWTH
+        - REDUCTION
+      x-oapi-codegen-extra-tags:
+        validate: required,opinionType
+    OpinionResponse:
+      type: object
+      required:
+        - id
+        - date
+        - expertId
+        - exchange
+        - expert
+        - securityId
+        - securityType
+        - text
+        - ticker
+        - type
+      properties:
+        id:
+          type: integer
+        date:
+          type: string
+          format: date
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        expert:
+          $ref: '#/components/schemas/ExpertResponse'
+        expertId:
+          type: integer
+        securityId:
+          type: integer
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        sourceLink:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        text:
+          type: string
+        ticker:
+          type: string
+        type:
+          $ref: '#/components/schemas/OpinionType'
+    PositionResponse:
+      type: object
+      required:
+        - amount
+        - averagePrice
+        - currentPrice
+        - currentCost
+        - id
+        - opinions
+        - opinionIds
+        - portfolioName
+        - securityType
+        - shortName
+        - ticker
+      properties:
+        amount:
+          type: integer
+        averagePrice:
+          type: number
+          format: double
+        comment:
+          type: string
+        currentPrice:
+          type: number
+          format: double
+        currentCost:
+          type: integer
+        id:
+          type: integer
+        opinions:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpinionResponse'
+        opinionIds:
+          type: array
+          items:
+            type: integer
+        portfolioName:
+          type: string
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        shortName:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        ticker:
+          type: string
+    DealType:
+      type: string
+      enum:
+        - BUY
+        - SELL
+    CreateDealRequest:
+      type: object
+      required:
+        - amount
+        - comission
+        - date
+        - exchange
+        - portfolioId
+        - price
+        - ticker
+        - securityType
+        - type
+        - ticker
+      properties:
+        amount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        comission:
+          type: number
+          format: double
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        price:
+          type: number
+          format: double
+        ticker:
+          type: string
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        type:
+          $ref: '#/components/schemas/DealType'
+    DealResponse:
+      allOf:
+        - $ref: '#/components/schemas/CreateDealRequest'
+        - type: object
+          required:
+            - id
+            - shortName
+          properties:
+            id:
+              type: integer
+            shortName:
+              type: string
+    TransactionType:
+      type: string
+      enum:
+        - DEPOSIT
+        - CASHOUT
+      x-oapi-codegen-extra-tags:
+        validate: required
+    CreateTransactionRequest:
+      type: object
+      required:
+        - amount
+        - date
+        - portfolioId
+        - type
+      properties:
+        amount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        type:
+          $ref: '#/components/schemas/TransactionType'
+    TransactionResponse:
+      allOf:
+        - $ref: '#/components/schemas/CreateTransactionRequest'
+        - type: object
+          required:
+            - id
+          properties:
+            id:
+              type: integer
+    FullPortfolioResponse:
+      type: object
+      properties:
+        bondPositions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionResponse'
+        bondsCost:
+          type: integer
+        cash:
+          type: integer
+        cashoutsSum:
+          type: integer
+        compound:
+          type: boolean
+        couponsSum:
+          type: integer
+        deals:
+          type: array
+          items:
+            $ref: '#/components/schemas/DealResponse'
+        depositsSum:
+          type: integer
+        dividendsSum:
+          type: integer
+        expensesSum:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        profitability:
+          type: integer
+        sharePositions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionResponse'
+        sharesCost:
+          type: integer
+        totalCost:
+          type: integer
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionResponse'
+      required:
+        - bondPositions
+        - bondsCost
+        - cash
+        - cashoutsSum
+        - couponsSum
+        - compound
+        - deals
+        - depositsSum
+        - dividendsSum
+        - expensesSum
+        - id
+        - name
+        - profitability
+        - sharePositions
+        - sharesCost
+        - totalCost
+        - transactions
+    CreateCouponRequest:
+      type: object
+      required:
+        - bondsCount
+        - couponAmount
+        - date
+        - exchange
+        - paymentPeriod
+        - portfolioId
+        - ticker
+      properties:
+        bondsCount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        couponAmount:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        paymentPeriod:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+    CreateDividendRequest:
+      type: object
+      required:
+        - date
+        - exchange
+        - paymentPeriod
+        - paymentPerShare
+        - portfolioId
+        - ticker
+        - sharesCount
+      properties:
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        paymentPeriod:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        paymentPerShare:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        sharesCount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+    CreateExpenseRequest:
+      type: object
+      required:
+        - amount
+        - date
+        - description
+        - portfolioId
+      properties:
+        amount:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        description:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+    UpdatePositionRequest:
+      type: object
+      properties:
+        comment:
+          type: string
+          nullable: true
+        targetPrice:
+          type: number
+          format: double
+    ISSMoexBoard:
+      type: string
+      enum:
+        - TQBR
+        - CETS
+    ISSMoexEngine:
+      type: string
+      enum:
+        - stock
+        - currency
+    ISSMoexMarket:
+      type: string
+      enum:
+        - bonds
+        - shares
+    MoexSecurityResponse:
+      type: object
+      required:
+        - board
+        - engine
+        - id
+        - lotSize
+        - market
+        - name
+        - ticker
+        - shortName
+      properties:
+        board:
+          $ref: '#/components/schemas/ISSMoexBoard'
+        engine:
+          $ref: '#/components/schemas/ISSMoexEngine'
+        id:
+          type: integer
+        lotSize:
+          type: integer
+        market:
+          $ref: '#/components/schemas/ISSMoexMarket'
+        name:
+          type: string
+        ticker:
+          type: string
+        shortName:
+          type: string
+    MoexBondResponse:
+      allOf:
+        - $ref: '#/components/schemas/MoexSecurityResponse'
+        - type: object
+          required:
+            - couponPercent
+            - couponValue
+            - couponFrequency
+            - issueDate
+            - faceValue
+            - matDate
+          properties:
+            couponPercent:
+              type: number
+              format: double
+              description: купон в процентах
+            couponValue:
+              type: number
+              format: double
+              description: купон в деньгах
+            couponFrequency:
+              type: integer
+              description: частота выплаты купонов в год
+            issueDate:
+              type: string
+              format: date
+            faceValue:
+              type: integer
+              description: номинальная стоимость
+            matDate:
+              type: string
+              format: date
+    MoexShareResponse:
+      allOf:
+        - $ref: '#/components/schemas/MoexSecurityResponse'
+    ExpertListResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/ExpertResponse'
+    CreateExpertRequest:
+      type: object
+      required:
+        - name
+      properties:
+        avatarUrl:
+          type: string
+        name:
+          type: string
+    CreateOpinionRequest:
+      type: object
+      required:
+        - date
+        - expertId
+        - exchange
+        - securityId
+        - securityType
+        - text
+        - ticker
+        - type
+      properties:
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        expertId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        securityId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        securityType:
+          $ref: '#/components/schemas/SecurityType'
+        sourceLink:
+          type: string
+        targetPrice:
+          type: number
+          format: double
+        text:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        type:
+          $ref: '#/components/schemas/OpinionType'
+    UpdateUserRequest:
+      type: object
+      properties:
+        investBotTgChatId:
+          type: integer
+        name:
+          type: string

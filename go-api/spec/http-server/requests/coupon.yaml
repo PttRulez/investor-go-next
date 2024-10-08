@@ -1,0 +1,43 @@
+components:
+  schemas:
+    CreateCouponRequest:
+      type: object
+      required:
+        [
+          bondsCount,
+          couponAmount,
+          date,
+          exchange,
+          paymentPeriod,
+          portfolioId,
+          ticker,
+        ]
+      properties:
+        bondsCount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        couponAmount:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        paymentPeriod:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required

@@ -1,0 +1,64 @@
+openapi: 3.0.3
+info:
+  title: Investor API
+  description: REST API для приложения "Инвестор"
+  version: 1.0.0
+paths:
+  # Auth
+  /login:
+    $ref: ./paths/auth.yaml#/~1login
+  /register:
+    $ref: ./paths/auth.yaml#/~1register
+
+  # Portfolio Endpoints
+  /portfolio:
+    $ref: ./paths/portfolio.yaml
+  /portfolio/{id}:
+    $ref: ./paths/portfolio@{id}.yaml
+  /portfolio/{portfolioId}/coupon:
+    $ref: ./paths/coupon.yaml
+  /portfolio/{portfolioId}/coupon/{id}:
+    $ref: ./paths/coupon@{id}.yaml
+  /portfolio/{portfolioId}/deal:
+    $ref: ./paths/deal.yaml
+  /portfolio/{portfolioId}/deal/{id}:
+    $ref: ./paths/deal@{id}.yaml
+  /portfolio/{portfolioId}/dividend:
+    $ref: ./paths/dividend.yaml
+  /portfolio/{portfolioId}/dividend/{id}:
+    $ref: ./paths/dividend@{id}.yaml
+  /portfolio/{portfolioId}/expense:
+    $ref: ./paths/expense.yaml
+  /portfolio/{portfolioId}/expense/{id}:
+    $ref: ./paths/expense@{id}.yaml
+  /portfolio/{portfolioId}/position/{id}:
+    $ref: ./paths/position@{id}.yaml
+  /portfolio/{portfolioId}/transaction:
+    $ref: ./paths/transaction.yaml
+  /portfolio/{portfolioId}/transaction/{id}:
+    $ref: ./paths/transaction@{id}.yaml
+
+  # MOEX
+  /moex/bond/{ticker}:
+    $ref: ./paths/moex-bond.yaml
+  /moex/share/{ticker}:
+    $ref: ./paths/moex-share.yaml
+
+  # Opinion functionality
+  /expert:
+    $ref: ./paths/expert.yaml
+  /opinion:
+    $ref: ./paths/opinion.yaml
+  /opinion/list:
+    $ref: ./paths/opinionlist.yaml
+
+  # User functionality
+  /user:
+    $ref: ./paths/user.yaml
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+security:
+  - BearerAuth: []

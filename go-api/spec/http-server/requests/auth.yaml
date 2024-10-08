@@ -1,0 +1,32 @@
+components:
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required: [email, name, password]
+      properties:
+        email:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        name:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        role:
+          $ref: ../shared/enums.yaml#/components/schemas/Role
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        password:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required

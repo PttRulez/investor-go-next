@@ -9,6 +9,9 @@ export enum PortfolioActionsMap {
   buy = 'buy',
   transaction = 'transaction',
   sell = 'sell',
+  dividend = 'dividend',
+  coupon = 'coupon',
+  expense = 'expense',
 }
 
 const PortfolioTableToolbar = ({ onChooseTransaction }: Props) => {
@@ -24,6 +27,9 @@ const PortfolioTableToolbar = ({ onChooseTransaction }: Props) => {
           { id: PortfolioActionsMap.buy, name: 'BUY' },
           { id: PortfolioActionsMap.sell, name: 'SELL' },
           { id: PortfolioActionsMap.transaction, name: 'Депозит/Кэшаут' },
+          { id: PortfolioActionsMap.dividend, name: 'Дивиденд' },
+          { id: PortfolioActionsMap.coupon, name: 'Купон' },
+          { id: PortfolioActionsMap.expense, name: 'Траты' },
         ]}
         value={''}
       />

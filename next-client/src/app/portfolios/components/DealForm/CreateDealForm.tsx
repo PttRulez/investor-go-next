@@ -1,21 +1,8 @@
 'use client';
 
-import { Button, TextField } from '@mui/material';
-import { DefaultFormBox, FormText, FormDatePicker } from '@pttrulez';
-import {
-  ChangeHandler,
-  Controller,
-  SubmitHandler,
-  useForm,
-} from 'react-hook-form';
-import { ChangeEvent, FC, SyntheticEvent, useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import MoexSearch from '@/components/ui/StocksSearch/MoexSearch';
 import investorService from '@/axios/investor/investor.service';
-import dayjs, { Dayjs } from 'dayjs';
+import MoexSearch from '@/components/ui/StocksSearch/MoexSearch';
 import { MoexSearchAutocompleteOption } from '@/components/ui/StocksSearch/types';
-import { getSecurityTypeFromMoexSecType } from '@/utils/helpers';
-import { zodResolver } from '@hookform/resolvers/zod';
 import {
   DealType,
   Exchange,
@@ -23,7 +10,15 @@ import {
   SecurityType,
 } from '@/types/enums';
 import { CreateDealData, CreateDealSchema } from '@/validation';
-import { MoexSecurityGroup } from '@/types/apis/go-api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Box, Button, Typography } from '@mui/material';
+import { DefaultFormBox, FormDatePicker, FormText } from '@pttrulez';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs, { Dayjs } from 'dayjs';
+import { FC, useEffect } from 'react';
+import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
+import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 
 interface DealFormProps {
   afterSuccessfulSubmit: () => void;
@@ -92,17 +87,29 @@ const CreateDealForm: FC<DealFormProps> = ({
     } else if (bondTypes.includes(secInfo.type)) {
       setValue('securityType', SecurityType.BOND);
     } else {
-      console.log('securityType', secInfo.type, 'не обработан');
       resetField('securityType');
     }
   };
 
-  useEffect(() => {
-    console.log('formState.errors', formState.errors);
-  }, [formState.errors]);
-
   return (
     <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
+      <Box
+        sx={{
+          alignItems: 'center',
+          display: 'flex',
+          gap: '20px',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography variant="h6">
+          Добавляем {dealType === DealType.SELL ? 'продажу' : 'покупку'} бумаги{' '}
+        </Typography>
+        {dealType === DealType.SELL ? (
+          <ArrowCircleDownIcon sx={{ color: 'red' }} />
+        ) : (
+          <ArrowCircleUpIcon sx={{ color: 'green' }} />
+        )}
+      </Box>
       <Controller
         control={control}
         name="ticker"

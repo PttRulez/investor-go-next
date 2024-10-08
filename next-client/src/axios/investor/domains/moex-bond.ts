@@ -10,14 +10,9 @@ export class InvestorMoexBond {
   }
 
   getByTicker(ticker: string): Promise<IMoexBondResponse> {
-    return this.api
-      .get(`/moex-bond/${ticker}`)
-      .then(res => {
-        res.data.securityType = SecurityType.BOND;
-        return res.data;
-      })
-      .catch(err => {
-        console.log('[investorApi.InvestorMoexBond.getByTicker ERR]:', err);
-      });
+    return this.api.get(`/moex-bond/${ticker}`).then(res => {
+      res.data.securityType = SecurityType.BOND;
+      return res.data;
+    });
   }
 }

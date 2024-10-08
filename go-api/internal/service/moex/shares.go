@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/database"
+	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
 	"github.com/pttrulez/investor-go/internal/service"
 )
 
@@ -14,10 +14,10 @@ func (s *Service) GetShareByTicker(ctx context.Context, ticker string) (domain.S
 	const op = "MoexShareService.GetByTicker"
 
 	// Пробуем достать из нашей бд
-	share, err := s.shareRepo.GetByTicker(ctx, ticker)
+	share, err := s.repo.GetMoexShare(ctx, ticker)
 
 	// Если её там нет то делаем запрос на МОЕХ и записываем в бд
-	if errors.Is(err, database.ErrNotFound) {
+	if errors.Is(err, storage.ErrNotFound) {
 		var err error
 		share, err = s.createNewShareFromMoexISS(ctx, ticker)
 		if err != nil {
@@ -67,7 +67,7 @@ func (s *Service) createNewShareFromMoexISS(ctx context.Context, ticker string) 
 	share.PriceDecimals = fullInfo.PriceDecimals
 
 	// сохраняем в бд
-	share, err = s.shareRepo.Insert(ctx, share)
+	share, err = s.repo.InsertMoexShare(ctx, share)
 	if err != nil {
 		return domain.Share{}, err
 	}

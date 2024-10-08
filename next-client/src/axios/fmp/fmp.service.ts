@@ -8,12 +8,9 @@ import { AxiosResponse } from 'axios';
 
 export const fmpService = {
   search(searchParam: string): Promise<AxiosResponse<searchStock[]> | void> {
-    return fmpApiV3
-      .get(`/search?query=${searchParam}&limit=30`)
-      .then(res => {
-        return res.data;
-      })
-      .catch(err => console.log('[fmpService.search err]', err));
+    return fmpApiV3.get(`/search?query=${searchParam}&limit=30`).then(res => {
+      return res.data;
+    });
   },
 
   historicalDailyByTicker(ticker: string | undefined):
@@ -28,14 +25,9 @@ export const fmpService = {
         historical: [],
       });
     }
-    return fmpApiV3
-      .get(`/historical-price-full/${ticker}`)
-      .then(res => {
-        return res.data;
-      })
-      .catch(err =>
-        console.log('[fmpService.historicalPriceByTicker err]', err),
-      );
+    return fmpApiV3.get(`/historical-price-full/${ticker}`).then(res => {
+      return res.data;
+    });
   },
 
   keyMetricsTTM(ticker: string) {

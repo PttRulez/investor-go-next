@@ -1,0 +1,43 @@
+components:
+  schemas:
+    CreateDividendRequest:
+      type: object
+      required:
+        [
+          date,
+          exchange,
+          paymentPeriod,
+          paymentPerShare,
+          portfolioId,
+          ticker,
+          sharesCount,
+        ]
+      properties:
+        date:
+          type: string
+          format: date
+          x-oapi-codegen-extra-tags:
+            validate: required
+        exchange:
+          $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        paymentPeriod:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        paymentPerShare:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        portfolioId:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required
+        ticker:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        sharesCount:
+          type: integer
+          x-oapi-codegen-extra-tags:
+            validate: required

@@ -101,10 +101,8 @@ const OpinionForm = ({
       resetField('securityType');
       return;
     }
-    console.log('value', value);
     const secType = getSecurityTypeFromMoexSecType(value.type);
 
-    console.log('secType', secType);
     let security: Omit<SecurityResponse, 'exchange'>;
     if (secType === SecurityType.SHARE) {
       security = await investorService.moexShare.getByTicker(value.ticker);
@@ -188,11 +186,6 @@ const OpinionForm = ({
             label={'Целевая цена'}
             name={'targetPrice'}
             onChange={(e: any) => {
-              console.log(
-                'e.target.value',
-                e.target.value,
-                e.target.value != '',
-              );
               if (e.target.value != '') {
                 setValue('targetPrice', parseFloat(e.target.value));
               }

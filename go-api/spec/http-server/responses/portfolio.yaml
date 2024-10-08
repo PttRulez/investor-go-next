@@ -1,0 +1,83 @@
+components:
+  schemas:
+    PortfolioResponse:
+      type: object
+      required: [id, compound, name]
+      properties:
+        id:
+          type: integer
+        compound:
+          type: boolean
+        name:
+          type: string
+        userId:
+          type: integer
+    PortfolioListResponse:
+      type: array
+      items:
+        $ref: "#/components/schemas/PortfolioResponse"
+    FullPortfolioResponse:
+      type: object
+      properties:
+        bondPositions:
+          type: array
+          items:
+            $ref: position.yaml#/components/schemas/PositionResponse
+        bondsCost:
+          type: integer
+        cash:
+          type: integer
+        cashoutsSum:
+          type: integer
+        compound:
+          type: boolean
+        couponsSum:
+          type: integer
+        deals:
+          type: array
+          items:
+            $ref: deal.yaml#/components/schemas/DealResponse
+        depositsSum:
+          type: integer
+        dividendsSum:
+          type: integer
+        expensesSum:
+          type: integer
+        id:
+          type: integer
+        name:
+          type: string
+        profitability:
+          type: integer
+        sharePositions:
+          type: array
+          items:
+            $ref: position.yaml#/components/schemas/PositionResponse
+        sharesCost:
+          type: integer
+        totalCost:
+          type: integer
+        transactions:
+          type: array
+          items:
+            $ref: transaction.yaml#/components/schemas/TransactionResponse
+      required:
+        [
+          bondPositions,
+          bondsCost,
+          cash,
+          cashoutsSum,
+          couponsSum,
+          compound,
+          deals,
+          depositsSum,
+          dividendsSum,
+          expensesSum,
+          id,
+          name,
+          profitability,
+          sharePositions,
+          sharesCost,
+          totalCost,
+          transactions,
+        ]

@@ -38,10 +38,6 @@ const OpinionsTable = ({ opinions, ticker }: Props) => {
     null,
   );
 
-  useEffect(() => {
-    console.log('opinionIdToAttach', opinionIdToAttach);
-  }, [opinionIdToAttach]);
-
   const columns = useMemo<Array<MRT_ColumnDef<IOpinionResponse>>>(
     () => [
       {
@@ -79,7 +75,6 @@ const OpinionsTable = ({ opinions, ticker }: Props) => {
         header: '',
         accessorKey: 'text',
         Cell: ({ cell, row }) => {
-          console.log('row', row);
           return (
             <Grid container spacing={3} justifyContent="space-between">
               <Grid xs={6}>

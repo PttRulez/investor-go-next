@@ -1,5 +1,5 @@
 import { Exchange } from '@/types/enums';
-import { IMoexSecurtiyResponse } from './moex-securities';
+import { IMoexSecurtiyResponse } from './moex';
 
 export interface BaseSecurityResponse {
   exchange: Exchange;
