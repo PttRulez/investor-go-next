@@ -287,6 +287,23 @@ func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
 	return portfolio, nil
 }
 
+func (s *Service) GetPortfolioSummary(ctx context.Context, portfolioID int) (string, error) {
+	const op = "PortfolioService.TgFullPortfolioMessage"
+
+	p, err := s.GetFullPortfolioByID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	message := fmt.Sprintf(`Портфель: %s - %d
+		Акции: %d руб.
+		Облигации: %d руб.
+		Рубли: %d руб.
+	`, p.Name, p.TotalCost, p.BondsCost, p.SharesCost, p.Cash)
+
+	return message, nil
+}
+
 func (s *Service) DeletePortfolio(ctx context.Context, portfolioID int, userID int) error {
 	const op = "PortfolioService.DeletePortfolio"
 
@@ -315,22 +332,4 @@ func (s *Service) UpdatePortfolio(ctx context.Context, portfolio domain.Portfoli
 	}
 
 	return updatedPortoflio, err
-}
-
-func (s *Service) TgFullPortfolioMessage(ctx context.Context, portfolioID int,
-	tgChatID int) (string, error) {
-	const op = "PortfolioService.TgFullPortfolioMessage"
-
-	p, err := s.GetFullPortfolioByID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
-	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
-	message := fmt.Sprintf(`Портфель: %s - %d
-		Акции: %d руб.
-		Облигации: %d руб.
-		Рубли: %d руб.
-	`, p.Name, p.TotalCost, p.BondsCost, p.SharesCost, p.Cash)
-
-	return message, nil
 }

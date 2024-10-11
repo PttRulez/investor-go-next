@@ -35,6 +35,6 @@ migrate_reset:
 	goose -dir db/migrations postgres "postgresql://$(PG_USERNAME):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" reset
 
 proto:
-	protoc --go_out=. --go-grpc_out=. proto/telegram.proto
+	protoc --go_out=. --go-grpc_out=. proto/investor.proto
 
 .PHONY: proto

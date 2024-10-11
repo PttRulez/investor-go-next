@@ -2,7 +2,7 @@ syntax = "proto3";
 
 option go_package = "pkg/protogen";
 
-service Telega {
+service Investor {
 	rpc GetPortfolioList(PortfolioListRequest) returns (PortfolioListResponse);
 	rpc GetPortfolioSummaryMessage(PortfolioRequest) returns (PortfolioSummaryResponse);
 }

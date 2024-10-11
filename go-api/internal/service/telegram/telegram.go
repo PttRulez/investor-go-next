@@ -26,8 +26,8 @@ func (t *Telegram) SendMsg(ctx context.Context, text string) {
 	}
 }
 
-func New(port string, logger *logger.Logger) *Telegram {
-	grpcClient, err := telegramclient.NewTelegramClient(port)
+func New(endpoint string, logger *logger.Logger) *Telegram {
+	grpcClient, err := telegramclient.NewTelegramClient(endpoint)
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to start tgClient: %w", err))
 	}

@@ -25,10 +25,11 @@ type Redis struct {
 }
 
 type Config struct {
-	API          api.Config
-	Pg           Postgres
-	TgClientPort string
-	Redis        Redis
+	API              api.Config
+	GrpcServerPort   string
+	Pg               Postgres
+	TgClientEndpoint string
+	Redis            Redis
 }
 
 func MustLoad() *Config {
@@ -65,9 +66,10 @@ func MustLoad() *Config {
 	}
 
 	return &Config{
-		API:          apiConfig,
-		Pg:           pgConfig,
-		Redis:        redisConfig,
-		TgClientPort: os.Getenv("TG_CLIENT_PORT"),
+		API:              apiConfig,
+		GrpcServerPort:   os.Getenv("GO_API_GRPC_PORT"),
+		Pg:               pgConfig,
+		Redis:            redisConfig,
+		TgClientEndpoint: os.Getenv("TG_CLIENT_ENDPOINT"),
 	}
 }

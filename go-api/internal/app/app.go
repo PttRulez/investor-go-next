@@ -11,13 +11,14 @@ import (
 	"time"
 
 	"github.com/pttrulez/investor-go-next/go-api/config"
+	grpcServer "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/grpc/server"
 	api "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server"
 	issclient "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/iss-client"
-	"github.com/pttrulez/investor-go-next/go-api/internal/service/telegram"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage/postgres"
 	"github.com/pttrulez/investor-go-next/go-api/internal/service/moex"
 	"github.com/pttrulez/investor-go-next/go-api/internal/service/opinion"
 	"github.com/pttrulez/investor-go-next/go-api/internal/service/portfolio"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service/telegram"
 	"github.com/pttrulez/investor-go-next/go-api/internal/service/user"
 	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 	"github.com/redis/go-redis/v9"
@@ -51,8 +52,8 @@ func Run() {
 	})
 
 	// init tgClient
-	telega := telegram.New(cfg.TgClientPort, logger)
-	fmt.Println("Telegram client started on port: ", cfg.TgClientPort)
+	telega := telegram.New(cfg.TgClientEndpoint, logger)
+	fmt.Println("Telegram client is ready to send to ednpoint: ", cfg.TgClientEndpoint)
 
 	// init services
 	moex := moex.NewMoexService(issClient, repo)
@@ -60,6 +61,12 @@ func Run() {
 	portfolio := portfolio.NewPortfolioService(issClient, logger, moex, repo, redisClient,
 		telega, transactioner)
 	user := user.NewUserService(repo)
+
+	// grpc Server
+	grpcServ := grpcServer.NewGRPCServer(portfolio)
+	go func() {
+		grpcServ.MustStart(cfg.GrpcServerPort)
+	}()
 
 	// start API Server
 	apiServer, err := api.StartApiServer(cfg.API, api.Services{
