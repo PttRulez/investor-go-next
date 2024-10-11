@@ -13,7 +13,7 @@ import (
 )
 
 func writeError(w http.ResponseWriter, err error) {
-	if errors.Is(err, service.ErrdomainNotFound) {
+	if errors.Is(err, service.ErrDomainNotFound) {
 		writeString(w, http.StatusNotFound, "Не найдено")
 		return
 	}

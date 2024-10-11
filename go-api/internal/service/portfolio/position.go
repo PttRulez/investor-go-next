@@ -36,6 +36,7 @@ func (s *Service) newPosition(ctx context.Context, exchange domain.Exchange, por
 	const op = "DealService.newPosition"
 
 	position := domain.Position{
+		Exchange:     exchange,
 		PortfolioID:  portfolioID,
 		Ticker:       ticker,
 		SecurityType: securityType,
@@ -69,6 +70,10 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
+	fmt.Println(`exchange,
+		portfolioID,
+		securityType,
+		ticker`, exchange, portfolioID, securityType, ticker)
 
 	var position domain.Position
 	oldPosition, err := s.repo.GetPosition(
@@ -83,6 +88,7 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 	}
 	if errors.Is(err, storage.ErrNotFound) {
 		position, err = s.newPosition(ctx, exchange, portfolioID, ticker, securityType, userID)
+		fmt.Println("Created new position")
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -90,7 +96,10 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 		position = oldPosition
 	}
 
+	fmt.Printf("Postion Before update:\n%+v", position)
+
 	position = position.UpdateByDeals(allDeals, decimalCount)
+	fmt.Printf("Postion After update:\n%+v", position)
 
 	if position.ID == 0 {
 		err = s.repo.InsertPosition(ctx, position)

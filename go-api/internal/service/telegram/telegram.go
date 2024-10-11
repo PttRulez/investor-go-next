@@ -14,7 +14,6 @@ import (
 
 func (t *Telegram) SendMsg(ctx context.Context, text string) {
 	chatId := utils.GetCurrentUserTgChatID(ctx)
-	fmt.Println("CHATID", chatId)
 	if chatId != "" {
 		err := t.grpcClient.SendMsg(ctx, &protogen.MessageInfo{
 			ChatId: chatId,

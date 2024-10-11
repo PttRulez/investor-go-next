@@ -49,7 +49,7 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 		d, err := s.repo.DeleteDeal(ctx, id, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
-				return service.ErrdomainNotFound
+				return service.ErrDomainNotFound
 			}
 			return fmt.Errorf("%s: %w", op, err)
 		}

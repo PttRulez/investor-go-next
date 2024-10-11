@@ -35,7 +35,7 @@ func (s *GRPCServer) GetPortfolioList(ctx context.Context,
 func (s *GRPCServer) GetPortfolioSummaryMessage(ctx context.Context,
 	req *protogen.PortfolioRequest) (*protogen.PortfolioSummaryResponse, error) {
 
-	msg, err := s.portfolioService.GetPortfolioSummary(ctx, int(req.GetId()))
+	msg, err := s.portfolioService.GetPortfolioSummary(ctx, int(req.GetId()), req.GetChatId())
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ type GRPCServer struct {
 
 type PortfolioService interface {
 	GetPortfolioListByChatID(ctx context.Context, chatId string) ([]domain.Portfolio, error)
-	GetPortfolioSummary(ctx context.Context, portfolioId int) (string, error)
+	GetPortfolioSummary(ctx context.Context, portfolioId int, chatID string) (string, error)
 }
 
 func NewGRPCServer(portfolioService PortfolioService) *GRPCServer {

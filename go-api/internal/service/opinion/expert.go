@@ -28,7 +28,7 @@ func (s *Service) DeleteExpert(ctx context.Context, id int, userID int) error {
 
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return service.ErrdomainNotFound
+			return service.ErrDomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -52,7 +52,7 @@ func (s *Service) GetExpert(ctx context.Context, id int, userID int) (domain.Exp
 
 	expert, err := s.repo.GetExpert(ctx, id, userID)
 	if errors.Is(err, storage.ErrNotFound) {
-		return expert, service.ErrdomainNotFound
+		return expert, service.ErrDomainNotFound
 	}
 	if err != nil {
 		return expert, fmt.Errorf("%s: %w", op, err)
@@ -67,7 +67,7 @@ func (s *Service) UpdateExpert(ctx context.Context, expert domain.Expert, userID
 
 	expert, err := s.repo.UpdateExpert(ctx, expert, userID)
 	if errors.Is(err, storage.ErrNotFound) {
-		return expert, service.ErrdomainNotFound
+		return expert, service.ErrDomainNotFound
 	}
 	if err != nil {
 		return expert, fmt.Errorf("%s: %w", op, err)

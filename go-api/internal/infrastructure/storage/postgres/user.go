@@ -41,6 +41,24 @@ func (pg *Repository) GetUserByEmail(ctx context.Context, email string) (domain.
 	return u, nil
 }
 
+func (pg *Repository) GetUserByChatID(ctx context.Context, chatID string) (domain.User, error) {
+	const op = "Repository.GetUserByEmail"
+
+	querySting := `SELECT * FROM users WHERE invest_bot_tg_chat_id = $1 LIMIT 1;`
+	row := pg.db.QueryRowContext(ctx, querySting, chatID)
+
+	var u domain.User
+	err := row.Scan(&u.ID, &u.Email, &u.HashedPassword, &u.Name, &u.Role, &u.TgChatID)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.User{}, storage.ErrNotFound
+	}
+	if err != nil {
+		return domain.User{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return u, nil
+}
+
 func (pg *Repository) GetUser(ctx context.Context, id int) (domain.User, error) {
 	const op = "Repository.GetUser"
 

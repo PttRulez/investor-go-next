@@ -38,7 +38,7 @@ func (s *Service) DeleteOpinionByID(ctx context.Context, id int, userID int) err
 	err := s.repo.DeleteOpinion(ctx, id, userID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return service.ErrdomainNotFound
+			return service.ErrDomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}

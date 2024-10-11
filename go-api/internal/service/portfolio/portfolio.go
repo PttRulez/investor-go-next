@@ -9,7 +9,6 @@ import (
 	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
 	"github.com/pttrulez/investor-go-next/go-api/internal/service"
-	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -32,7 +31,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	eg.Go(func() error {
 		p, err := s.GetPortfolioByID(ctx, portfolioID, userID)
 		if errors.Is(err, sql.ErrNoRows) {
-			return service.ErrdomainNotFound
+			return service.ErrDomainNotFound
 		}
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
@@ -127,7 +126,7 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	// депозиты и кэшауты
 	eg.Go(func() error {
 		var err error
-		transactions, err = s.repo.GetTransactionList(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+		transactions, err = s.repo.GetTransactionList(ctx, portfolioID, userID)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -279,7 +278,7 @@ func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
 
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return domain.Portfolio{}, service.ErrdomainNotFound
+			return domain.Portfolio{}, service.ErrDomainNotFound
 		}
 		return domain.Portfolio{}, fmt.Errorf("%s: %w", op, err)
 	}
@@ -287,19 +286,26 @@ func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,
 	return portfolio, nil
 }
 
-func (s *Service) GetPortfolioSummary(ctx context.Context, portfolioID int) (string, error) {
+func (s *Service) GetPortfolioSummary(ctx context.Context, portfolioID int, chatID string) (string, error) {
 	const op = "PortfolioService.TgFullPortfolioMessage"
 
-	p, err := s.GetFullPortfolioByID(ctx, portfolioID, utils.GetCurrentUserID(ctx))
+	u, err := s.userService.GetUserByChatID(ctx, chatID)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
-	message := fmt.Sprintf(`Портфель: %s - %d
-		Акции: %d руб.
-		Облигации: %d руб.
-		Рубли: %d руб.
-	`, p.Name, p.TotalCost, p.BondsCost, p.SharesCost, p.Cash)
+	p, err := s.GetFullPortfolioByID(ctx, portfolioID, u.ID)
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	message := fmt.Sprintf(`
+	Портфель "%s"
+	Всего: %d руб.
+	Акции: %d руб.
+	Облигации: %d руб.
+	Рубли: %d руб.
+	`, p.Name, p.TotalCost, p.SharesCost, p.BondsCost, p.Cash)
 
 	return message, nil
 }
@@ -311,7 +317,7 @@ func (s *Service) DeletePortfolio(ctx context.Context, portfolioID int, userID i
 
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return service.ErrdomainNotFound
+			return service.ErrDomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -326,7 +332,7 @@ func (s *Service) UpdatePortfolio(ctx context.Context, portfolio domain.Portfoli
 	updatedPortoflio, err := s.repo.UpdatePortfolio(ctx, portfolio, userID)
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return domain.Portfolio{}, service.ErrdomainNotFound
+			return domain.Portfolio{}, service.ErrDomainNotFound
 		}
 		return domain.Portfolio{}, fmt.Errorf("%s: %w", op, err)
 	}

@@ -27,7 +27,7 @@ func (s *Service) DeleteTransaction(ctx context.Context, transactionID int, user
 
 	if err != nil {
 		if errors.Is(err, storage.ErrNotFound) {
-			return service.ErrdomainNotFound
+			return service.ErrDomainNotFound
 		}
 		return fmt.Errorf("%s: %w", op, err)
 	}

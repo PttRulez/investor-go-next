@@ -63,6 +63,10 @@ type Repository interface {
 	InsertTransaction(ctx context.Context, t domain.Transaction) (domain.Transaction, error)
 }
 
+type UserService interface {
+	GetUserByChatID(ctx context.Context, chatID string) (domain.User, error)
+}
+
 type Telegram interface {
 	SendMsg(ctx context.Context, text string)
 }
@@ -74,6 +78,7 @@ type Service struct {
 	redisClient *redis.Client
 	repo        Repository
 	tg          Telegram
+	userService UserService
 }
 
 func NewPortfolioService(
@@ -83,6 +88,7 @@ func NewPortfolioService(
 	repo Repository,
 	redisClient *redis.Client,
 	tg Telegram,
+	userService UserService,
 ) *Service {
 	return &Service{
 		repo:        repo,
@@ -91,5 +97,6 @@ func NewPortfolioService(
 		moexService: moexService,
 		redisClient: redisClient,
 		tg:          tg,
+		userService: userService,
 	}
 }

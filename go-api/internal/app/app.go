@@ -56,11 +56,11 @@ func Run() {
 	fmt.Println("Telegram client is ready to send to ednpoint: ", cfg.TgClientEndpoint)
 
 	// init services
+	user := user.NewUserService(repo)
 	moex := moex.NewMoexService(issClient, repo)
 	opinion := opinion.NewOpinionService(repo)
 	portfolio := portfolio.NewPortfolioService(issClient, logger, moex, repo, redisClient,
-		telega)
-	user := user.NewUserService(repo)
+		telega, user)
 
 	// grpc Server
 	grpcServ := grpcServer.NewGRPCServer(portfolio)
