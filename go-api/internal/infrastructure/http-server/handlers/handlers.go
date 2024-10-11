@@ -3,8 +3,8 @@ package handlers
 import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/interfaces"
-	"github.com/pttrulez/investor-go/pkg/logger"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/interfaces"
+	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 )
 
 func NewHandlers(

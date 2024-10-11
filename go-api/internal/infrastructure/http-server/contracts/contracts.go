@@ -349,7 +349,7 @@ type UpdatePositionRequest struct {
 
 // UpdateUserRequest defines model for UpdateUserRequest.
 type UpdateUserRequest struct {
-	InvestBotTgChatId *int    `json:"investBotTgChatId,omitempty"`
+	InvestBotTgChatId *string `json:"investBotTgChatId,omitempty"`
 	Name              *string `json:"name,omitempty"`
 }
 

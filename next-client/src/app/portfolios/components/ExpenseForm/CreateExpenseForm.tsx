@@ -7,7 +7,11 @@ import {
 } from '@/validation/expense-schema';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Button from '@mui/material/Button/Button';
-import { DefaultFormBox, FormDatePicker, FormText } from '@pttrulez';
+import {
+  DefaultFormBox,
+  FormDatePicker,
+  FormText,
+} from '@pttrulez/mui-based-ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
 import { useForm } from 'react-hook-form';

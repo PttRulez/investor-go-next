@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 )
 
 func (s *Service) CreateExpense(ctx context.Context, d domain.Expense,

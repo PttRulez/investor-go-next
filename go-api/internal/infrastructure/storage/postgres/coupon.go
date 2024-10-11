@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
 )
 
 func (pg *Repository) DeleteCoupon(ctx context.Context, id int, userID int) error {

@@ -3,7 +3,7 @@ package opinion
 import (
 	"context"
 
-	"github.com/pttrulez/investor-go/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 )
 
 type Repository interface {

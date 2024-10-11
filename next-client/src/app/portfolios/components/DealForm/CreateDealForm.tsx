@@ -12,7 +12,11 @@ import {
 import { CreateDealData, CreateDealSchema } from '@/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Box, Button, Typography } from '@mui/material';
-import { DefaultFormBox, FormDatePicker, FormText } from '@pttrulez';
+import {
+  DefaultFormBox,
+  FormDatePicker,
+  FormText,
+} from '@pttrulez/mui-based-ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
 import { FC, useEffect } from 'react';
@@ -35,7 +39,7 @@ const CreateDealForm: FC<DealFormProps> = ({
     useForm<CreateDealData>({
       defaultValues: {
         comission: 0,
-        date: dayjs().toDate(),
+        date: dayjs().format('YYYY-MM-DD'),
         exchange: Exchange.MOEX,
         portfolioId,
         type: dealType,
@@ -178,7 +182,7 @@ const CreateDealForm: FC<DealFormProps> = ({
         handleClear={() => resetField('date')}
         onChange={(newValue: Dayjs | null) => {
           if (newValue) {
-            setValue('date', newValue?.toDate());
+            setValue('date', newValue?.format('YYYY-MM-DD'));
           } else {
             resetField('date');
           }

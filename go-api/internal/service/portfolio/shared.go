@@ -3,7 +3,7 @@ package portfolio
 import (
 	"context"
 
-	"github.com/pttrulez/investor-go/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 )
 
 func (s *Service) checkSecurity(ctx context.Context, e domain.Exchange,

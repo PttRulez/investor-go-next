@@ -23,13 +23,18 @@ test:
 	@go test -v ./...
 
 migrate_up:
-	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" up
+	goose -dir db/migrations postgres "postgresql://$(PG_USERNAME):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" up
 
 migrate_down:
-	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" down
+	goose -dir db/migrations postgres "postgresql://$(PG_USERNAME):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" down
 
 migrate_down_all:
-	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" down-to 0
+	goose -dir db/migrations postgres "postgresql://$(PG_USERNAME):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" down-to 0
 
 migrate_reset:
-	goose -dir db/migrations postgres "postgresql://postgres:$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" reset
+	goose -dir db/migrations postgres "postgresql://$(PG_USERNAME):$(PG_PASSWORD)@$(PG_HOST):$(PG_PORT)/$(PG_DB_NAME)?sslmode=disable" reset
+
+proto:
+	protoc --go_out=. --go-grpc_out=. proto/telegram.proto
+
+.PHONY: proto

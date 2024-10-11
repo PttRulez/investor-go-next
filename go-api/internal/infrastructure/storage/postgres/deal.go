@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
 )
 
 func (pg *Repository) DeleteDeal(ctx context.Context, id int, userID int) (domain.Deal, error) {
@@ -16,7 +16,7 @@ func (pg *Repository) DeleteDeal(ctx context.Context, id int, userID int) (domai
 	// Удаляем через QueryRowContext т.к нам в сервисе нужна полная инфа по сделке, чтобы
 	// пересчитать позицию, куда входила сделка
 	queryString := `DELETE FROM deals WHERE id = $1 AND user_id = $2 RETURNING *;`
-	row := pg.db.QueryRowContext(ctx, queryString, id, userID)
+	row := pg.t(ctx).QueryRowContext(ctx, queryString, id, userID)
 
 	var d domain.Deal
 
@@ -67,7 +67,7 @@ func (pg *Repository) GetDealList(ctx context.Context,
     	d.date DESC,
     	d.id DESC;`
 
-	rows, err := pg.db.QueryContext(ctx, queryString, portfolioID, userID)
+	rows, err := pg.t(ctx).QueryContext(ctx, queryString, portfolioID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -112,7 +112,7 @@ func (pg *Repository) GetDealListForSecurity(ctx context.Context, exchange domai
 		WHERE d.exchange = $1 AND d.security_type = $2 AND d.ticker = $3 AND d.portfolio_id = $4
 		ORDER BY d.date DESC, d.id DESC;`
 
-	rows, err := pg.db.QueryContext(
+	rows, err := pg.t(ctx).QueryContext(
 		ctx,
 		queryString,
 		exchange,
@@ -153,16 +153,9 @@ func (pg *Repository) GetDealListForSecurity(ctx context.Context, exchange domai
 	return deals, nil
 }
 
-func (pg *Repository) InsertDeal(ctx context.Context, tx *sql.Tx, d domain.Deal) (domain.Deal, error) {
+func (pg *Repository) InsertDeal(ctx context.Context, d domain.Deal) (domain.Deal, error) {
 	const op = "Repository.InsertDeal"
 	var err error
-
-	if tx == nil {
-		tx, err = pg.db.BeginTx(ctx, &sql.TxOptions{})
-		if err != nil {
-			return domain.Deal{}, fmt.Errorf("%s: %w", op, err)
-		}
-	}
 
 	queryString := `INSERT INTO deals (amount, commission, date, exchange, portfolio_id, price,
 		security_type, ticker, type, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -170,7 +163,7 @@ func (pg *Repository) InsertDeal(ctx context.Context, tx *sql.Tx, d domain.Deal)
 		ticker, type;`
 
 	var deal domain.Deal
-	err = tx.QueryRowContext(
+	err = pg.t(ctx).QueryRowContext(
 		ctx,
 		queryString,
 		d.Amount,
@@ -210,7 +203,7 @@ func (pg *Repository) UpdateDeal(ctx context.Context, d domain.Deal) (domain.Dea
 		RETURNING amount, date, exchange, portfolio_id, price, security_type, ticker, type;`
 
 	var deal domain.Deal
-	err := pg.db.QueryRowContext(
+	err := pg.t(ctx).QueryRowContext(
 		ctx,
 		queryString,
 		d.Amount,

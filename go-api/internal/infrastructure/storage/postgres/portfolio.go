@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
 )
 
 func (pg *Repository) DeletePortfolio(ctx context.Context, id int, userID int) error {
@@ -32,13 +32,15 @@ func (pg *Repository) DeletePortfolio(ctx context.Context, id int, userID int) e
 	return nil
 }
 
-func (pg *Repository) GetPortfolio(ctx context.Context, id int, userID int) (domain.Portfolio, error) {
+func (pg *Repository) GetPortfolio(ctx context.Context, id int, userID int) (
+	domain.Portfolio, error) {
 	const op = "Repository.GetPortfolio"
 
 	queryString := `SELECT * FROM portfolios where id = $1 AND user_id = $2;`
 
 	var p domain.Portfolio
-	err := pg.db.QueryRowContext(ctx, queryString, id, userID).Scan(&p.ID, &p.Compound, &p.Name, &p.UserID)
+	err := pg.db.QueryRowContext(ctx, queryString, id, userID).Scan(&p.ID, &p.Compound,
+		&p.Name, &p.UserID)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -50,11 +52,42 @@ func (pg *Repository) GetPortfolio(ctx context.Context, id int, userID int) (dom
 	return p, nil
 }
 
-func (pg *Repository) GetPortfolioList(ctx context.Context, userID int) ([]domain.Portfolio, error) {
+func (pg *Repository) GetPortfolioList(ctx context.Context, userID int) (
+	[]domain.Portfolio, error) {
 	const op = "Repository.GetPortfolioList"
 
 	queryString := `SELECT id, compound, name FROM portfolios where user_id = $1;`
 	rows, err := pg.db.QueryContext(ctx, queryString, strconv.Itoa(userID))
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var portfolios []domain.Portfolio
+	for rows.Next() {
+		var p domain.Portfolio
+		err = rows.Scan(&p.ID, &p.Compound, &p.Name)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		portfolios = append(portfolios, p)
+	}
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("%s: %w", op, rows.Err())
+	}
+
+	return portfolios, nil
+}
+
+func (pg *Repository) GetPortfolioListByChatID(ctx context.Context, chatId string) (
+	[]domain.Portfolio, error) {
+	const op = "Repository.GetPortfolioList"
+
+	queryString := `SELECT id, compound, name FROM portfolios where user_id = (
+		SELECT id FROM users WHERE invest_bot_tg_chat_id = $1 LIMIT 1
+	);`
+
+	rows, err := pg.db.QueryContext(ctx, queryString, chatId)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

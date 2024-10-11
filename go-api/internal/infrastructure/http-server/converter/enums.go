@@ -3,8 +3,8 @@ package converter
 import (
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
 )
 
 type WrongEnumValueError struct {

@@ -3,8 +3,8 @@ package moex
 import (
 	"context"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/iss-client"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/iss-client"
 )
 
 func NewMoexService(

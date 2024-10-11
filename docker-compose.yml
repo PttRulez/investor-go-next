@@ -5,13 +5,13 @@ services:
     image: postgres
     restart: always
     ports:
-      - ${PG_PORT_DOCKER}:${PG_PORT}
+      - ${PG_PORT_DOCKER}:5432
     environment:
       - POSTGRES_USER=${PG_USERNAME}
       - POSTGRES_DB=${PG_DB_NAME}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
     volumes:
-      - pg_go_investor:/var/lib/postgresql
+      - ./docker-volumes/postgres:/var/lib/postgresql/data
     networks:
       - investor_network
     healthcheck:
@@ -29,13 +29,22 @@ services:
       interval: 10s
       retries: 10
 
+  redis:
+    container_name: investor-redis
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - ${DOCKER_REDIS_PORT}:6379
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./docker-volumes/redis/data:/data
+      # - ./docker-volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
+
   backend:
-    container_name: investor-go-controller
+    container_name: investor-go-backend
     build:
       context: ./go-api
       dockerfile: Dockerfile
-    environment:
-      - DB_HOST=postgresdb
     depends_on:
       postgresdb:
         condition: service_healthy
@@ -45,17 +54,14 @@ services:
       - investor_network
 
   frontend:
-    container_name: investor-client
+    container_name: investor-next-client
     build:
       context: ./next-client
       dockerfile: Dockerfile
     ports:
-      - ${DOCKER_NEXTC_LIENT_PORT}:${NEXT_CLIENT_PORT}
+      - ${DOCKER_NEXT_CLIENT_PORT}:${NEXT_CLIENT_PORT}
     networks:
       - investor_network
-
-volumes:
-  pg_go_investor:
 
 networks:
   investor_network:

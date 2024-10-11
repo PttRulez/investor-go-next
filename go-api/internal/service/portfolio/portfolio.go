@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
-	"github.com/pttrulez/investor-go/internal/service"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -265,6 +265,10 @@ func (s *Service) CreatePortfolio(ctx context.Context, p domain.Portfolio) (doma
 func (s *Service) GetPortfolioList(ctx context.Context, userID int) ([]domain.Portfolio,
 	error) {
 	return s.repo.GetPortfolioList(ctx, userID)
+}
+
+func (s *Service) GetPortfolioListByChatID(ctx context.Context, chatId string) ([]domain.Portfolio, error) {
+	return s.repo.GetPortfolioListByChatID(ctx, chatId)
 }
 
 func (s *Service) GetPortfolioByID(ctx context.Context, portfolioID int,

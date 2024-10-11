@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/pttrulez/investor-go/pkg/logger/slogpretty"
+	"github.com/pttrulez/investor-go-next/go-api/pkg/logger/slogpretty"
 )
 
 type Logger struct {

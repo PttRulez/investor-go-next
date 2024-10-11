@@ -13,7 +13,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 import { redirect, useRouter } from 'next/navigation';
 import Head from 'next/head';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { IPortfolioResponse } from '@/types/apis/go-api';
 import { CreatePortfolioData, UpdatePortfolioData } from '@/validation';
 
@@ -26,7 +26,8 @@ export default function PortfoliosPage() {
   const { data: session } = useSession({
     required: true,
     onUnauthenticated() {
-      redirect('/api/auth/signin?callbackUrl=/portfolios');
+      signOut();
+      // redirect('/api/auth/signin?callbackUrl=/portfolios');
     },
   });
   const client = useQueryClient();

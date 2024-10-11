@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option go_package = "pkg/protogen";
+
+service Telega {
+	rpc GetPortfolioList(PortfolioListRequest) returns (PortfolioListResponse);
+	rpc GetPortfolioSummaryMessage(PortfolioRequest) returns (PortfolioSummaryResponse);
+}
+
+message Portfolio {
+	int32 id = 1;
+	string name = 2;
+}
+
+message PortfolioListRequest {
+	string chatId = 1;
+}
+
+message PortfolioRequest {
+	int32 id = 1;
+	string chatId = 2;
+}
+
+message PortfolioListResponse {
+	repeated Portfolio portfolios = 1;
+}
+
+message PortfolioSummaryResponse {
+	string text = 1;
+}

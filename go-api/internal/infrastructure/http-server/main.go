@@ -9,14 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/handlers"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/interfaces"
-	mwLogger "github.com/pttrulez/investor-go/internal/infrastructure/http-server/middleware/logger"
-	"github.com/pttrulez/investor-go/pkg/logger"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/handlers"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/interfaces"
+	mwLogger "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/logger"
+	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 )
 
 func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, error) {

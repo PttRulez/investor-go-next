@@ -20,8 +20,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
-      "@pttrulez": ["../../../ui/src"]
+      "@/*": ["./src/*"]
+      // "@pttrulez": ["../../../ui/src"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

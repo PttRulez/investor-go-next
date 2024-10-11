@@ -8,9 +8,9 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/converter"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/converter"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 
 	"github.com/go-playground/validator/v10"
 )

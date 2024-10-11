@@ -14,5 +14,5 @@ type User struct {
 	Name           string
 	Password       string
 	Role           Role
-	TgChatID       *int
+	TgChatID       *string
 }

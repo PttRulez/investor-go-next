@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/converter"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/converter"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 )
 
 func (c *Handlers) CreateNewPortfolio(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +74,6 @@ func (c *Handlers) GetPortfolioByID(w http.ResponseWriter, r *http.Request) {
 	const op = "Handlers.GetPortfolioByID"
 	ctx := r.Context()
 	portfolioID, err := strconv.Atoi(chi.URLParam(r, "id"))
-
 	if err != nil {
 		c.logger.Error(err)
 		writeString(w, http.StatusBadRequest, fmt.Sprintf("%s: Проблема с конвертацией айди %s: %s",

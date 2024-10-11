@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
-	"github.com/pttrulez/investor-go/internal/service"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
 func (s *Service) AttachToPosition(ctx context.Context, opinionID, positionID int) error {

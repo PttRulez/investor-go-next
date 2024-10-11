@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/converter"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/converter"
 
 	"github.com/go-chi/chi/v5"
 )

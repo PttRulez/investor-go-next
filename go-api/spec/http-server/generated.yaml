@@ -1205,6 +1205,6 @@ components:
       type: object
       properties:
         investBotTgChatId:
-          type: integer
+          type: string
         name:
           type: string

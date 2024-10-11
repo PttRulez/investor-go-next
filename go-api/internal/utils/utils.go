@@ -13,6 +13,16 @@ func GetCurrentUserID(ctx context.Context) int {
 	return int(claims["id"].(float64))
 }
 
+func GetCurrentUserTgChatID(ctx context.Context) string {
+	_, claims, _ := jwtauth.FromContext(ctx)
+
+	if chatId, ok := claims["tg_chat_id"].(string); ok {
+		return chatId
+	}
+
+	return ""
+}
+
 func SignsAfterDot(f float64) int {
 	s := fmt.Sprintf("%v", f)
 	parts := strings.Split(s, ".")

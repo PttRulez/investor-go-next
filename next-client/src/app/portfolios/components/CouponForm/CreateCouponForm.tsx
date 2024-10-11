@@ -15,7 +15,7 @@ import {
   FormDatePicker,
   FormSelect,
   FormText,
-} from '@pttrulez';
+} from '@pttrulez/mui-based-ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import dayjs, { Dayjs } from 'dayjs';
 import { useForm } from 'react-hook-form';

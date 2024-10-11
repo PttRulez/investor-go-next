@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 )
 
 type ISSSecInfo struct {

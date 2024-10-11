@@ -1,8 +1,8 @@
 package converter
 
 import (
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
 )
 
 func FromCreateExpertRequestToExpert(req contracts.CreateExpertRequest) domain.Expert {

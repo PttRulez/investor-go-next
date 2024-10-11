@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/converter"
-	"github.com/pttrulez/investor-go/internal/service/user"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/converter"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service/user"
 )
 
 const tokentExpHours = 6
@@ -47,10 +47,11 @@ func (c *Handlers) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := jwt.MapClaims{
-		"id":    u.ID,
-		"email": u.Email,
-		"name":  u.Name,
-		"role":  u.Role,
+		"id":         u.ID,
+		"email":      u.Email,
+		"name":       u.Name,
+		"role":       u.Role,
+		"tg_chat_id": u.TgChatID,
 	}
 
 	jwtauth.SetExpiry(claims, time.Now().Add(time.Hour*tokentExpHours))

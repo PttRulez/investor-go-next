@@ -1,9 +1,7 @@
-import type { NextAuthOptions } from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import investorService from '@/axios/investor/investor.service';
-import NextAuth from 'next-auth/next';
-import { cookies } from 'next/headers';
 import axios from 'axios';
+import type { NextAuthOptions } from 'next-auth';
+import NextAuth from 'next-auth/next';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 const options: NextAuthOptions = {
   pages: {

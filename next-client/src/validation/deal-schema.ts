@@ -15,7 +15,7 @@ export const CreateDealSchema = z.object({
       message: 'Введите комиссию',
     }),
   }),
-  date: z.date(),
+  date: z.string(),
   exchange: z.nativeEnum(Exchange),
   portfolioId: z.number(),
   price: z.number({

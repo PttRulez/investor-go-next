@@ -2,31 +2,30 @@ package portfolio
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
-	"github.com/pttrulez/investor-go/internal/service"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
 func (s *Service) CreateDeal(ctx context.Context, d domain.Deal, userID int) (domain.Deal, error) {
 	const op = "DealService.Create"
-	var res domain.Deal
 
-	err := s.repo.ExecAsTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+	var res domain.Deal
+	err := s.repo.Transac(ctx, nil, func(ctx context.Context) error {
 		decimalCount, err := s.checkSecurity(ctx, d.Exchange, d.SecurityType, d.Ticker)
 		if err != nil {
 			return err
 		}
 
-		res, err = s.repo.InsertDeal(ctx, tx, d)
+		res, err = s.repo.InsertDeal(ctx, d)
 		if err != nil {
 			return err
 		}
 
-		err = s.updatePositionInDB(ctx, tx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
+		err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
 			userID, decimalCount)
 		if err != nil {
 			return err
@@ -38,13 +37,15 @@ func (s *Service) CreateDeal(ctx context.Context, d domain.Deal, userID int) (do
 		return domain.Deal{}, fmt.Errorf("%s: %w", op, err)
 	}
 
+	s.tg.SendMsg(ctx, fmt.Sprintf("Deal created:\n%s: %d шт.", res.Ticker, res.Amount))
+
 	return res, nil
 }
 
 func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error {
 	const op = "DealService.DeleteDealByID"
 
-	err := s.repo.ExecAsTransaction(ctx, func(ctx context.Context, tx *sql.Tx) error {
+	err := s.transactioner.Transac(ctx, nil, func(ctx context.Context) error {
 		d, err := s.repo.DeleteDeal(ctx, id, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {
@@ -62,7 +63,7 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 			decimalCount = share.PriceDecimals
 		}
 
-		err = s.updatePositionInDB(ctx, tx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
+		err = s.updatePositionInDB(ctx, d.PortfolioID, d.Exchange, d.SecurityType, d.Ticker,
 			userID, decimalCount)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
@@ -72,33 +73,4 @@ func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error 
 	})
 
 	return err
-}
-
-func (s *Service) createNewPosition(ctx context.Context, exchange domain.Exchange, portfolioID int,
-	ticker string, securityType domain.SecurityType) (domain.Position, error) {
-	const op = "DealService.createNewPosition"
-
-	position := domain.Position{
-		PortfolioID:  portfolioID,
-		Ticker:       ticker,
-		SecurityType: securityType,
-	}
-
-	if exchange == domain.EXCHMoex && securityType == domain.STShare {
-		share, err := s.moexService.GetShareByTicker(ctx, ticker)
-		if err != nil {
-			return domain.Position{}, fmt.Errorf("%s: %w", op, err)
-		}
-		position.Board = share.Board
-		position.ShortName = share.ShortName
-	} else if exchange == domain.EXCHMoex && securityType == domain.STBond {
-		bond, err := s.moexService.GetBondByTicker(ctx, ticker)
-		if err != nil {
-			return domain.Position{}, fmt.Errorf("%s: %w", op, err)
-		}
-		position.Board = bond.Board
-		position.ShortName = bond.ShortName
-	}
-
-	return position, nil
 }

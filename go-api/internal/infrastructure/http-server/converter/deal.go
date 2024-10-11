@@ -4,9 +4,9 @@ import (
 	"context"
 
 	openapi_types "github.com/oapi-codegen/runtime/types"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 )
 
 func FromCreateDealRequestToDeal(ctx context.Context, req contracts.CreateDealRequest) (domain.Deal, error) {

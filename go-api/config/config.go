@@ -6,17 +6,10 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
-	api "github.com/pttrulez/investor-go/internal/infrastructure/http-server"
+	api "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server"
 )
 
-type APIConfig struct {
-	APIHost         string
-	APIPort         int
-	AllowedCors     []string
-	TokenAuthSecret string
-}
-
-type PostgresConfig struct {
+type Postgres struct {
 	DBName   string
 	SSLMode  string
 	Host     string
@@ -25,9 +18,17 @@ type PostgresConfig struct {
 	Username string
 }
 
+type Redis struct {
+	Address  string
+	Password string
+	DB       int
+}
+
 type Config struct {
-	API api.Config
-	Pg  PostgresConfig
+	API          api.Config
+	Pg           Postgres
+	TgClientPort string
+	Redis        Redis
 }
 
 func MustLoad() *Config {
@@ -36,7 +37,7 @@ func MustLoad() *Config {
 		panic("Error loading .env file")
 	}
 
-	pgConfig := PostgresConfig{
+	pgConfig := Postgres{
 		DBName:   os.Getenv("PG_DB_NAME"),
 		Host:     os.Getenv("PG_HOST"),
 		Password: os.Getenv("PG_PASSWORD"),
@@ -45,21 +46,28 @@ func MustLoad() *Config {
 		Username: os.Getenv("PG_USERNAME"),
 	}
 
-	apiPort, _ := strconv.Atoi(os.Getenv("GO_API_PORT"))
-	apiHost := os.Getenv("GO_API_HOST")
-	corsString := os.Getenv("CORS_ALLOWED_ORIGINS")
-	allowedCors := strings.Split(corsString, ",")
-	tokenAuthSecret := os.Getenv("TOKEN_AUTH_SECRET")
+	apiPort, err := strconv.Atoi(os.Getenv("GO_API_PORT"))
+	if err != nil {
+		panic(err)
+	}
 
 	apiConfig := api.Config{
-		AllowedCors:     allowedCors,
+		AllowedCors:     strings.Split(os.Getenv("CORS_ALLOWED_ORIGINS"), ","),
 		APIPort:         apiPort,
-		APIHost:         apiHost,
-		TokenAuthSecret: tokenAuthSecret,
+		APIHost:         os.Getenv("GO_API_HOST"),
+		TokenAuthSecret: os.Getenv("TOKEN_AUTH_SECRET"),
+	}
+
+	redisConfig := Redis{
+		Address:  os.Getenv("REDIS_ADDRESS"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
 	}
 
 	return &Config{
-		API: apiConfig,
-		Pg:  pgConfig,
+		API:          apiConfig,
+		Pg:           pgConfig,
+		Redis:        redisConfig,
+		TgClientPort: os.Getenv("TG_CLIENT_PORT"),
 	}
 }

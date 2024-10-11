@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
-	"github.com/pttrulez/investor-go/internal/service"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
 func (s *Service) CreateTransaction(ctx context.Context, t domain.Transaction) (domain.Transaction, error) {

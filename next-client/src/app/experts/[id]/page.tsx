@@ -3,7 +3,8 @@ import OpinionsTable from '@/app/opinions/components/OpinionsTable';
 const Expert = ({ params }: { params: { id: string } }) => {
   return (
     <>
-      <OpinionsTable filters={{ expertId: +params.id }} />
+      <h1>Expert Page</h1>
+      {/* <OpinionsTable filters={{ expertId: +params.id }} /> */}
     </>
   );
 };

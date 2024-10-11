@@ -9,7 +9,7 @@ import (
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/service"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
 func writeError(w http.ResponseWriter, err error) {

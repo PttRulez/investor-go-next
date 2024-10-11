@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/lib/pq"
-	"github.com/pttrulez/investor-go/internal/domain"
-	"github.com/pttrulez/investor-go/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
 )
 
 func (pg *Repository) AddPositionInfo(ctx context.Context, i domain.PositionUpdateInfo) error {
@@ -36,7 +36,7 @@ func (pg *Repository) AddPositionInfo(ctx context.Context, i domain.PositionUpda
 	queryString += fmt.Sprintf(" WHERE id = $%d;", count)
 	args = append(args, i.UserID)
 
-	result, err := pg.db.ExecContext(ctx, queryString, args...)
+	result, err := pg.t(ctx).ExecContext(ctx, queryString, args...)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -74,7 +74,7 @@ func (pg *Repository) GetPosition(ctx context.Context,
 
 	var p domain.Position
 
-	err := pg.db.QueryRowContext(
+	err := pg.t(ctx).QueryRowContext(
 		ctx,
 		queryString,
 		exchange,
@@ -156,7 +156,7 @@ func (pg *Repository) GetPortfolioPositionList(ctx context.Context, id int, user
 		    p.id;
 	`
 
-	rows, err := pg.db.QueryContext(ctx, queryString, id, userID)
+	rows, err := pg.t(ctx).QueryContext(ctx, queryString, id, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s QueryContext: %w", op, err)
 	}
@@ -216,7 +216,7 @@ func (pg *Repository) GetUserPositionList(ctx context.Context, userID int) (
 		WHERE p.user_id = $1;
 	`
 
-	rows, err := pg.db.QueryContext(ctx, queryString, userID)
+	rows, err := pg.t(ctx).QueryContext(ctx, queryString, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -261,7 +261,7 @@ func (pg *Repository) InsertPosition(ctx context.Context, p domain.Position) err
     ) 
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) ;`
 
-	_, err := pg.db.ExecContext(ctx, queryString,
+	_, err := pg.t(ctx).ExecContext(ctx, queryString,
 		p.Amount,
 		p.AveragePrice,
 		p.Board,
@@ -280,22 +280,15 @@ func (pg *Repository) InsertPosition(ctx context.Context, p domain.Position) err
 	return nil
 }
 
-func (pg *Repository) UpdatePosition(ctx context.Context, tx *sql.Tx, p domain.Position) error {
+func (pg *Repository) UpdatePosition(ctx context.Context, p domain.Position) error {
 	const op = "Repository.UpdatePosition"
 	var err error
-
-	if tx == nil {
-		tx, err = pg.db.BeginTx(ctx, &sql.TxOptions{})
-		if err != nil {
-			return fmt.Errorf("%s: %w", op, err)
-		}
-	}
 
 	queryString := `UPDATE positions SET amount = $1, average_price = $2, board = $3,
 		comment = $4, exchange = $5, portfolio_id = $6, security_type = $7, shortname = $8,
 		ticker = $9, target_price = $10 WHERE id = $11;`
 
-	_, err = tx.ExecContext(ctx, queryString,
+	_, err = pg.t(ctx).ExecContext(ctx, queryString,
 		p.Amount,
 		p.AveragePrice,
 		p.Board,

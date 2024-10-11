@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-playground/validator/v10"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/contracts"
-	"github.com/pttrulez/investor-go/internal/infrastructure/http-server/converter"
-	"github.com/pttrulez/investor-go/internal/utils"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/converter"
+	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 )
 
 func (c *Handlers) CreateDividend(w http.ResponseWriter, r *http.Request) {
