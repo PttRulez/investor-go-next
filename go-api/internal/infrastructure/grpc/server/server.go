@@ -25,7 +25,7 @@ func (s *GRPCServer) GetPortfolioList(ctx context.Context,
 
 	for i, p := range ps {
 		var pr protogen.Portfolio
-		pr.Id = int32(p.ID)
+		pr.Id = int64(p.ID)
 		pr.Name = p.Name
 		psProto[i] = &pr
 	}
