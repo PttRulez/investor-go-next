@@ -63,22 +63,17 @@ type Repository interface {
 	InsertTransaction(ctx context.Context, t domain.Transaction) (domain.Transaction, error)
 }
 
-type Transactioner interface {
-	Transac(ctx context.Context, opts *sql.TxOptions, fn func(ctx context.Context) error) (err error)
-}
-
 type Telegram interface {
 	SendMsg(ctx context.Context, text string)
 }
 
 type Service struct {
-	issClient     *issclient.IssClient
-	logger        *logger.Logger
-	moexService   *moex.Service
-	redisClient   *redis.Client
-	repo          Repository
-	tg            Telegram
-	transactioner Transactioner
+	issClient   *issclient.IssClient
+	logger      *logger.Logger
+	moexService *moex.Service
+	redisClient *redis.Client
+	repo        Repository
+	tg          Telegram
 }
 
 func NewPortfolioService(
@@ -88,15 +83,13 @@ func NewPortfolioService(
 	repo Repository,
 	redisClient *redis.Client,
 	tg Telegram,
-	transactioner Transactioner,
 ) *Service {
 	return &Service{
-		repo:          repo,
-		issClient:     issClient,
-		logger:        logger,
-		moexService:   moexService,
-		redisClient:   redisClient,
-		tg:            tg,
-		transactioner: transactioner,
+		repo:        repo,
+		issClient:   issClient,
+		logger:      logger,
+		moexService: moexService,
+		redisClient: redisClient,
+		tg:          tg,
 	}
 }

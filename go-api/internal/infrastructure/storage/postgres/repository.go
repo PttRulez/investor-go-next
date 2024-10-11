@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -10,12 +11,8 @@ type ctxKey string
 
 var txKey = ctxKey("tx")
 
-type withDB struct {
-	db *sql.DB
-}
-
 type Repository struct {
-	withDB
+	db *sql.DB
 }
 
 func (r *Repository) t(ctx context.Context) DXBT {
@@ -26,38 +23,38 @@ func (r *Repository) t(ctx context.Context) DXBT {
 	return tx
 }
 
-type Transactioner struct {
-	withDB
-}
+// type Transactioner struct {
+// 	withDB
+// }
 
-func (t *Transactioner) Transac(ctx context.Context, opts *sql.TxOptions,
-	fn func(ctx context.Context) error) (err error) {
-	if opts == nil {
-		opts = &sql.TxOptions{}
-	}
+// func (t *Transactioner) Transac(ctx context.Context, opts *sql.TxOptions,
+// 	fn func(ctx context.Context) error) (err error) {
+// 	if opts == nil {
+// 		opts = &sql.TxOptions{}
+// 	}
 
-	// Начинаем транзакцию
-	tx, err := t.db.BeginTx(ctx, opts)
-	if err == nil {
-		return fmt.Errorf("failed to begin transaction %w", err)
-	}
-	ctx = context.WithValue(ctx, txKey, tx)
+// 	// Начинаем транзакцию
+// 	tx, err := t.db.BeginTx(ctx, opts)
+// 	if err != nil {
+// 		return fmt.Errorf("failed  to begin transaction %w", err)
+// 	}
+// 	ctx = context.WithValue(ctx, txKey, tx)
 
-	// Роллбэк в случае ошибки
-	defer func() {
-		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("failed to begin transaction %w", err)
-		}
-	}()
+// 	// Роллбэк в случае ошибки
+// 	defer func() {
+// 		rollbackErr := tx.Rollback()
+// 		if rollbackErr != nil {
+// 			err = fmt.Errorf("failed to rollback transaction %w", err)
+// 		}
+// 	}()
 
-	err = fn(ctx)
-	if err == nil {
-		return tx.Commit()
-	}
+// 	err = fn(ctx)
+// 	if err == nil {
+// 		return tx.Commit()
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (t *Repository) Transac(ctx context.Context, opts *sql.TxOptions,
 	fn func(ctx context.Context) error) (err error) {
@@ -67,7 +64,7 @@ func (t *Repository) Transac(ctx context.Context, opts *sql.TxOptions,
 
 	// Начинаем транзакцию
 	tx, err := t.db.BeginTx(ctx, opts)
-	if err == nil {
+	if err != nil {
 		return fmt.Errorf("failed to begin transaction %w", err)
 	}
 	ctx = context.WithValue(ctx, txKey, tx)
@@ -75,8 +72,8 @@ func (t *Repository) Transac(ctx context.Context, opts *sql.TxOptions,
 	// Роллбэк в случае ошибки
 	defer func() {
 		rollbackErr := tx.Rollback()
-		if rollbackErr != nil {
-			err = fmt.Errorf("failed to begin transaction %w", err)
+		if rollbackErr != nil && !errors.Is(rollbackErr, sql.ErrTxDone) {
+			err = fmt.Errorf("failed to rollback transaction %w", err)
 		}
 	}()
 
@@ -88,12 +85,8 @@ func (t *Repository) Transac(ctx context.Context, opts *sql.TxOptions,
 	return nil
 }
 
-func NewRepository(db *sql.DB) (*Repository, *Transactioner) {
-	return &Repository{
-			withDB{db},
-		}, &Transactioner{
-			withDB{db},
-		}
+func NewRepository(db *sql.DB) *Repository {
+	return &Repository{db}
 }
 
 type DXBT interface {

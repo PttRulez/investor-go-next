@@ -39,7 +39,7 @@ func Run() {
 	if err != nil {
 		log.Fatal(fmt.Errorf("failed to start postgres db: %w", err))
 	}
-	repo, transactioner := postgres.NewRepository(db)
+	repo := postgres.NewRepository(db)
 
 	// init external apis
 	issClient := issclient.NewISSClient()
@@ -59,7 +59,7 @@ func Run() {
 	moex := moex.NewMoexService(issClient, repo)
 	opinion := opinion.NewOpinionService(repo)
 	portfolio := portfolio.NewPortfolioService(issClient, logger, moex, repo, redisClient,
-		telega, transactioner)
+		telega)
 	user := user.NewUserService(repo)
 
 	// grpc Server

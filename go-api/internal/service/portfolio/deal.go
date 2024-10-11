@@ -45,7 +45,7 @@ func (s *Service) CreateDeal(ctx context.Context, d domain.Deal, userID int) (do
 func (s *Service) DeleteDealByID(ctx context.Context, id int, userID int) error {
 	const op = "DealService.DeleteDealByID"
 
-	err := s.transactioner.Transac(ctx, nil, func(ctx context.Context) error {
+	err := s.repo.Transac(ctx, nil, func(ctx context.Context) error {
 		d, err := s.repo.DeleteDeal(ctx, id, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNotFound) {

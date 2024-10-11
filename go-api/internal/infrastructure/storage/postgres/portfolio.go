@@ -82,7 +82,7 @@ func (pg *Repository) GetPortfolioList(ctx context.Context, userID int) (
 func (pg *Repository) GetPortfolioListByChatID(ctx context.Context, chatId string) (
 	[]domain.Portfolio, error) {
 	const op = "Repository.GetPortfolioList"
-
+	fmt.Println("chatId", chatId)
 	queryString := `SELECT id, compound, name FROM portfolios where user_id = (
 		SELECT id FROM users WHERE invest_bot_tg_chat_id = $1 LIMIT 1
 	);`

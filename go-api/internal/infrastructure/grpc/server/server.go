@@ -19,9 +19,10 @@ func (s *GRPCServer) GetPortfolioList(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("GRPCServer GetPortfolioList chatId", chatId)
 
 	psProto := make([]*protogen.Portfolio, len(ps))
-	fmt.Println("len(ps)", len(ps))
+
 	for i, p := range ps {
 		var pr protogen.Portfolio
 		pr.Id = int32(p.ID)
