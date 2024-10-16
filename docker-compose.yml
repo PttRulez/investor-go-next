@@ -5,7 +5,7 @@ services:
     image: postgres
     restart: always
     ports:
-      - ${PG_PORT_DOCKER}:5432
+      - ${DOCKER_PG_PORT}:5432
     environment:
       - POSTGRES_USER=${PG_USERNAME}
       - POSTGRES_DB=${PG_DB_NAME}
@@ -29,6 +29,15 @@ services:
       interval: 10s
       retries: 10
 
+  prometheus:
+    container_name: investor-prometheus
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - ${DOCKER_PROMETHEUS_PORT}:9090
+    volumes:
+      - ./docker-volumes/prometheus:/etc/prometheus
+
   redis:
     container_name: investor-redis
     image: redis:6.2-alpine
@@ -48,8 +57,11 @@ services:
     depends_on:
       postgresdb:
         condition: service_healthy
+    environment:
+      - GO_API_PORT=${GO_API_PORT}
+      - DOCKER_GO_API_PORT=${DOCKER_GO_API_PORT}
     ports:
-      - ${GO_API_PORT_DOCKER}:${GO_API_PORT}
+      - ${DOCKER_GO_API_PORT}:${GO_API_PORT}
     networks:
       - investor_network
 
@@ -62,6 +74,15 @@ services:
       - ${DOCKER_NEXT_CLIENT_PORT}:${NEXT_CLIENT_PORT}
     networks:
       - investor_network
+
+  grafana:
+    container_name: investor-grafana
+    image: grafana/grafana
+    restart: unless-stopped
+    ports:
+      - ${DOCKER_GRAFANA_PORT}:3000
+    volumes:
+      - ./docker-volumes/grafana:/var/lib/grafana
 
 networks:
   investor_network:

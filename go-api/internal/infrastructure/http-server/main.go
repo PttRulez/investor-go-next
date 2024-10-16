@@ -16,6 +16,7 @@ import (
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/handlers"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/interfaces"
 	mwLogger "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/logger"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/metrics"
 	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 )
 
@@ -39,6 +40,7 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 
 	// Router init
 	r := chi.NewRouter()
+	mtrcs := metrics.Register()
 
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   cfg.AllowedCors,
@@ -48,15 +50,19 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 		AllowCredentials: true,
 	}))
 	r.Use(mwLogger.New(logger.SetupPrettySlog()))
+
 	// r.Use(mwValidator.New(validator))
 
 	// Controllers init
 	h := handlers.NewHandlers(log, s.OpinionService, s.PortfolioService, tokenAuth,
 		s.MoexService, s.UserService, validator)
 
+	hw := NewWrapper(log, mtrcs)
+
 	// Public Routes
 	r.Post("/register", h.RegisterUser)
 	r.Post("/login", h.LoginUser)
+	r.Get("/metrics", mtrcs.Default().ServeHTTP)
 
 	// Protected Routes
 	r.Route("/", func(r chi.Router) {
@@ -68,8 +74,8 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 		// portfolio
 		r.Route("/portfolio", func(r chi.Router) {
 			r.Delete("/{id}", h.DeletePortfolio)
-			r.Get("/", h.GetListOfPortfoliosOfCurrentUser)
-			r.Get("/{id}", h.GetPortfolioByID)
+			r.Get("/", hw.makeHttpHandler(h.GetListOfPortfoliosOfCurrentUser))
+			r.Get("/{id}", hw.makeHttpHandler(h.GetPortfolioByID))
 			r.Post("/", h.CreateNewPortfolio)
 			r.Put("/", h.UpdatePortfolio)
 		})

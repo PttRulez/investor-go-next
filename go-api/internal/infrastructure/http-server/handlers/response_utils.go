@@ -12,6 +12,22 @@ import (
 	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
+func writeErr(w http.ResponseWriter, err error) error {
+	var code int
+	if errors.Is(err, service.ErrDomainNotFound) {
+		code = http.StatusNotFound
+		writeString(w, code, "Не найдено")
+	}
+
+	code = http.StatusInternalServerError
+	writeString(w, code, err.Error())
+
+	return APIError{
+		Code: code,
+		Err:  err,
+	}
+}
+
 func writeError(w http.ResponseWriter, err error) {
 	if errors.Is(err, service.ErrDomainNotFound) {
 		writeString(w, http.StatusNotFound, "Не найдено")
@@ -19,6 +35,32 @@ func writeError(w http.ResponseWriter, err error) {
 	}
 
 	writeString(w, http.StatusInternalServerError, err.Error())
+}
+
+func writeJS(w http.ResponseWriter, status int, value any) error {
+	buf := &bytes.Buffer{}
+	encoder := json.NewEncoder(buf)
+	encoder.SetEscapeHTML(true)
+	err := encoder.Encode(value)
+	if err != nil {
+		return APIError{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+		}
+	}
+
+	w.Header().Set("Content-Type", "applications/json; charset=utf-8")
+	w.WriteHeader(status)
+
+	_, err = w.Write(buf.Bytes())
+	if err != nil {
+		return APIError{
+			Code: http.StatusInternalServerError,
+			Err:  err,
+		}
+	}
+
+	return nil
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
@@ -78,4 +120,13 @@ func validationErrsToResponse(errs validator.ValidationErrors) map[string]string
 	}
 
 	return mappedErrors
+}
+
+type APIError struct {
+	Code int
+	Err  error
+}
+
+func (e APIError) Error() string {
+	return e.Err.Error()
 }

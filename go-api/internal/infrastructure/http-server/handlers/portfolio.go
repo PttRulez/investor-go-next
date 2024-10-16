@@ -50,16 +50,13 @@ func (c *Handlers) CreateNewPortfolio(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Handlers) GetListOfPortfoliosOfCurrentUser(w http.ResponseWriter,
-	r *http.Request) {
+	r *http.Request) error {
 	const op = "Handlers.GetListOfPortfoliosOfCurrentUser"
 
 	ctx := r.Context()
 	portfolios, err := c.portfolioService.GetPortfolioList(ctx, utils.GetCurrentUserID(r.Context()))
 	if err != nil {
-		err = fmt.Errorf("%s: %w", op, err)
-		c.logger.Error(err)
-		writeError(w, err)
-		return
+		return writeErr(w, fmt.Errorf("%s: %w", op, err))
 	}
 
 	var res []contracts.PortfolioResponse
@@ -67,32 +64,28 @@ func (c *Handlers) GetListOfPortfoliosOfCurrentUser(w http.ResponseWriter,
 		res = append(res, converter.FromPortfolioToPortfolioResponse(portfolio))
 	}
 
-	writeJSON(w, http.StatusOK, res)
+	return writeJS(w, http.StatusOK, res)
 }
 
-func (c *Handlers) GetPortfolioByID(w http.ResponseWriter, r *http.Request) {
+func (c *Handlers) GetPortfolioByID(w http.ResponseWriter, r *http.Request) error {
 	const op = "Handlers.GetPortfolioByID"
+
 	ctx := r.Context()
 	portfolioID, err := strconv.Atoi(chi.URLParam(r, "id"))
 	if err != nil {
-		c.logger.Error(err)
-		writeString(w, http.StatusBadRequest, fmt.Sprintf("%s: Проблема с конвертацией айди %s: %s",
+		return writeErr(w, fmt.Errorf("%s: Проблема с конвертацией айди %s: %w",
 			op,
 			chi.URLParam(r, "id"),
-			err.Error()))
-		return
+			err))
 	}
 
 	portfolio, err := c.portfolioService.GetFullPortfolioByID(ctx, portfolioID,
 		utils.GetCurrentUserID(r.Context()))
 	if err != nil {
-		err = fmt.Errorf("%s: %w", op, err)
-		c.logger.Error(err)
-		writeError(w, err)
-		return
+		return writeErr(w, fmt.Errorf("%s: %w", op, err))
 	}
 
-	writeJSON(w, http.StatusOK, converter.FromPortfolioToFullPortfolioResponse(portfolio))
+	return writeJS(w, http.StatusOK, converter.FromPortfolioToFullPortfolioResponse(portfolio))
 }
 
 func (c *Handlers) DeletePortfolio(w http.ResponseWriter, r *http.Request) {
