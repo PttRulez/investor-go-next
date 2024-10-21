@@ -15,8 +15,7 @@ const (
 	// path of request
 	labelPath = "path"
 
-	// http code returned from our server
-	labelCode = "code"
+	namespace = "invest_api"
 )
 
 type Metrics struct {
@@ -27,21 +26,23 @@ type Metrics struct {
 
 func Register() *Metrics {
 	reqTotal := promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: "http",
-		Name:      "req_total",
+		Namespace: namespace,
+		Name:      "requests_total",
 		Help:      "Total number of requests received.",
 	})
+
 	reqLatency := promauto.NewHistogramVec(
 		prometheus.HistogramOpts{
-			Namespace: "http",
+			Namespace: namespace,
 			Name:      "latency",
 			Help:      "Duration of request in seconds.",
 			Buckets:   []float64{0.1, 0.5, 1},
 		},
-		[]string{labelMethod, labelPath, labelCode},
+		[]string{labelMethod, labelPath},
 	)
+
 	errInternalTotal := promauto.NewCounter(prometheus.CounterOpts{
-		Namespace: "http",
+		Namespace: namespace,
 		Name:      "500_errors",
 		Help:      "Total number of requests received.",
 	})

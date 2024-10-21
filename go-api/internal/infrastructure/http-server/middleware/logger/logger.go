@@ -13,6 +13,10 @@ func New(log *slog.Logger) func(next http.Handler) http.Handler {
 		log := log.With(
 			slog.String("component", "middleware/logger"),
 		)
+		// f := func(w http.ResponseWriter, r *http.Request) {
+		// 	ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+		// }
 
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			entry := log.With(

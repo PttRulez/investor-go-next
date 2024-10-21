@@ -1,3 +1,5 @@
+version: "3.9"
+
 name: investor_go_app
 services:
   postgresdb:
@@ -29,34 +31,31 @@ services:
       interval: 10s
       retries: 10
 
-  prometheus:
-    container_name: investor-prometheus
-    image: prom/prometheus:latest
-    restart: always
-    ports:
-      - ${DOCKER_PROMETHEUS_PORT}:9090
-    volumes:
-      - ./docker-volumes/prometheus:/etc/prometheus
-
-  redis:
-    container_name: investor-redis
-    image: redis:6.2-alpine
-    restart: always
-    ports:
-      - ${DOCKER_REDIS_PORT}:6379
-    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - ./docker-volumes/redis/data:/data
-      # - ./docker-volumes/redis/redis.conf:/usr/local/etc/redis/redis.conf
-
   backend:
     container_name: investor-go-backend
+    logging:
+      # Указываем, какой драйвер использовать
+      driver: loki
+      options:
+        # Адрес Loki, куда складывать логи
+        # Обратите внимание, что здесь используется не имя сервиса loki, а локальный хост, на который проброшен порт Loki,
+        # это сделано потому, что логи будет писать docker engine, котрый расположен на хостовой машине,
+        # и он не знает имени хоста контейнера Loki, которое ему присвоил compose во внутренней сети проекта.
+        loki-url: "http://localhost:4100/loki/api/v1/push"
+        loki-batch-size: "100"
+        loki-retries: 2
+        loki-max-backoff: 1000ms
+        loki-timeout: 1s
     build:
       context: ./go-api
       dockerfile: Dockerfile
     depends_on:
       postgresdb:
         condition: service_healthy
+      loki:
+        condition: service_started
+      prometheus:
+        condition: service_started
     environment:
       - GO_API_PORT=${GO_API_PORT}
       - DOCKER_GO_API_PORT=${DOCKER_GO_API_PORT}
@@ -83,6 +82,43 @@ services:
       - ${DOCKER_GRAFANA_PORT}:3000
     volumes:
       - ./docker-volumes/grafana:/var/lib/grafana
+
+  loki:
+    container_name: investor-loki
+    hostname: loki
+    image: grafana/loki:latest
+    ports:
+      - ${DOCKER_LOKI_PORT}:3100
+    volumes:
+      - ./docker-volumes/loki:/etc/loki
+    command: -config.file=/etc/loki/retention-config.yaml
+
+  prometheus:
+    container_name: investor-prometheus
+    image: prom/prometheus:latest
+    restart: always
+    ports:
+      - ${DOCKER_PROMETHEUS_PORT}:9090
+    volumes:
+      - ./docker-volumes/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  promtail:
+    container_name: investor-promtail
+    image: grafana/promtail:latest
+    ports:
+      - 4080:9080
+    volumes:
+      - ./docker-volumes/promtail:/etc/promtail
+
+  redis:
+    container_name: investor-redis
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - ${DOCKER_REDIS_PORT}:6379
+    command: redis-server --save 60 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - ./docker-volumes/redis/data:/data
 
 networks:
   investor_network:

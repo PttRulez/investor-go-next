@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/handlers"
-	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/metrics"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/metrics"
 	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 )
 
@@ -18,13 +18,14 @@ func (wr *Wrapper) makeHttpHandler(handler HandlerFunc) http.HandlerFunc {
 		}(time.Now())
 
 		if err := handler(w, r); err != nil {
-			// логгируем в графану или просто в stdout
-			wr.log.Error(err)
-
-			// увеличиваем счётчик 500-х ошибок в метриках, если это нага ApiErr
 			var apiErr handlers.APIError
+			// в метрики и логи летят 500-е
 			if errors.As(err, &apiErr) && apiErr.Code == http.StatusInternalServerError {
+				// увеличиваем счётчик 500-х ошибок в метриках, если это нага ApiErr
 				wr.mtrcs.IncTotalInternalErrors()
+
+				// логгируем в графану или просто в stdout
+				wr.log.Error(err)
 			}
 		}
 

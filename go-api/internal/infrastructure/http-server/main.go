@@ -15,8 +15,7 @@ import (
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/contracts"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/handlers"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/interfaces"
-	mwLogger "github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/logger"
-	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/middleware/metrics"
+	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/http-server/metrics"
 	"github.com/pttrulez/investor-go-next/go-api/pkg/logger"
 )
 
@@ -49,9 +48,7 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
 	}))
-	r.Use(mwLogger.New(logger.SetupPrettySlog()))
-
-	// r.Use(mwValidator.New(validator))
+	// r.Use(mwLogger.New(logger.SetupPrettySlog()))
 
 	// Controllers init
 	h := handlers.NewHandlers(log, s.OpinionService, s.PortfolioService, tokenAuth,
@@ -68,8 +65,6 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 	r.Route("/", func(r chi.Router) {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
-
-		r.Post("/invest-bot-tg-chat-id", h.CreateDeal)
 
 		// portfolio
 		r.Route("/portfolio", func(r chi.Router) {
