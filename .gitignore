@@ -1,5 +1,7 @@
 .env
 .DS_Store
 .idea
-.trunk
-docker-volumes/
+.trunk/
+docker-volumes/grafana/*
+docker-volumes/postgres/*
+docker-volumes/redis/data/*
