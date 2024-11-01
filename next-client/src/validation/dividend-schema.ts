@@ -5,20 +5,25 @@ export const CreateDividendSchema = z.object({
   date: z.string(),
   exchange: z.nativeEnum(Exchange),
   paymentPeriod: z.string(),
-  paymentPerShare: z.number({
+  portfolioId: z.number(),
+  sharesCount: z.number({
     errorMap: _ => ({
-      message: 'Введите размер выплаты на одну акцию сделки',
+      message: 'Введите количество акций',
     }),
   }),
-  portfolioId: z.number(),
+  taxPaid: z.number({
+    errorMap: _ => ({
+      message: 'Введите размер уплаченного налога',
+    }),
+  }),
   ticker: z.string({
     errorMap: _ => ({
       message: 'Выберите бумагу',
     }),
   }),
-  sharesCount: z.number({
+  totalPayment: z.number({
     errorMap: _ => ({
-      message: 'Введите количество акций',
+      message: 'Введите сумму выплаты, полученную в рублях',
     }),
   }),
 });

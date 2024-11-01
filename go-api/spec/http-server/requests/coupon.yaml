@@ -5,21 +5,16 @@ components:
       required:
         [
           bondsCount,
-          couponAmount,
           date,
           exchange,
           paymentPeriod,
           portfolioId,
           ticker,
+          totalPayment,
         ]
       properties:
         bondsCount:
           type: integer
-          x-oapi-codegen-extra-tags:
-            validate: required
-        couponAmount:
-          type: number
-          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         date:
@@ -37,7 +32,17 @@ components:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: required
+        taxPaid:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        totalPayment:
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required

@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 create table if not exists transactions (
 		id serial primary key,
-		amount integer not null,
+		amount numeric(15, 2) not null,
 		date date not null,
 		portfolio_id integer references portfolios(id) not null,
 		type varchar(50) not null,

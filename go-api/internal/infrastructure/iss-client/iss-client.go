@@ -17,6 +17,7 @@ import (
 
 type ISSSecInfo struct {
 	Board     domain.ISSMoexBoard
+	Currency  string
 	Engine    domain.ISSMoexEngine
 	Market    domain.ISSMoexMarket
 	Name      string
@@ -32,18 +33,33 @@ type ISSSecInfo struct {
 	CouponValue   float64
 
 	// номинальная стоимость облигации
-	FaceValue int
+	LotPrice int
 
 	IssueDate time.Time
 
 	// дата погашения облиги
-	MatDate time.Time
+	MaturityDate time.Time
 }
 
 type ISSFullSecurityInfo struct {
-	LotSize       int
+	LotPrice      int
 	PriceDecimals int
 }
+
+const (
+	couponFrequency = "COUPONFREQUENCY"
+	couponPercent   = "COUPONPERCENT"
+	couponValue     = "COUPONVALUE"
+	currency        = "FACEUNIT"
+	issueDate       = "ISSUEDATE"
+	lotAmount       = "FACEVALUE"
+	maturityDate    = "MATDATE"
+	name            = "NAME"
+	shortName       = "SHORTNAME"
+
+	usdRateName = "CBRF_USD_LAST"
+	eurRateName = "CBRF_EUR_LAST"
+)
 
 func (api *IssClient) GetSecurityInfoByTicker(ctx context.Context, ticker string) (ISSSecInfo, error) {
 	const op = "issclient.GetSecurityInfoByTicker"
@@ -104,64 +120,73 @@ func (api *IssClient) GetSecurityInfoByTicker(ctx context.Context, ticker string
 		break
 	}
 
-	// У облигаций больше свойств
-	if result.Market == domain.MoexMarketBonds {
-		for _, item := range data.Description.Data {
-			switch item[0] {
-			case "NAME":
-				result.Name = item[1]
-			case "SHORTNAME":
-				result.ShortName = item[1]
-			case "COUPONFREQUENCY":
-				freq, err := strconv.Atoi(item[1])
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing COUPONFREQUENCY: %w", op, err)
-				}
-				result.CouponFrequency = freq
-			case "COUPONPERCENT":
-				percent, err := strconv.ParseFloat(item[1], 32)
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing COUPONPERCENT: %w", op, err)
-				}
-				result.CouponPercent = percent
-			case "COUPONVALUE":
-				percent, err := strconv.ParseFloat(item[1], 32)
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing COUPONVALUE: %w", op, err)
-				}
-				result.CouponValue = percent
-			case "ISSUEDATE":
-				t, err := time.Parse("2006-01-02", item[1])
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing ISSUEDATE: %w", op, err)
-				}
-				result.IssueDate = t
-			case "MATDATE":
-				t, err := time.Parse("2006-01-02", item[1])
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing MATDATE: %w", op, err)
-				}
-				result.MatDate = t
-			case "FACEVALUE":
-				faceValue, err := strconv.Atoi(item[1])
-				if err != nil {
-					return ISSSecInfo{}, fmt.Errorf("%s parsing FACEVALUE: %w", op, err)
-				}
-				result.FaceValue = faceValue
-			}
-		}
-	} else {
-		for _, item := range data.Description.Data {
-			switch item[0] {
-			case "NAME":
-				result.Name = item[1]
-			case "SHORTNAME":
-				result.ShortName = item[1]
-			}
+	for _, item := range data.Description.Data {
+		err := chooseSecProperty(&result, item[0], item[1])
+		if err != nil {
+			return ISSSecInfo{}, fmt.Errorf("%s: %w", op, err)
 		}
 	}
 
 	return result, nil
+}
+
+func chooseSecProperty(sec *ISSSecInfo, propName, value string) error {
+	switch propName {
+	case currency:
+		if value == "SUR" {
+			value = "RUB"
+		}
+		sec.Currency = value
+	case name:
+		fmt.Println("NAME", value)
+		sec.Name = value
+	case shortName:
+		sec.ShortName = value
+	}
+
+	if sec.Market == domain.MoexMarketBonds {
+		switch propName {
+		case couponFrequency:
+			freq, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", couponFrequency, err)
+			}
+			sec.CouponFrequency = freq
+		case couponPercent:
+			percent, err := strconv.ParseFloat(value, 32)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", couponPercent, err)
+			}
+			sec.CouponPercent = percent
+		case couponValue:
+			percent, err := strconv.ParseFloat(value, 32)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", couponValue, err)
+			}
+			sec.CouponValue = percent
+
+		case issueDate:
+			t, err := time.Parse("2006-01-02", value)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", issueDate, err)
+			}
+			sec.IssueDate = t
+		case lotAmount:
+			faceValue, err := strconv.Atoi(value)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", lotAmount, err)
+			}
+			sec.LotPrice = faceValue
+		case maturityDate:
+			t, err := time.Parse("2006-01-02", value)
+			if err != nil {
+				return fmt.Errorf("%s parsing: %w", maturityDate, err)
+			}
+			sec.MaturityDate = t
+		}
+	}
+
+	return nil
 }
 
 type MoexFullInfo struct {
@@ -214,7 +239,7 @@ func (api *IssClient) GetSecurityFullInfo(ctx context.Context, engine domain.ISS
 
 	lotSize := int(lotSizeFloat)
 
-	result.LotSize = lotSize
+	result.LotPrice = lotSize
 	result.PriceDecimals = utils.SignsAfterDot(prevPrice)
 
 	return result, nil
@@ -272,6 +297,10 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market domain.
 
 		price, ok := i[2].(float64)
 		if !ok {
+			// цена от iss иногда приходит null для некоторых бордов
+			if i[2] == nil {
+				continue
+			}
 			return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
 		}
 		v, ok := tickerInfos[ticker]
@@ -281,6 +310,54 @@ func (api *IssClient) GetStocksCurrentPrices(ctx context.Context, market domain.
 	}
 
 	return m, nil
+}
+
+func (api *IssClient) GetCurrencyRates(ctx context.Context) (map[string]float64, error) {
+	const op = "issclient.GetCurrencyRates"
+
+	uri := fmt.Sprintf("%s/statistics/engines/currency/markets/selt/rates.json",
+		api.baseURL)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, fmt.Errorf("%s NewRequestWithContext: %w", op, err)
+	}
+
+	resp, err := api.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%s api.client.Do: %w", op, err)
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	var data MoexAPIResponseCurrency
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	result := map[string]float64{"RUB": 1}
+	for i, name := range data.Cbrf.RateNames {
+		if name == usdRateName {
+			rate, ok := data.Cbrf.Data[0][i].(float64)
+			if !ok {
+				return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
+			}
+			result["USD"] = rate
+		} else if name == eurRateName {
+			rate, ok := data.Cbrf.Data[0][i].(float64)
+			if !ok {
+				return nil, fmt.Errorf("%s: failed to cast price from issreponse", op)
+			}
+			result["EUR"] = rate
+		}
+	}
+
+	return result, nil
 }
 
 type IssClient struct {

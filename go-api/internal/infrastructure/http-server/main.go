@@ -84,7 +84,7 @@ func StartApiServer(cfg Config, s Services, log *logger.Logger) (*http.Server, e
 		// deals
 		r.Route("/deal", func(r chi.Router) {
 			r.Post("/", h.CreateDeal)
-			r.Delete("/{id}", h.DeleteDeal)
+			r.Delete("/{id}", hw.makeHttpHandler(h.DeleteDeal))
 		})
 
 		// dividends

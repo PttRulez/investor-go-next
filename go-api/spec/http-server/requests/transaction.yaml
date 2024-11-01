@@ -5,7 +5,8 @@ components:
       required: [amount, date, portfolioId, type]
       properties:
         amount:
-          type: integer
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         date:

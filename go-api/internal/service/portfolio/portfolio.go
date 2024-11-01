@@ -16,12 +16,13 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	userID int) (domain.Portfolio, error) {
 	const op = "PortfolioService.GetFullPortfolioByID"
 	var (
-		result         domain.Portfolio
+		bondPositions  = make([]domain.Position, 0)
+		currencyRates  map[string]float64
 		deals          []domain.Deal
+		result         domain.Portfolio
 		coupons        []domain.Coupon
 		dividends      []domain.Dividend
 		expenses       []domain.Expense
-		bondPositions  = make([]domain.Position, 0)
 		sharePositions = make([]domain.Position, 0)
 		transactions   = make([]domain.Transaction, 0)
 		eg             = errgroup.Group{}
@@ -64,11 +65,19 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		}
 
 		var bondPositionsCount, sharePositionsCount int
+		needCurrencyRates := false
+
 		for _, p := range positions {
 			if p.SecurityType == domain.STBond {
+				if err != nil {
+					return fmt.Errorf("%s: %w", op, err)
+				}
 				bondPositionsCount++
 			} else if p.SecurityType == domain.STShare {
 				sharePositionsCount++
+			}
+			if p.Currency != "RUB" {
+				needCurrencyRates = true
 			}
 		}
 
@@ -88,20 +97,44 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		}
 
 		var bondPrices, sharePrices map[string]float64
+		var eg errgroup.Group
 
 		if bondPositionsCount > 0 {
-			bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, domain.MoexMarketBonds,
-				bondBoards)
-			if err != nil {
-				return fmt.Errorf("%s: %w", op, err)
-			}
+			eg.Go(func() error {
+				bondPrices, err = s.issClient.GetStocksCurrentPrices(ctx, domain.MoexMarketBonds,
+					bondBoards)
+				if err != nil {
+					return fmt.Errorf("%s: %w", op, err)
+				}
+				return nil
+			})
 		}
+
 		if sharePositionsCount > 0 {
-			sharePrices, err = s.issClient.GetStocksCurrentPrices(ctx, domain.MoexMarketShares,
-				shareBoards)
-			if err != nil {
-				return fmt.Errorf("%s: %w", op, err)
-			}
+			eg.Go(func() error {
+				sharePrices, err = s.issClient.GetStocksCurrentPrices(ctx, domain.MoexMarketShares,
+					shareBoards)
+				if err != nil {
+					return fmt.Errorf("%s: %w", op, err)
+				}
+				return nil
+			})
+		}
+
+		if needCurrencyRates {
+			eg.Go(func() error {
+				var err error
+				currencyRates, err = s.issClient.GetCurrencyRates(ctx)
+				if err != nil {
+					return err
+				}
+				return nil
+			})
+		}
+
+		err = eg.Wait()
+		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
 		}
 
 		// каждой позиции присваиваем текущую цену и общую текущую стоимость
@@ -111,13 +144,13 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 			bondPositions[i].CurrentPrice = bondPrices[bondPositions[i].Ticker]
 			bondPositions[i].CurrentCost = int(
 				(bondPositions[i].CurrentPrice / hundredPercents) * faceValue *
-					float64(bondPositions[i].Amount))
+					float64(bondPositions[i].Amount) * currencyRates[bondPositions[i].Currency])
 		}
 
 		for i := range len(sharePositions) {
 			sharePositions[i].CurrentPrice = sharePrices[sharePositions[i].Ticker]
 			sharePositions[i].CurrentCost = int(
-				sharePositions[i].CurrentPrice * float64(sharePositions[i].Amount))
+				sharePositions[i].CurrentPrice * float64(sharePositions[i].Amount) * currencyRates[sharePositions[i].Currency])
 		}
 
 		return nil
@@ -172,15 +205,8 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		return domain.Portfolio{}, err
 	}
 
-	for _, t := range transactions {
-		if t.Type == domain.TTCashout {
-			result.CashoutsSum += t.Amount
-		} else if t.Type == domain.TTDeposit {
-			result.DepositsSum += t.Amount
-		}
-		result.Transactions = append(result.Transactions, t)
-	}
-
+	var cashoutsSum float64
+	var depositsSum float64
 	var spentToComissions float64
 	var spentToBuys float64
 	var spentToOtherExpenses float64
@@ -188,9 +214,22 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 	var receivedFromDividends float64
 	var receivedFromSells float64
 
+	for _, t := range transactions {
+		if t.Type == domain.TTCashout {
+			cashoutsSum += t.Amount
+		} else if t.Type == domain.TTDeposit {
+			depositsSum += t.Amount
+		}
+		result.Transactions = append(result.Transactions, t)
+	}
+
 	// сделки
 	for _, d := range deals {
-		if d.Type == domain.DTBuy {
+		if d.Type == domain.DTBuy && d.SecurityType == domain.STBond {
+			spentToBuys += float64(d.Amount)*d.Price + *d.Nkd
+		} else if d.Type == domain.DTSell && d.SecurityType == domain.STBond {
+			receivedFromSells += float64(d.Amount)*d.Price + *d.Nkd
+		} else if d.Type == domain.DTBuy {
 			spentToBuys += float64(d.Amount) * d.Price
 		} else {
 			receivedFromSells += float64(d.Amount) * d.Price
@@ -201,12 +240,12 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 
 	// купоны
 	for _, c := range coupons {
-		receivedFromCoupons += c.CouponAmount * float64(c.BondsCount)
+		receivedFromCoupons += c.TotalPayment
 	}
 
 	// дивиденды
 	for _, d := range dividends {
-		receivedFromDividends += d.PaymentPerShare * float64(d.SharesCount)
+		receivedFromDividends += d.TotalPayment
 	}
 
 	// прочие траты/возвраты
@@ -230,17 +269,23 @@ func (s *Service) GetFullPortfolioByID(ctx context.Context, portfolioID int,
 		result.SharePositions[i] = sharePositions[i]
 	}
 
+	result.CashoutsSum = int(cashoutsSum)
+	result.Coupons = coupons
 	result.CouponsSum = int(receivedFromCoupons)
+	result.DepositsSum = int(depositsSum)
+	result.Dividends = dividends
 	result.DividendsSum = int(receivedFromDividends)
 	result.ExpensesSum = int(spentToOtherExpenses)
 
 	const percentageMultiplier = 100
-	result.Cash = result.DepositsSum - result.CashoutsSum - int(spentToBuys) + int(receivedFromSells)
+	result.Cash = result.DepositsSum - result.CashoutsSum - int(spentToBuys) +
+		int(receivedFromSells) + result.DividendsSum + result.CouponsSum - result.ExpensesSum -
+		int(spentToComissions)
 
 	result.TotalCost += result.BondsCost
 	result.TotalCost += result.SharesCost
 	result.TotalCost += result.Cash
-	result.TotalCost -= int(spentToComissions)
+	// result.TotalCost -= int(spentToComissions)
 	result.TotalCost += result.CouponsSum
 	result.TotalCost += result.DividendsSum
 	result.TotalCost -= result.ExpensesSum

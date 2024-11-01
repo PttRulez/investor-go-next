@@ -14,3 +14,10 @@ type MoexAPIResponseCurrentPrices struct {
 		Data [][3]any `json:"data"`
 	} `json:"securities"`
 }
+
+type MoexAPIResponseCurrency struct {
+	Cbrf struct {
+		RateNames []string `json:"columns"`
+		Data      [][]any  `json:"data"`
+	} `json:"cbrf"`
+}

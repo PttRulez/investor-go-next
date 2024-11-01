@@ -7,36 +7,38 @@ import CloseIcon from '@mui/icons-material/Close';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
 import { IDealResponse } from '@/types/apis/go-api';
-import { DealType } from '@/types/enums';
+import { DealType, SecurityType } from '@/types/enums';
 
 type Props = {
   deals: IDealResponse[];
+  portfolioId: number;
 };
 
-const DealsTable = ({ deals }: Props) => {
+const DealsTable = ({ deals, portfolioId }: Props) => {
   const client = useQueryClient();
   const deleteDeal = useMutation(
     (dealId: number) => investorService.deal.deleteDeal(dealId),
     {
-      onSuccess: deal => {
-        client.invalidateQueries({ queryKey: ['portfolio', deal.portfolioId] });
+      onSuccess: _ => {
+        client.invalidateQueries({ queryKey: ['portfolio', portfolioId] });
       },
     },
   );
 
   const columns: AdvancedTableColumn<IDealResponse>[] = [
     {
-      label: 'Тикер',
-      name: 'ticker',
+      label: 'Название',
+      name: 'shortName',
+      render: (value, row) => value,
     },
     {
       label: 'Тип',
       name: 'type',
       render: (value: DealType) =>
         value === DealType.BUY ? (
-          <ArrowCircleUpIcon sx={{ color: 'green' }} />
+          <ArrowCircleUpIcon sx={{ color: 'success.main' }} />
         ) : (
-          <ArrowCircleDownIcon sx={{ color: 'red' }} />
+          <ArrowCircleDownIcon sx={{ color: 'error.main' }} />
         ),
     },
     {
@@ -46,11 +48,16 @@ const DealsTable = ({ deals }: Props) => {
     {
       label: 'Цена',
       name: 'price',
+      format: price => price.toLocaleString('RU-ru'),
     },
     {
       label: 'Сумма',
       name: 'total',
-      format: (_, deal) => deal.price * deal.amount,
+      format: (_, deal) => (deal.price * deal.amount).toLocaleString('RU-ru'),
+    },
+    {
+      label: 'НКД',
+      name: 'nkd',
     },
     {
       label: 'Дата',
@@ -75,7 +82,16 @@ const DealsTable = ({ deals }: Props) => {
     },
   ];
 
-  return <AdvancedTable rows={deals} columns={columns} />;
+  return (
+    <AdvancedTable
+      rows={deals}
+      columns={columns}
+      sx={{
+        height: '90vh',
+        padding: '20px',
+      }}
+    />
+  );
 };
 
 export default DealsTable;

@@ -2,7 +2,6 @@
 
 import investorService from '@/axios/investor/investor.service';
 import { Exchange } from '@/types/enums';
-import { CreateDividendSchema } from '@/validation';
 import {
   CreateCouponData,
   CreateCouponSchema,
@@ -23,7 +22,7 @@ import { useForm } from 'react-hook-form';
 type Props = {
   afterSuccessfulSubmit: () => void;
   portfolioId: number;
-  tickerList: SelectOption[];
+  tickerList: SelectOption[] | SelectList;
 };
 
 const CreateCouponForm = ({
@@ -47,7 +46,7 @@ const CreateCouponForm = ({
   const createCoupon = useMutation({
     mutationFn: (formData: CreateCouponData) =>
       investorService.coupon.createCoupon(formData),
-    onSuccess: c => {
+    onSuccess: _ => {
       afterSuccessfulSubmit();
       client.invalidateQueries({ queryKey: ['portfolio', portfolioId] });
     },
@@ -57,7 +56,10 @@ const CreateCouponForm = ({
     createCoupon.mutate(data);
   };
   return (
-    <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
+    <DefaultFormBox
+      onSubmit={handleSubmit(onSubmit)}
+      sx={{ minWidth: '600px' }}
+    >
       <Typography variant="h6">Добавляем выплату купона</Typography>
       <FormDatePicker
         control={control}
@@ -77,7 +79,7 @@ const CreateCouponForm = ({
       <FormSelect
         control={control}
         name={'ticker'}
-        label="Тикер"
+        label="Тикер (рег. номер)"
         options={tickerList}
         value={watchAll.ticker}
         variant="outlined"
@@ -85,21 +87,40 @@ const CreateCouponForm = ({
       <FormText
         control={control}
         decimal
-        error={!!formState.errors.couponAmount}
-        handleClear={() => resetField('couponAmount')}
-        helperText={formState.errors.couponAmount?.message}
-        label={'Размер купона'}
-        name={'couponAmount'}
+        error={!!formState.errors.totalPayment}
+        handleClear={() => resetField('totalPayment')}
+        helperText={formState.errors.totalPayment?.message}
+        label={'Общая сумма выплаты, пришедшая на счёт'}
+        name={'totalPayment'}
         onChange={(e: any) => {
           if (e.target.value != '') {
-            setValue('couponAmount', parseFloat(e.target.value));
+            setValue('totalPayment', Number(e.target.value));
           }
         }}
         type="number"
         inputProps={{
           step: 'any',
         }}
-        value={watchAll.couponAmount}
+        value={watchAll.totalPayment}
+      />
+      <FormText
+        control={control}
+        decimal
+        error={!!formState.errors.taxPaid}
+        handleClear={() => resetField('taxPaid')}
+        helperText={formState.errors.taxPaid?.message}
+        label={'Налог уплаченный помимо суммы выплаты'}
+        name={'taxPaid'}
+        onChange={(e: any) => {
+          if (e.target.value != '') {
+            setValue('taxPaid', Number(e.target.value));
+          }
+        }}
+        type="number"
+        inputProps={{
+          step: 'any',
+        }}
+        value={watchAll.taxPaid}
       />
       <FormText
         control={control}

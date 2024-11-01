@@ -9,6 +9,10 @@ type Dividend struct {
 	PaymentPeriod   string
 	PaymentPerShare float64
 	PortfolioID     int
-	Ticker          string
 	SharesCount     int
+	ShortName       string
+	TaxPaid         float64
+	Ticker          string
+	TotalPayment    float64
+	UserID          int
 }

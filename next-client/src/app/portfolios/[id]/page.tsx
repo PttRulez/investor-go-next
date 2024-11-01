@@ -13,6 +13,8 @@ import PortfolioTable from '../components/PortfolioTable/PortfolioTable';
 import { PortfolioActionsMap } from '../components/PortfolioTable/PortfolioTableToolbar';
 import TransactionForm from '../components/TransactionForm/TransactionForm';
 import CreateExpenseForm from '../components/ExpenseForm/CreateExpenseForm';
+import DealsTable from '../components/DealsTable';
+import TransactionsTable from '../components/TransactionsTable';
 
 export default function Portfolio({ params }: { params: { id: string } }) {
   const [openModal, setOpenModal] = useState<PortfolioActionsMap | false>(
@@ -39,50 +41,28 @@ export default function Portfolio({ params }: { params: { id: string } }) {
     // initialData: initPortfolio,
   });
 
-  const shareTickers = useMemo<SelectOption[]>(() => {
+  const shareTickers = useMemo<SelectList>(() => {
     if (!portfolio) {
-      return [];
+      return {};
     }
-    return portfolio.deals
-      .reduce<string[]>((acc, deal) => {
-        if (
-          !acc.includes(deal.ticker) &&
-          deal.securityType === SecurityType.SHARE
-        ) {
-          acc.push(deal.ticker);
-        }
-        return acc;
-      }, [])
-      .map<SelectOption>(ticker => {
-        return {
-          id: ticker,
-          name: ticker,
-        };
-      })
-      .sort((a, b) => (a.id > b.id ? 1 : -1));
+    return portfolio.deals.reduce<SelectList>((acc, d) => {
+      if (!acc[d.ticker] && d.securityType === SecurityType.SHARE) {
+        acc[d.ticker] = d.shortName;
+      }
+      return acc;
+    }, {});
   }, [portfolio]);
 
-  const bondTickers = useMemo<SelectOption[]>(() => {
+  const bondTickers = useMemo<SelectList>(() => {
     if (!portfolio) {
-      return [];
+      return {};
     }
-    return portfolio.deals
-      .reduce<string[]>((acc, deal) => {
-        if (
-          !acc.includes(deal.ticker) &&
-          deal.securityType === SecurityType.BOND
-        ) {
-          acc.push(deal.ticker);
-        }
-        return acc;
-      }, [])
-      .map<SelectOption>(ticker => {
-        return {
-          id: ticker,
-          name: ticker,
-        };
-      })
-      .sort((a, b) => (a.id > b.id ? 1 : -1));
+    return portfolio.bondPositions.reduce<SelectList>((acc, p) => {
+      if (!acc[p.ticker] && p.securityType === SecurityType.BOND) {
+        acc[p.ticker] = p.shortName;
+      }
+      return acc;
+    }, {});
   }, [portfolio]);
 
   const chooseTransactionHandler = (e: SelectChangeEvent) => {
@@ -119,6 +99,7 @@ export default function Portfolio({ params }: { params: { id: string } }) {
           <Tab label="Портфолио" value="portfolio"></Tab>
           <Tab label="Сделки" value="deals"></Tab>
           <Tab label="Транзакции" value="transactions"></Tab>
+          {/* <Tab label="История" value="history"></Tab> */}
         </TabList>
         <TabPanel value="portfolio">
           {portfolio && (
@@ -128,14 +109,27 @@ export default function Portfolio({ params }: { params: { id: string } }) {
             />
           )}
         </TabPanel>
-        {/* <TabPanel value="deals">
-          {portfolio && <DealsTable deals={portfolio.deals ?? []} />}
+        <TabPanel value="deals">
+          {portfolio && (
+            <DealsTable
+              deals={portfolio.deals ?? []}
+              portfolioId={portfolio.id}
+            />
+          )}
         </TabPanel>
         <TabPanel value="transactions">
           {portfolio && (
             <TransactionsTable
               portfolioId={portfolio.id}
               transactions={portfolio.transactions ?? []}
+            />
+          )}
+        </TabPanel>
+        {/* <TabPanel value="history">
+          {portfolio && (
+            <DealsTable
+              deals={portfolio.deals ?? []}
+              portfolioId={portfolio.id}
             />
           )}
         </TabPanel> */}

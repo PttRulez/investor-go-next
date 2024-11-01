@@ -9,6 +9,7 @@ type Deal struct {
 	Commission   float64
 	Date         time.Time
 	Exchange     Exchange
+	Nkd          *float64
 	ID           int
 	PortfolioID  int
 	Price        float64

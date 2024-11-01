@@ -6,9 +6,11 @@ create table if not exists deals (
 	date date not null,
 	exchange varchar(20) not null,
 	id serial primary key,
+	nkd numeric(15,2),
 	portfolio_id integer references portfolios(id) not null,
-	price numeric(10, 6) not null,
-	security_type varchar(20) not null, 
+	price numeric(15, 6) not null,
+	security_type varchar(20) not null,
+	shortname varchar(255) not null,
 	ticker varchar(50) not null,
 	type varchar(50) not null,
 	user_id  integer references users(id) not null

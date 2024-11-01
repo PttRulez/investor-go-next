@@ -70,15 +70,27 @@ const (
 	DEPOSIT TransactionType = "DEPOSIT"
 )
 
+// CouponResponse defines model for CouponResponse.
+type CouponResponse struct {
+	BondsCount    int                `json:"bondsCount"`
+	Date          openapi_types.Date `json:"date"`
+	Id            int                `json:"id"`
+	PaymentPeriod string             `json:"paymentPeriod"`
+	ShortName     string             `json:"shortName"`
+	TaxPaid       float64            `json:"taxPaid"`
+	TotalPayment  float64            `json:"totalPayment"`
+}
+
 // CreateCouponRequest defines model for CreateCouponRequest.
 type CreateCouponRequest struct {
 	BondsCount    int                `json:"bondsCount" validate:"required"`
-	CouponAmount  float64            `json:"couponAmount" validate:"required"`
 	Date          openapi_types.Date `json:"date" validate:"required"`
 	Exchange      Exchange           `json:"exchange" validate:"required,is-exchange"`
 	PaymentPeriod string             `json:"paymentPeriod" validate:"required"`
 	PortfolioId   int                `json:"portfolioId" validate:"required"`
+	TaxPaid       *float64           `json:"taxPaid,omitempty" validate:"required"`
 	Ticker        string             `json:"ticker" validate:"required"`
+	TotalPayment  float64            `json:"totalPayment" validate:"required"`
 }
 
 // CreateDealRequest defines model for CreateDealRequest.
@@ -87,22 +99,25 @@ type CreateDealRequest struct {
 	Comission    float64            `json:"comission"`
 	Date         openapi_types.Date `json:"date" validate:"required"`
 	Exchange     Exchange           `json:"exchange" validate:"required,is-exchange"`
+	Nkd          *float64           `json:"nkd,omitempty"`
 	PortfolioId  int                `json:"portfolioId" validate:"required"`
-	Price        float64            `json:"price"`
+	Price        float64            `json:"price" validate:"required"`
 	SecurityType SecurityType       `json:"securityType" validate:"required,securityType"`
-	Ticker       string             `json:"ticker"`
+	ShortName    string             `json:"shortName" validate:"required"`
+	Ticker       string             `json:"ticker" validate:"required"`
 	Type         DealType           `json:"type"`
 }
 
 // CreateDividendRequest defines model for CreateDividendRequest.
 type CreateDividendRequest struct {
-	Date            openapi_types.Date `json:"date" validate:"required"`
-	Exchange        Exchange           `json:"exchange" validate:"required,is-exchange"`
-	PaymentPerShare float64            `json:"paymentPerShare" validate:"required"`
-	PaymentPeriod   string             `json:"paymentPeriod" validate:"required"`
-	PortfolioId     int                `json:"portfolioId" validate:"required"`
-	SharesCount     int                `json:"sharesCount" validate:"required"`
-	Ticker          string             `json:"ticker" validate:"required"`
+	Date          openapi_types.Date `json:"date" validate:"required"`
+	Exchange      Exchange           `json:"exchange" validate:"required,is-exchange"`
+	PaymentPeriod string             `json:"paymentPeriod" validate:"required"`
+	PortfolioId   int                `json:"portfolioId" validate:"required"`
+	SharesCount   int                `json:"sharesCount" validate:"required"`
+	TaxPaid       *float64           `json:"taxPaid,omitempty" validate:"required"`
+	Ticker        string             `json:"ticker" validate:"required"`
+	TotalPayment  float64            `json:"totalPayment" validate:"required"`
 }
 
 // CreateExpenseRequest defines model for CreateExpenseRequest.
@@ -141,7 +156,7 @@ type CreatePortfolioRequest struct {
 
 // CreateTransactionRequest defines model for CreateTransactionRequest.
 type CreateTransactionRequest struct {
-	Amount      int                `json:"amount" validate:"required"`
+	Amount      float64            `json:"amount" validate:"required"`
 	Date        openapi_types.Date `json:"date" validate:"required"`
 	PortfolioId int                `json:"portfolioId" validate:"required"`
 	Type        TransactionType    `json:"type" validate:"required"`
@@ -154,16 +169,28 @@ type DealResponse struct {
 	Date         openapi_types.Date `json:"date" validate:"required"`
 	Exchange     Exchange           `json:"exchange" validate:"required,is-exchange"`
 	Id           int                `json:"id"`
+	Nkd          *float64           `json:"nkd,omitempty"`
 	PortfolioId  int                `json:"portfolioId" validate:"required"`
-	Price        float64            `json:"price"`
+	Price        float64            `json:"price" validate:"required"`
 	SecurityType SecurityType       `json:"securityType" validate:"required,securityType"`
 	ShortName    string             `json:"shortName"`
-	Ticker       string             `json:"ticker"`
+	Ticker       string             `json:"ticker" validate:"required"`
 	Type         DealType           `json:"type"`
 }
 
 // DealType defines model for DealType.
 type DealType string
+
+// DividendResponse defines model for DividendResponse.
+type DividendResponse struct {
+	Date          openapi_types.Date `json:"date"`
+	Id            int                `json:"id"`
+	PaymentPeriod string             `json:"paymentPeriod"`
+	SharesCount   int                `json:"sharesCount"`
+	ShortName     string             `json:"shortName"`
+	TaxPaid       float64            `json:"taxPaid"`
+	TotalPayment  float64            `json:"totalPayment"`
+}
 
 // Exchange defines model for Exchange.
 type Exchange string
@@ -186,9 +213,11 @@ type FullPortfolioResponse struct {
 	Cash           int                   `json:"cash"`
 	CashoutsSum    int                   `json:"cashoutsSum"`
 	Compound       bool                  `json:"compound"`
+	Coupons        []CouponResponse      `json:"coupons"`
 	CouponsSum     int                   `json:"couponsSum"`
 	Deals          []DealResponse        `json:"deals"`
 	DepositsSum    int                   `json:"depositsSum"`
+	Dividends      []DividendResponse    `json:"dividends"`
 	DividendsSum   int                   `json:"dividendsSum"`
 	ExpensesSum    int                   `json:"expensesSum"`
 	Id             int                   `json:"id"`
@@ -324,7 +353,7 @@ type SecurityType string
 
 // TransactionResponse defines model for TransactionResponse.
 type TransactionResponse struct {
-	Amount      int                `json:"amount" validate:"required"`
+	Amount      float64            `json:"amount" validate:"required"`
 	Date        openapi_types.Date `json:"date" validate:"required"`
 	Id          int                `json:"id"`
 	PortfolioId int                `json:"portfolioId" validate:"required"`

@@ -97,11 +97,13 @@ const PortfolioTable = ({
         header: 'Кол-во',
         accessorKey: 'amount',
         size: 5,
+        accessorFn: position => position.amount?.toLocaleString('ru-RU'),
       },
       {
-        header: 'Средняя цена',
+        header: 'Цена',
         accessorKey: 'averagePrice',
         size: 5,
+        accessorFn: position => position.averagePrice?.toLocaleString('ru-RU'),
       },
       {
         header: 'Текущая цена',
@@ -109,10 +111,7 @@ const PortfolioTable = ({
         size: 5,
         accessorFn: position => {
           if (!position.currentPrice) return '';
-          if (position.targetPrice) {
-            return `${position.currentPrice} (${position.targetPrice})`;
-          }
-          return position.currentPrice;
+          return `${position.currentPrice?.toLocaleString('ru-RU')} (${position.targetPrice?.toLocaleString('ru-RU') ?? '?'})`;
         },
       },
       {
@@ -152,6 +151,7 @@ const PortfolioTable = ({
     [onChooseTransaction],
   );
 
+  // Данные для таблицы
   const portfolioData = useMemo<IPositionResponse[]>(() => {
     if (!portfolio) return [];
     return [
@@ -173,7 +173,7 @@ const PortfolioTable = ({
         currentCost: portfolio?.cash,
         ticker: 'Рубли',
       },
-    ] as IPositionResponse[];
+    ] as unknown as IPositionResponse[];
   }, [portfolio]);
 
   // Свойства одной строчки таблицы
@@ -208,6 +208,7 @@ const PortfolioTable = ({
       expanded: {
         0: true,
         1: true,
+        2: false,
       },
     },
     muiExpandAllButtonProps: {
@@ -255,12 +256,22 @@ const PortfolioTable = ({
         <PositionDetails position={row.original} />
       ) : null;
     },
+    state: {
+      pagination: {
+        pageIndex: 0,
+        pageSize: 200,
+      },
+    },
   });
 
   return (
     <>
       <MaterialReactTable table={table} />
-      <Dialog open={!!positionToEdit} onClose={() => setPositionToEdit(null)}>
+      <Dialog
+        open={!!positionToEdit}
+        onClose={() => setPositionToEdit(null)}
+        sx={{ '& .MuiPaper-root': { maxWidth: '100%' } }}
+      >
         {positionToEdit && (
           <PositionForm
             afterSuccessfulSubmit={() => setPositionToEdit(null)}

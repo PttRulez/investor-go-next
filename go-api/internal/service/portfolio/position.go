@@ -7,6 +7,7 @@ import (
 
 	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 	"github.com/pttrulez/investor-go-next/go-api/internal/infrastructure/storage"
+	"github.com/pttrulez/investor-go-next/go-api/internal/service"
 )
 
 func (s *Service) AddInfoToPosition(ctx context.Context, i domain.PositionUpdateInfo) error {
@@ -33,7 +34,7 @@ func (s *Service) GetPositionList(ctx context.Context, userID int) ([]domain.Pos
 
 func (s *Service) newPosition(ctx context.Context, exchange domain.Exchange, portfolioID int,
 	ticker string, securityType domain.SecurityType, userID int) (domain.Position, error) {
-	const op = "DealService.newPosition"
+	const op = "-> newPosition()"
 
 	position := domain.Position{
 		Exchange:     exchange,
@@ -70,10 +71,6 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
-	fmt.Println(`exchange,
-		portfolioID,
-		securityType,
-		ticker`, exchange, portfolioID, securityType, ticker)
 
 	var position domain.Position
 	oldPosition, err := s.repo.GetPosition(
@@ -88,7 +85,6 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 	}
 	if errors.Is(err, storage.ErrNotFound) {
 		position, err = s.newPosition(ctx, exchange, portfolioID, ticker, securityType, userID)
-		fmt.Println("Created new position")
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
@@ -96,19 +92,24 @@ func (s *Service) updatePositionInDB(ctx context.Context, portfolioID int, excha
 		position = oldPosition
 	}
 
-	fmt.Printf("Postion Before update:\n%+v", position)
-
 	position = position.UpdateByDeals(allDeals, decimalCount)
-	fmt.Printf("Postion After update:\n%+v", position)
 
 	if position.ID == 0 {
 		err = s.repo.InsertPosition(ctx, position)
 		if err != nil {
 			return fmt.Errorf("%s: %w", op, err)
 		}
-	} else {
+	} else if position.Amount > 0 {
 		err = s.repo.UpdatePosition(ctx, position)
 		if err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+	} else {
+		err = s.repo.DeletePosition(ctx, position.ID, userID)
+		if err != nil {
+			if errors.Is(err, storage.ErrNotFound) {
+				return service.ErrDomainNotFound
+			}
 			return fmt.Errorf("%s: %w", op, err)
 		}
 	}

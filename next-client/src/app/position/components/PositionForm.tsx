@@ -47,7 +47,12 @@ const PositionForm = ({
   };
 
   return (
-    <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
+    <DefaultFormBox
+      onSubmit={handleSubmit(onSubmit)}
+      sx={{
+        minWidth: '800px',
+      }}
+    >
       <FormText
         control={control}
         error={!!formState.errors.comment}

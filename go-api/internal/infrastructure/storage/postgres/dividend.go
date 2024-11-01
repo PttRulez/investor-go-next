@@ -32,8 +32,9 @@ func (pg *Repository) GetDividendList(ctx context.Context, portfolioID int) (
 	[]domain.Dividend, error) {
 	const op = "Repository.GetDividendList"
 
-	queryString := `SELECT date, exchange, id, payment_per_share, payment_period,
-		portfolio_id, shares_count, ticker FROM dividends WHERE portfolio_id = $1
+	queryString := `SELECT date, exchange, id, payment_period, portfolio_id, shares_count,
+		shortname, tax_paid, ticker, total_payment FROM dividends
+		WHERE portfolio_id = $1
 		ORDER BY date DESC, id DESC;`
 
 	rows, err := pg.db.QueryContext(ctx, queryString, portfolioID)
@@ -49,11 +50,13 @@ func (pg *Repository) GetDividendList(ctx context.Context, portfolioID int) (
 			&d.Date,
 			&d.Exchange,
 			&d.ID,
-			&d.PaymentPerShare,
 			&d.PaymentPeriod,
 			&d.PortfolioID,
 			&d.SharesCount,
+			&d.ShortName,
+			&d.TaxPaid,
 			&d.Ticker,
+			&d.TotalPayment,
 		)
 		if e != nil {
 			return nil, fmt.Errorf("%s: %w", op, e)
@@ -71,18 +74,20 @@ func (pg *Repository) InsertDividend(ctx context.Context, d domain.Dividend,
 	userID int) error {
 	const op = "Repository.InsertDividend"
 
-	queryString := `INSERT INTO dividends (date, exchange, payment_per_share,
-    payment_period, portfolio_id, shares_count, ticker, user_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+	queryString := `INSERT INTO dividends (date, exchange, payment_period, portfolio_id,
+		shares_count, shortname, tax_paid, ticker, total_payment, user_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		d.Date,
 		d.Exchange,
-		d.PaymentPerShare,
 		d.PaymentPeriod,
 		d.PortfolioID,
 		d.SharesCount,
+		d.ShortName,
+		d.TaxPaid,
 		d.Ticker,
+		d.TotalPayment,
 		userID,
 	)
 	if err != nil {

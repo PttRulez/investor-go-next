@@ -2,7 +2,6 @@
 import { Roboto } from 'next/font/google';
 import { createTheme } from '@mui/material/styles';
 
-
 const roboto = Roboto({
   weight: ['300', '400', '500', '700'],
   subsets: ['latin'],
@@ -52,16 +51,44 @@ const theme = createTheme({
       dark: '#ba000d',
       contrastText: '#000',
     },
+    success: {
+      light: '#5cb85c',
+      main: '#53a653',
+      dark: '#4a934a',
+      contrastText: '#376e37',
+    },
     error: {
       light: '#ff7961',
       main: '#f44336',
       dark: '#ba000d',
       contrastText: '#000',
     },
+    myAwesomeColor: {
+      light: 'purple',
+    },
   },
   typography: {
     fontFamily: roboto.style.fontFamily,
   },
 });
+
+declare module '@mui/material/styles' {
+  interface Palette {
+    myAwesomeColor: {
+      light?: string;
+      main?: string;
+      dark?: string;
+      contrastText?: string;
+    };
+  }
+  interface PaletteOptions {
+    myAwesomeColor: {
+      light?: string;
+      main?: string;
+      dark?: string;
+      contrastText?: string;
+    };
+  }
+}
 
 export default theme;

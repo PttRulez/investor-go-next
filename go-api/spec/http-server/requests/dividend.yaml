@@ -7,9 +7,9 @@ components:
           date,
           exchange,
           paymentPeriod,
-          paymentPerShare,
           portfolioId,
           ticker,
+          totalPayment,
           sharesCount,
         ]
       properties:
@@ -24,17 +24,22 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: required
-        paymentPerShare:
-          type: number
-          format: double
-          x-oapi-codegen-extra-tags:
-            validate: required
         portfolioId:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: required
+        taxPaid:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        totalPayment:
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         sharesCount:

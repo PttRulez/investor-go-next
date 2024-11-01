@@ -80,7 +80,7 @@ func (c *Handlers) GetPortfolioByID(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	portfolio, err := c.portfolioService.GetFullPortfolioByID(ctx, portfolioID,
-		utils.GetCurrentUserID(r.Context()))
+		utils.GetCurrentUserID(ctx))
 	if err != nil {
 		return writeErr(w, fmt.Errorf("%s: %w", op, err))
 	}

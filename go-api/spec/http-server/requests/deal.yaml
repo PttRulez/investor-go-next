@@ -12,6 +12,7 @@ components:
           price,
           ticker,
           securityType,
+          shortName,
           type,
           ticker,
         ]
@@ -30,6 +31,9 @@ components:
             validate: required
         exchange:
           $ref: ../shared/enums.yaml#/components/schemas/Exchange
+        nkd:
+          type: number
+          format: double
         portfolioId:
           type: integer
           x-oapi-codegen-extra-tags:
@@ -37,8 +41,16 @@ components:
         price:
           type: number
           format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        shortName:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
         securityType:
           $ref: ../shared/enums.yaml#/components/schemas/SecurityType
         type:

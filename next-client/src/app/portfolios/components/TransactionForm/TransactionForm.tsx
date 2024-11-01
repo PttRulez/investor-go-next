@@ -1,15 +1,15 @@
-import { SubmitHandler, useForm } from 'react-hook-form';
-import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { FormText, FormDatePicker, FormSelect } from '@pttrulez/mui-based-ui';
+import { FormDatePicker, FormSelect, FormText } from '@pttrulez/mui-based-ui';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import dayjs from 'dayjs';
+import { SubmitHandler, useForm } from 'react-hook-form';
 
 import investorService from '@/axios/investor/investor.service';
+import { TransactionType } from '@/types/enums';
+import { CreateTransactionData, CreateTransactionSchema } from '@/validation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Button from '@mui/material/Button';
-import { CreateTransactionData, CreateTransactionSchema } from '@/validation';
-import { TransactionType } from '@/types/enums';
 import { useEffect } from 'react';
 
 type Props = {
@@ -36,7 +36,7 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
     (formData: CreateTransactionData) =>
       investorService.transaction.createTransaction(formData),
     {
-      onSuccess: cashout => {
+      onSuccess: _ => {
         afterSuccessfulSubmit();
         client.invalidateQueries({ queryKey: ['portfolio', portfolioId] });
       },
@@ -51,9 +51,23 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
     <Box
       onSubmit={handleSubmit(onSubmit)}
       component="form"
-      sx={{ padding: '30px' }}
+      sx={{ padding: '30px', minWidth: '400px' }}
     >
       <Stack gap={'20px'}>
+        <FormDatePicker
+          control={control}
+          name={'date'}
+          handleClear={() => resetField('date')}
+          onChange={newValue => {
+            if (newValue) {
+              setValue('date', newValue?.format('YYYY-MM-DD'));
+            } else {
+              resetField('date');
+            }
+          }}
+          label={'Дата'}
+          value={watchAll.date}
+        />
         <FormSelect
           control={control}
           name={'type'}
@@ -69,28 +83,21 @@ const TransactionForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
           error={!!formState.errors.amount}
           handleClear={() => resetField('amount')}
           helperText={formState.errors.amount?.message}
-          label={'Сумма кэшаута'}
+          label={
+            watchAll.type === TransactionType.CASHOUT
+              ? 'Сумма кэшаута'
+              : 'Сумма депозита'
+          }
           name={'amount'}
           onChange={e => {
-            setValue('amount', parseInt(e.target.value));
+            if (e.target.value != '') {
+              setValue('amount', Number(e.target.value));
+            }
           }}
           type="number"
           value={watchAll.amount}
         />
-        <FormDatePicker
-          control={control}
-          name={'date'}
-          handleClear={() => resetField('date')}
-          onChange={newValue => {
-            if (newValue) {
-              setValue('date', newValue?.format('YYYY-MM-DD'));
-            } else {
-              resetField('date');
-            }
-          }}
-          label={'Дата кэшаута'}
-          value={watchAll.date}
-        />
+
         <Button
           variant="outlined"
           color="primary"

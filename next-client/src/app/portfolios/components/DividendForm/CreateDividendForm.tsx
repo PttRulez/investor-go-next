@@ -18,7 +18,7 @@ import { useForm } from 'react-hook-form';
 type Props = {
   afterSuccessfulSubmit: () => void;
   portfolioId: number;
-  tickerList: SelectOption[];
+  tickerList: SelectOption[] | SelectList;
 };
 
 const CreateDividendForm = ({
@@ -31,6 +31,8 @@ const CreateDividendForm = ({
       defaultValues: {
         date: dayjs().format('YYYY-MM-DD'),
         exchange: Exchange.MOEX,
+        taxPaid: 0,
+        totalPayment: 0,
         portfolioId,
       },
       resolver: zodResolver(CreateDividendSchema),
@@ -52,7 +54,10 @@ const CreateDividendForm = ({
     createDividend.mutate(data);
   };
   return (
-    <DefaultFormBox onSubmit={handleSubmit(onSubmit)}>
+    <DefaultFormBox
+      onSubmit={handleSubmit(onSubmit)}
+      sx={{ minWidth: '600px' }}
+    >
       <FormDatePicker
         control={control}
         name={'date'}
@@ -79,21 +84,40 @@ const CreateDividendForm = ({
       <FormText
         control={control}
         decimal
-        error={!!formState.errors.paymentPerShare}
-        handleClear={() => resetField('paymentPerShare')}
-        helperText={formState.errors.paymentPerShare?.message}
-        label={'Размер дивиденда на одну акцию'}
-        name={'paymentPerShare'}
+        error={!!formState.errors.totalPayment}
+        handleClear={() => resetField('totalPayment')}
+        helperText={formState.errors.totalPayment?.message}
+        label={'Общая сумма выплаты, пришедшая на счёт'}
+        name={'totalPayment'}
         onChange={(e: any) => {
           if (e.target.value != '') {
-            setValue('paymentPerShare', parseFloat(e.target.value));
+            setValue('totalPayment', Number(e.target.value));
           }
         }}
         type="number"
         inputProps={{
           step: 'any',
         }}
-        value={watchAll.paymentPerShare}
+        value={watchAll.totalPayment}
+      />
+      <FormText
+        control={control}
+        decimal
+        error={!!formState.errors.taxPaid}
+        handleClear={() => resetField('taxPaid')}
+        helperText={formState.errors.taxPaid?.message}
+        label={'Налог уплаченный помимо суммы выплаты'}
+        name={'taxPaid'}
+        onChange={(e: any) => {
+          if (e.target.value != '') {
+            setValue('taxPaid', Number(e.target.value));
+          }
+        }}
+        type="number"
+        inputProps={{
+          step: 'any',
+        }}
+        value={watchAll.taxPaid}
       />
       <FormText
         control={control}

@@ -3,7 +3,7 @@ package domain
 import "time"
 
 type Transaction struct {
-	Amount      int
+	Amount      float64
 	Date        time.Time
 	ID          int
 	PortfolioID int

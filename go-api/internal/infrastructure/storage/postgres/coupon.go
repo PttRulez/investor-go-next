@@ -32,8 +32,9 @@ func (pg *Repository) GetCouponList(ctx context.Context, portfolioID int) (
 	[]domain.Coupon, error) {
 	const op = "Repository.GetCouponList"
 
-	queryString := `SELECT bonds_count, coupon_amount, date, exchange, id, payment_period,
-		portfolio_id, ticker FROM coupons WHERE portfolio_id = $1 ORDER BY date DESC, id DESC;`
+	queryString := `SELECT bonds_count, date, exchange, id, payment_period, portfolio_id,
+		shortname, tax_paid, ticker, total_payment
+		FROM coupons WHERE portfolio_id = $1 ORDER BY date DESC, id DESC;`
 
 	rows, err := pg.db.QueryContext(ctx, queryString, portfolioID)
 	if err != nil {
@@ -46,13 +47,15 @@ func (pg *Repository) GetCouponList(ctx context.Context, portfolioID int) (
 		var c domain.Coupon
 		e := rows.Scan(
 			&c.BondsCount,
-			&c.CouponAmount,
 			&c.Date,
 			&c.Exchange,
 			&c.ID,
 			&c.PaymentPeriod,
 			&c.PortfolioID,
+			&c.ShortName,
+			&c.TaxPaid,
 			&c.Ticker,
+			&c.TotalPayment,
 		)
 		if e != nil {
 			return nil, fmt.Errorf("%s: %w", op, e)
@@ -70,18 +73,20 @@ func (pg *Repository) InsertCoupon(ctx context.Context, c domain.Coupon,
 	userID int) error {
 	const op = "Repository.InsertCoupon"
 
-	queryString := `INSERT INTO coupons (bonds_count, coupon_amount, date, exchange,
-    payment_period, portfolio_id, ticker, user_id)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`
+	queryString := `INSERT INTO coupons (bonds_count, date, exchange,
+    payment_period, portfolio_id, shortname, tax_paid, ticker, total_payment, user_id)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`
 
 	_, err := pg.db.ExecContext(ctx, queryString,
 		c.BondsCount,
-		c.CouponAmount,
 		c.Date,
 		c.Exchange,
 		c.PaymentPeriod,
 		c.PortfolioID,
+		c.ShortName,
+		c.TaxPaid,
 		c.Ticker,
+		c.TotalPayment,
 		userID,
 	)
 	if err != nil {

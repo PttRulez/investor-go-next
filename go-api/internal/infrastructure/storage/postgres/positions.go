@@ -33,10 +33,32 @@ func (pg *Repository) AddPositionInfo(ctx context.Context, i domain.PositionUpda
 		count++
 	}
 	queryString += strings.Join(s, ", ")
-	queryString += fmt.Sprintf(" WHERE id = $%d;", count)
-	args = append(args, i.UserID)
+	queryString += fmt.Sprintf(" WHERE id = $%d AND user_id = $%d;", count, count+1)
+	args = append(args, i.ID, i.UserID)
 
+	fmt.Println(queryString, args)
 	result, err := pg.t(ctx).ExecContext(ctx, queryString, args...)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+	if rowsAffected == 0 {
+		return storage.ErrNotFound
+	}
+
+	return nil
+}
+
+func (pg *Repository) DeletePosition(ctx context.Context, id int, userID int) error {
+	const op = "Repository.DeletePosition"
+
+	queryString := "DELETE FROM positions where id = $1 AND user_id = $2;"
+
+	result, err := pg.db.ExecContext(ctx, queryString, id, userID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -138,7 +160,8 @@ func (pg *Repository) GetPortfolioPositionList(ctx context.Context, id int, user
 	        )
 		    ) FILTER (WHERE o.id IS NOT NULL),
 	        '[]'::json
-			)AS opinions
+			)AS opinions,
+		COALESCE(MAX(bond_data.currency), MAX(share_data.currency))
 		FROM
 		    positions p
 		LEFT JOIN
@@ -147,6 +170,10 @@ func (pg *Repository) GetPortfolioPositionList(ctx context.Context, id int, user
 		    opinions o ON oop.opinion_id = o.id
 		LEFT JOIN
 		    experts e ON o.expert_id = e.id
+		LEFT JOIN moex_bonds bond_data 
+       ON p.security_type = 'BOND' AND p.ticker = bond_data.ticker
+		LEFT JOIN moex_shares share_data 
+		   ON p.security_type = 'SHARE' AND p.ticker = share_data.ticker
 		WHERE
 		    p.portfolio_id = $1 AND p.user_id = $2
 		GROUP BY
@@ -181,6 +208,7 @@ func (pg *Repository) GetPortfolioPositionList(ctx context.Context, id int, user
 			&p.Ticker,
 			&p.TargetPrice,
 			&opinionsData,
+			&p.Currency,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("%s rows.Scan: %w", op, err)

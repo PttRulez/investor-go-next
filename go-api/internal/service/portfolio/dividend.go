@@ -11,7 +11,14 @@ func (s *Service) CreateDividend(ctx context.Context, d domain.Dividend,
 	userID int) error {
 	const op = "PortfolioService.AddDividend"
 
-	err := s.repo.InsertDividend(ctx, d, userID)
+	share, err := s.moexService.GetShareByTicker(ctx, d.Ticker)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	d.ShortName = share.ShortName
+
+	err = s.repo.InsertDividend(ctx, d, userID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

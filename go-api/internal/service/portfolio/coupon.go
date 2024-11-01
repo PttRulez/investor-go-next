@@ -11,7 +11,14 @@ func (s *Service) CreateCoupon(ctx context.Context, d domain.Coupon,
 	userID int) error {
 	const op = "PortfolioService.CreateCoupon"
 
-	err := s.repo.InsertCoupon(ctx, d, userID)
+	bond, err := s.moexService.GetBondByTicker(ctx, d.Ticker)
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	d.ShortName = bond.ShortName
+
+	err = s.repo.InsertCoupon(ctx, d, userID)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}

@@ -63,7 +63,7 @@ func (s *Service) createNewShareFromMoexISS(ctx context.Context, ticker string) 
 	}
 
 	// Это всё что нам нужно было из фулинфо
-	share.LotSize = fullInfo.LotSize
+	share.LotSize = fullInfo.LotPrice
 	share.PriceDecimals = fullInfo.PriceDecimals
 
 	// сохраняем в бд

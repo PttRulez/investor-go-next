@@ -38,6 +38,7 @@ type Repository interface {
 
 	// positions
 	AddPositionInfo(ctx context.Context, i domain.PositionUpdateInfo) error
+	DeletePosition(ctx context.Context, id int, userID int) error
 	GetPosition(ctx context.Context, exchange domain.Exchange, portfolioID int,
 		securityType domain.SecurityType, ticker string) (domain.Position, error)
 	GetPortfolioPositionList(ctx context.Context, portfolioID int, userID int) ([]domain.Position, error)

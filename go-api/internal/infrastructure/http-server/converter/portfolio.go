@@ -39,9 +39,9 @@ func FromPortfolioToFullPortfolioResponse(portfolio domain.Portfolio) contracts.
 		bondPositions = append(bondPositions, FromPositionToResponse(p))
 	}
 
-	sharePositions := make([]contracts.PositionResponse, 0, len(portfolio.SharePositions))
-	for _, p := range portfolio.SharePositions {
-		sharePositions = append(sharePositions, FromPositionToResponse(p))
+	coupons := make([]contracts.CouponResponse, 0, len(portfolio.Coupons))
+	for _, d := range portfolio.Coupons {
+		coupons = append(coupons, FromCouponToCouponResponse(d))
 	}
 
 	deals := make([]contracts.DealResponse, 0, len(portfolio.Deals))
@@ -49,14 +49,31 @@ func FromPortfolioToFullPortfolioResponse(portfolio domain.Portfolio) contracts.
 		deals = append(deals, FromDealToResponse(d))
 	}
 
+	dividends := make([]contracts.DividendResponse, 0, len(portfolio.Dividends))
+	for _, d := range portfolio.Dividends {
+		dividends = append(dividends, FromDividendToDividendResponse(d))
+	}
+
+	sharePositions := make([]contracts.PositionResponse, 0, len(portfolio.SharePositions))
+	for _, p := range portfolio.SharePositions {
+		sharePositions = append(sharePositions, FromPositionToResponse(p))
+	}
+
+	transactions := make([]contracts.TransactionResponse, 0, len(portfolio.Transactions))
+	for _, t := range portfolio.Transactions {
+		transactions = append(transactions, FromTransactionToResponse(t))
+	}
+
 	return contracts.FullPortfolioResponse{
 		BondPositions:  bondPositions,
 		Cash:           portfolio.Cash,
 		CashoutsSum:    portfolio.CashoutsSum,
 		Compound:       portfolio.Compound,
+		Coupons:        coupons,
 		CouponsSum:     portfolio.CouponsSum,
 		Deals:          deals,
 		DepositsSum:    portfolio.DepositsSum,
+		Dividends:      dividends,
 		DividendsSum:   portfolio.DividendsSum,
 		ExpensesSum:    portfolio.ExpensesSum,
 		Id:             portfolio.ID,
@@ -64,5 +81,6 @@ func FromPortfolioToFullPortfolioResponse(portfolio domain.Portfolio) contracts.
 		Profitability:  portfolio.Profitability,
 		SharePositions: sharePositions,
 		TotalCost:      portfolio.TotalCost,
+		Transactions:   transactions,
 	}
 }

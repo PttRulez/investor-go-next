@@ -74,18 +74,18 @@ func (pg *Repository) InsertMoexBond(ctx context.Context, b domain.Bond) (domain
 	const op = "Repository.InsertMoexBond"
 
 	querySting := `INSERT INTO moex_bonds (board, coupon_percent, coupon_value, coupon_frequency,
-	 engine, face_value, issue_date, lotsize, market, mat_date, name, shortname, ticker)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, board,
-		coupon_percent, coupon_value, coupon_frequency, engine, face_value, issue_date,
+	 currency, engine, face_value, issue_date, lotsize, market, mat_date, name, shortname, ticker)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id, board,
+		coupon_percent, coupon_value, coupon_frequency, currency, engine, face_value, issue_date,
 		lotsize, market, mat_date, name, shortname, ticker;`
 
 	var r domain.Bond
 	err := pg.db.QueryRowContext(ctx, querySting, b.Board, b.CouponPercent, b.CouponValue,
-		b.CouponFrequency, b.Engine, b.FaceValue, b.IssueDate, b.LotSize, b.Market,
+		b.CouponFrequency, b.Currency, b.Engine, b.FaceValue, b.IssueDate, b.LotSize, b.Market,
 		b.MatDate, b.Name, b.ShortName, b.Ticker).
-		Scan(&r.ID, &r.Board, &r.CouponPercent, &r.CouponValue, &r.CouponFrequency, &r.Engine,
-			&r.FaceValue, &r.IssueDate, &r.LotSize, &r.Market, &r.MatDate, &r.Name, &r.ShortName,
-			&r.Ticker)
+		Scan(&r.ID, &r.Board, &r.CouponPercent, &r.CouponValue, &r.CouponFrequency, &r.Currency,
+			&r.Engine, &r.FaceValue, &r.IssueDate, &r.LotSize, &r.Market, &r.MatDate, &r.Name,
+			&r.ShortName, &r.Ticker)
 	if err != nil {
 		return domain.Bond{}, fmt.Errorf("%s: %w", op, err)
 	}

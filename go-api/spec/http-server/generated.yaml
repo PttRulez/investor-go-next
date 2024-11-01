@@ -793,6 +793,34 @@ components:
           format: double
         ticker:
           type: string
+    CouponResponse:
+      type: object
+      required:
+        - bondsCount
+        - date
+        - id
+        - paymentPeriod
+        - shortName
+        - taxPaid
+        - totalPayment
+      properties:
+        bondsCount:
+          type: integer
+        id:
+          type: integer
+        taxPaid:
+          type: number
+          format: double
+        totalPayment:
+          type: number
+          format: double
+        paymentPeriod:
+          type: string
+        date:
+          type: string
+          format: date
+        shortName:
+          type: string
     DealType:
       type: string
       enum:
@@ -809,6 +837,7 @@ components:
         - price
         - ticker
         - securityType
+        - shortName
         - type
         - ticker
       properties:
@@ -826,6 +855,9 @@ components:
             validate: required
         exchange:
           $ref: '#/components/schemas/Exchange'
+        nkd:
+          type: number
+          format: double
         portfolioId:
           type: integer
           x-oapi-codegen-extra-tags:
@@ -833,8 +865,16 @@ components:
         price:
           type: number
           format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
+        shortName:
+          type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
         securityType:
           $ref: '#/components/schemas/SecurityType'
         type:
@@ -851,6 +891,34 @@ components:
               type: integer
             shortName:
               type: string
+    DividendResponse:
+      type: object
+      required:
+        - date
+        - id
+        - paymentPeriod
+        - sharesCount
+        - shortName
+        - taxPaid
+        - totalPayment
+      properties:
+        date:
+          type: string
+          format: date
+        id:
+          type: integer
+        paymentPeriod:
+          type: string
+        sharesCount:
+          type: integer
+        shortName:
+          type: string
+        taxPaid:
+          type: number
+          format: double
+        totalPayment:
+          type: number
+          format: double
     TransactionType:
       type: string
       enum:
@@ -867,7 +935,8 @@ components:
         - type
       properties:
         amount:
-          type: integer
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         date:
@@ -905,6 +974,10 @@ components:
           type: integer
         compound:
           type: boolean
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CouponResponse'
         couponsSum:
           type: integer
         deals:
@@ -913,6 +986,10 @@ components:
             $ref: '#/components/schemas/DealResponse'
         depositsSum:
           type: integer
+        dividends:
+          type: array
+          items:
+            $ref: '#/components/schemas/DividendResponse'
         dividendsSum:
           type: integer
         expensesSum:
@@ -940,10 +1017,12 @@ components:
         - bondsCost
         - cash
         - cashoutsSum
+        - coupons
         - couponsSum
         - compound
         - deals
         - depositsSum
+        - dividends
         - dividendsSum
         - expensesSum
         - id
@@ -957,20 +1036,15 @@ components:
       type: object
       required:
         - bondsCount
-        - couponAmount
         - date
         - exchange
         - paymentPeriod
         - portfolioId
         - ticker
+        - totalPayment
       properties:
         bondsCount:
           type: integer
-          x-oapi-codegen-extra-tags:
-            validate: required
-        couponAmount:
-          type: number
-          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         date:
@@ -988,8 +1062,18 @@ components:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: required
+        taxPaid:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        totalPayment:
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required
     CreateDividendRequest:
@@ -998,9 +1082,9 @@ components:
         - date
         - exchange
         - paymentPeriod
-        - paymentPerShare
         - portfolioId
         - ticker
+        - totalPayment
         - sharesCount
       properties:
         date:
@@ -1014,17 +1098,22 @@ components:
           type: string
           x-oapi-codegen-extra-tags:
             validate: required
-        paymentPerShare:
-          type: number
-          format: double
-          x-oapi-codegen-extra-tags:
-            validate: required
         portfolioId:
           type: integer
           x-oapi-codegen-extra-tags:
             validate: required
+        taxPaid:
+          type: number
+          format: double
+          x-oapi-codegen-extra-tags:
+            validate: required
         ticker:
           type: string
+          x-oapi-codegen-extra-tags:
+            validate: required
+        totalPayment:
+          type: number
+          format: double
           x-oapi-codegen-extra-tags:
             validate: required
         sharesCount:

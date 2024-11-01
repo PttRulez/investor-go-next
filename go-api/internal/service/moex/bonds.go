@@ -36,6 +36,7 @@ func (s *Service) createNewBondFromMoexISS(ctx context.Context, ticker string) (
 	bond := domain.Bond{
 		SecurityCommonInfo: domain.SecurityCommonInfo{
 			Board:     secInfo.Board,
+			Currency:  secInfo.Currency,
 			Engine:    secInfo.Engine,
 			Market:    secInfo.Market,
 			Name:      secInfo.Name,
@@ -46,8 +47,8 @@ func (s *Service) createNewBondFromMoexISS(ctx context.Context, ticker string) (
 		CouponValue:     secInfo.CouponValue,
 		CouponFrequency: secInfo.CouponFrequency,
 		IssueDate:       secInfo.IssueDate,
-		FaceValue:       secInfo.FaceValue,
-		MatDate:         secInfo.MatDate,
+		FaceValue:       secInfo.LotPrice,
+		MatDate:         secInfo.MaturityDate,
 	}
 	if err != nil {
 		return domain.Bond{}, err
@@ -66,7 +67,7 @@ func (s *Service) createNewBondFromMoexISS(ctx context.Context, ticker string) (
 	}
 
 	// Это всё что нам нужно было из фулинфо
-	bond.LotSize = fullInfo.LotSize
+	bond.LotSize = fullInfo.LotPrice
 
 	// сохраняем в бд
 	b, err := s.repo.InsertMoexBond(ctx, bond)

@@ -6,9 +6,11 @@ type Portfolio struct {
 	Cash           int
 	CashoutsSum    int
 	Compound       bool
+	Coupons        []Coupon
 	CouponsSum     int
 	Deals          []Deal
 	DepositsSum    int
+	Dividends      []Dividend
 	DividendsSum   int
 	ExpensesSum    int
 	ID             int

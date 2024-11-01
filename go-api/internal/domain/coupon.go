@@ -10,6 +10,9 @@ type Coupon struct {
 	ID            int
 	PaymentPeriod string
 	PortfolioID   int
+	ShortName     string
+	TaxPaid       float64
+	TotalPayment  float64
 	Ticker        string
 	UserID        int
 }

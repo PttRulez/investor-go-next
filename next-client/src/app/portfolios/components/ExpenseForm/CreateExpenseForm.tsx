@@ -73,7 +73,7 @@ const CreateExpenseForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
         name={'amount'}
         onChange={(e: any) => {
           if (e.target.value != '') {
-            setValue('amount', parseFloat(e.target.value));
+            setValue('amount', Number(e.target.value));
           }
         }}
         type="number"
@@ -87,7 +87,7 @@ const CreateExpenseForm = ({ afterSuccessfulSubmit, portfolioId }: Props) => {
         error={!!formState.errors.description}
         handleClear={() => resetField('description')}
         helperText={formState.errors.description?.message}
-        label={'Кол-во облигаций'}
+        label={'Описание'}
         name={'description'}
         value={watchAll.description}
       />

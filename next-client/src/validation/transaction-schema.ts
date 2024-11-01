@@ -2,14 +2,11 @@ import { TransactionType } from '@/types/enums';
 import { z } from 'zod';
 
 export const CreateTransactionSchema = z.object({
-  amount: z
-    .number({
-      errorMap: _ => ({
-        message: 'Введите сумму кэшаута',
-      }),
-    })
-    .int()
-    .positive(),
+  amount: z.number({
+    errorMap: _ => ({
+      message: 'Введите сумму кэшаута',
+    }),
+  }),
   date: z.string(),
   portfolioId: z.number(),
   type: z.nativeEnum(TransactionType),

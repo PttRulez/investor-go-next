@@ -53,7 +53,7 @@ const CreateDealForm: FC<DealFormProps> = ({
   const createDeal = useMutation({
     mutationFn: (formData: CreateDealData) =>
       investorService.deal.createDeal(formData),
-    onSuccess: deal => {
+    onSuccess: _ => {
       afterSuccessfulSubmit();
       client.invalidateQueries({ queryKey: ['portfolio', portfolioId] });
     },
@@ -86,6 +86,8 @@ const CreateDealForm: FC<DealFormProps> = ({
     }
 
     setValue('ticker', secInfo.ticker);
+    setValue('shortName', secInfo.shortName);
+
     if (shareTypes.includes(secInfo.type)) {
       setValue('securityType', SecurityType.SHARE);
     } else if (bondTypes.includes(secInfo.type)) {
@@ -114,6 +116,20 @@ const CreateDealForm: FC<DealFormProps> = ({
           <ArrowCircleUpIcon sx={{ color: 'green' }} />
         )}
       </Box>
+      <FormDatePicker
+        control={control}
+        name={'date'}
+        handleClear={() => resetField('date')}
+        onChange={(newValue: Dayjs | null) => {
+          if (newValue) {
+            setValue('date', newValue?.format('YYYY-MM-DD'));
+          } else {
+            resetField('date');
+          }
+        }}
+        label={'Дата'}
+        value={watchAll.date}
+      />
       <Controller
         control={control}
         name="ticker"
@@ -138,17 +154,18 @@ const CreateDealForm: FC<DealFormProps> = ({
         type="number"
         value={watchAll.amount}
       />
+
       <FormText
         control={control}
         decimal
         error={!!formState.errors.price}
         handleClear={() => resetField('price')}
         helperText={formState.errors.price?.message}
-        label={'Цена покупки'}
+        label={dealType === DealType.BUY ? 'Цена покупки' : 'Цена продажи'}
         name={'price'}
         onChange={(e: any) => {
           if (e.target.value != '') {
-            setValue('price', parseFloat(e.target.value));
+            setValue('price', Number(e.target.value));
           }
         }}
         type="number"
@@ -160,14 +177,14 @@ const CreateDealForm: FC<DealFormProps> = ({
       <FormText
         control={control}
         decimal
-        error={!!formState.errors.price}
-        handleClear={() => resetField('price')}
-        helperText={formState.errors.price?.message}
+        error={!!formState.errors.comission}
+        handleClear={() => resetField('comission')}
+        helperText={formState.errors.comission?.message}
         label={'Комиссия'}
         name={'comission'}
         onChange={(e: any) => {
           if (e.target.value != '') {
-            setValue('comission', parseFloat(e.target.value));
+            setValue('comission', Number(e.target.value));
           }
         }}
         type="number"
@@ -176,20 +193,23 @@ const CreateDealForm: FC<DealFormProps> = ({
         }}
         value={watchAll.comission}
       />
-      <FormDatePicker
-        control={control}
-        name={'date'}
-        handleClear={() => resetField('date')}
-        onChange={(newValue: Dayjs | null) => {
-          if (newValue) {
-            setValue('date', newValue?.format('YYYY-MM-DD'));
-          } else {
-            resetField('date');
-          }
-        }}
-        label={'Дата покупки'}
-        value={watchAll.date}
-      />
+      {watchAll.securityType === SecurityType.BOND && (
+        <FormText
+          control={control}
+          error={!!formState.errors.nkd}
+          handleClear={() => resetField('nkd')}
+          helperText={formState.errors.nkd?.message}
+          label={'НКД'}
+          name={'nkd'}
+          onChange={(e: any) => {
+            if (e.target.value != '') {
+              setValue('nkd', Number(e.target.value));
+            }
+          }}
+          type="number"
+          value={watchAll.nkd}
+        />
+      )}
       <Button
         variant="outlined"
         color="primary"

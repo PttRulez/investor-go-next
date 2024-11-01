@@ -42,6 +42,7 @@ type Position struct {
 	Comment       *string
 	CurrentPrice  float64
 	CurrentCost   int
+	Currency      string
 	Exchange      Exchange
 	ID            int
 	OpinionIDs    []int

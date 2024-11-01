@@ -81,6 +81,17 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	}
 }
 
+func writeS(w http.ResponseWriter, status int, value string) error {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(status)
+	_, err := w.Write([]byte(value))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func writeString(w http.ResponseWriter, status int, value string) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(status)

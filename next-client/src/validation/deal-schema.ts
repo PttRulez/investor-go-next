@@ -1,7 +1,7 @@
 import { DealType, Exchange, SecurityType } from '@/types/enums';
 import { z } from 'zod';
 
-export const CreateDealSchema = z.object({
+const DealSchema = z.object({
   amount: z
     .number({
       errorMap: _ => ({
@@ -17,10 +17,16 @@ export const CreateDealSchema = z.object({
   }),
   date: z.string(),
   exchange: z.nativeEnum(Exchange),
+  nkd: z.number().optional(),
   portfolioId: z.number(),
   price: z.number({
     errorMap: _ => ({
       message: 'Введите стоимость сделки',
+    }),
+  }),
+  shortName: z.string({
+    errorMap: _ => ({
+      message: 'Выберите бумагу',
     }),
   }),
   ticker: z.string({
@@ -32,7 +38,19 @@ export const CreateDealSchema = z.object({
   type: z.nativeEnum(DealType),
 });
 
-export const UpdateDealSchema = CreateDealSchema.partial().extend({
+export const CreateDealSchema = DealSchema.refine(
+  d => {
+    if (d.securityType === SecurityType.BOND && d.nkd == undefined)
+      return false;
+    return true;
+  },
+  {
+    message: 'Введите НКД',
+    path: ['nkd'],
+  },
+);
+
+export const UpdateDealSchema = DealSchema.partial().extend({
   id: z.number(),
 });
 

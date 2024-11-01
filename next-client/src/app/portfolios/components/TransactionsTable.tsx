@@ -9,6 +9,8 @@ import investorService from '@/axios/investor/investor.service';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowCircleUpIcon from '@mui/icons-material/ArrowCircleUp';
 import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
+import ShoppingCartCheckoutIcon from '@mui/icons-material/ShoppingCartCheckout';
+import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { ITransactionResponse } from '@/types/apis/go-api';
 import { TransactionType } from '@/types/enums';
 
@@ -39,14 +41,15 @@ const TransactionsTable = ({ portfolioId, transactions }: Props) => {
       name: 'type',
       render: (value: TransactionType) =>
         value === TransactionType.CASHOUT ? (
-          <ArrowCircleUpIcon sx={{ color: 'green' }} />
+          <ShoppingCartCheckoutIcon sx={{ color: 'error.main' }} />
         ) : (
-          <ArrowCircleDownIcon sx={{ color: 'red' }} />
+          <AddShoppingCartIcon sx={{ color: 'green' }} />
         ),
     },
     {
       label: 'Сумма',
       name: 'amount',
+      render: (value: number) => value.toLocaleString('RU-ru'),
     },
     {
       label: 'Дата',
@@ -71,7 +74,15 @@ const TransactionsTable = ({ portfolioId, transactions }: Props) => {
     },
   ];
 
-  return <AdvancedTable rows={transactions} columns={columns} />;
+  return (
+    <AdvancedTable
+      rows={transactions}
+      columns={columns}
+      sx={{
+        padding: '20px 100px',
+      }}
+    />
+  );
 };
 
 export default TransactionsTable;

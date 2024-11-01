@@ -53,7 +53,7 @@ func Run() {
 
 	// init tgClient
 	telega := telegram.New(cfg.TgClientEndpoint, logger)
-	fmt.Println("Telegram client is ready to send to ednpoint: ", cfg.TgClientEndpoint)
+	fmt.Println("Telegram client is ready to send to endpoint: ", cfg.TgClientEndpoint)
 
 	// init services
 	user := user.NewUserService(repo)

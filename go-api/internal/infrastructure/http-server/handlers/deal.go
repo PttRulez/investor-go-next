@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/pttrulez/investor-go-next/go-api/internal/domain"
 	"github.com/pttrulez/investor-go-next/go-api/internal/utils"
 
 	"github.com/go-playground/validator/v10"
@@ -43,6 +44,11 @@ func (c *Handlers) CreateDeal(w http.ResponseWriter, r *http.Request) {
 		writeString(w, http.StatusBadRequest, err.Error())
 	}
 
+	if deal.SecurityType == domain.STBond && deal.Nkd == nil {
+		writeJS(w, http.StatusBadRequest, map[string]string{"nkd": "Необходимо указать НКД"})
+		return
+	}
+
 	result, err := c.portfolioService.CreateDeal(ctx, deal, utils.GetCurrentUserID(ctx))
 	if err != nil {
 		err = fmt.Errorf("%s: %w", op, err)
@@ -54,7 +60,7 @@ func (c *Handlers) CreateDeal(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, result)
 }
 
-func (c *Handlers) DeleteDeal(w http.ResponseWriter, r *http.Request) {
+func (c *Handlers) DeleteDeal(w http.ResponseWriter, r *http.Request) error {
 	const op = "DealController.DeleteDeal"
 
 	ctx := r.Context()
@@ -62,7 +68,7 @@ func (c *Handlers) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 	i := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(i)
 	if err != nil {
-		writeString(w, http.StatusBadRequest, fmt.Sprintf(
+		return writeS(w, http.StatusBadRequest, fmt.Sprintf(
 			"Проблема с конвертацией айди %s: %s",
 			chi.URLParam(r, "id"),
 			err.Error()))
@@ -72,8 +78,9 @@ func (c *Handlers) DeleteDeal(w http.ResponseWriter, r *http.Request) {
 
 	err = c.portfolioService.DeleteDealByID(ctx, id, userID)
 	if err != nil {
-		writeError(w, fmt.Errorf("%s, %w", op, err))
+		return writeErr(w, fmt.Errorf("%s, %w", op, err))
 	}
 
 	w.WriteHeader(http.StatusOK)
+	return nil
 }

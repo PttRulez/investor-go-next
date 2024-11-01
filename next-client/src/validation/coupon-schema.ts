@@ -7,18 +7,23 @@ export const CreateCouponSchema = z.object({
       message: 'Введите количество облигаций',
     }),
   }),
-  couponAmount: z.number({
-    errorMap: _ => ({
-      message: 'Введите размер купона в рублях',
-    }),
-  }),
   date: z.string(),
   exchange: z.nativeEnum(Exchange),
   paymentPeriod: z.string(),
   portfolioId: z.number(),
+  taxPaid: z.number({
+    errorMap: _ => ({
+      message: 'Введите размер уплаченного налога',
+    }),
+  }),
   ticker: z.string({
     errorMap: _ => ({
       message: 'Выберите облигацию',
+    }),
+  }),
+  totalPayment: z.number({
+    errorMap: _ => ({
+      message: 'Введите сумму выплаты, полученную в рублях',
     }),
   }),
 });

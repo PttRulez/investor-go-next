@@ -7,11 +7,11 @@ export interface ICouponResponse {
   bondsCount: number;
   couponAmount: number;
   date: Date;
-  exchange: Exchange;
   id: number;
   paymentPeriod: string;
   portfolioId: number;
   ticker: string;
+  totalPayment: number;
 }
 
 export interface IDealResponse {
@@ -19,10 +19,12 @@ export interface IDealResponse {
   date: Date;
   exchange: Exchange;
   id: number;
+  nkd: number | null;
   portfolioId: number;
   price: number;
   securityId: number;
   securityType: SecurityType;
+  shortName: string;
   ticker: string;
   type: DealType;
 }
@@ -32,9 +34,9 @@ export interface IDividendResponse {
   exchange: Exchange;
   id: number;
   paymentPeriod: string;
-  paymentPerShare: number;
   portfolioId: number;
   ticker: string;
+  totalPayment: number;
   sharesCount: number;
 }
 
@@ -52,6 +54,7 @@ export interface IPortfolioResponse {
   profitability: number;
   sharePositions: IPositionResponse[];
   totalCost: number;
+  transactions: ITransactionResponse[];
 }
 
 export interface IPositionResponse {

@@ -10,7 +10,7 @@ export class InvestorMoexShare {
   }
 
   getByTicker(ticker: string): Promise<IMoexShareResponse> {
-    return this.api.get(`/moex-share/${ticker}`).then(res => {
+    return this.api.get(`/moex/share/${ticker}`).then(res => {
       res.data.securityType = SecurityType.SHARE;
       return res.data;
     });

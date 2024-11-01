@@ -4,6 +4,7 @@ import "time"
 
 type SecurityCommonInfo struct {
 	Board     ISSMoexBoard
+	Currency  string
 	Engine    ISSMoexEngine
 	ID        int
 	LotSize   int
